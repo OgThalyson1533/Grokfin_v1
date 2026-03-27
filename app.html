@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com 'unsafe-inline'; connect-src 'self' *.supabase.co economia.awesomeapi.com.br api.coingecko.com fonts.googleapis.com api.anthropic.com generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data: blob:;">
+  <title>GrokFin Elite v6 • Hybrid PWA Organizado</title>
+  <meta name="theme-color" content="#0b0f1b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GrokFin">
+  <meta name="description" content="Painel financeiro premium com navegação híbrida, perfil editável e instalação como aplicativo.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          boxShadow: {
+            glow: '0 0 0 1px rgba(0,245,255,.08), 0 18px 40px rgba(0,0,0,.28)',
+            brand: '0 0 24px rgba(0,245,255,.24)',
+            success: '0 0 24px rgba(0,255,133,.20)'
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <!-- [NEW] OCR Client-Side nativo para recibos -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+  <!-- CSS Modular (extraído do Fin.html sem alterar nenhum estilo) -->
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/glass.css">
+  <link rel="stylesheet" href="./css/nav.css">
+  <link rel="stylesheet" href="./css/components.css">
+</head>
+<body class="selection:bg-cyan-300 selection:text-black">
+  <div class="pointer-events-none fixed inset-0 overflow-hidden" id="app-glow-container">
+    <div id="app-glow-1" class="absolute -top-24 left-[8%] h-72 w-72 rounded-full bg-cyan-400/10 blur-[120px] transition-colors duration-1000"></div>
+    <div id="app-glow-2" class="absolute top-28 right-[10%] h-72 w-72 rounded-full bg-violet-500/12 blur-[120px] transition-colors duration-1000"></div>
+    <div id="app-glow-3" class="absolute bottom-0 left-[35%] h-80 w-80 rounded-full bg-emerald-400/8 blur-[120px] transition-colors duration-1000"></div>
+  </div>
+
+  <div class="relative min-h-screen">
+    <aside class="nav-rail fixed inset-y-0 left-0 z-30 hidden flex-col justify-between px-3 py-5 lg:flex">
+      <div>
+        <div class="flex items-center justify-center">
+          <div class="flex h-14 w-14 items-center justify-center rounded-[22px] bg-gradient-to-br from-cyan-300 to-emerald-300 text-2xl font-black text-black shadow-brand">G</div>
+        </div>
+        <p class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[.28em] text-cyan-200/55">Wealth OS</p>
+
+        <nav class="mt-6 flex-1 overflow-y-auto space-y-1.5 scrollbar-hide pb-4">
+          <button data-tab="0" class="nav-rail-button active" aria-label="Home">
+            <span class="nav-rail-icon"><i class="fa-solid fa-house"></i></span>
+            <span class="nav-rail-tooltip">Home</span>
+          </button>
+          <button data-tab="1" class="nav-rail-button" aria-label="Análise">
+            <span class="nav-rail-icon"><i class="fa-solid fa-chart-pie"></i></span>
+            <span class="nav-rail-tooltip">Análise</span>
+          </button>
+          <button data-tab="2" class="nav-rail-button" aria-label="Conta">
+            <span class="nav-rail-icon"><i class="fa-solid fa-wallet"></i></span>
+            <span class="nav-rail-tooltip">Conta</span>
+          </button>
+          <button data-tab="3" class="nav-rail-button" aria-label="Chat">
+            <span class="nav-rail-icon"><i class="fa-solid fa-robot"></i></span>
+            <span class="nav-rail-tooltip">Chat</span>
+          </button>
+          <button data-tab="4" class="nav-rail-button" aria-label="Metas">
+            <span class="nav-rail-icon"><i class="fa-solid fa-bullseye"></i></span>
+            <span class="nav-rail-tooltip">Metas</span>
+          </button>
+          <button data-tab="5" class="nav-rail-button" aria-label="Perfil">
+            <span class="nav-rail-icon"><i class="fa-solid fa-user"></i></span>
+            <span class="nav-rail-tooltip">Perfil</span>
+          </button>
+          <button data-tab="6" class="nav-rail-button" aria-label="Cartões">
+            <span class="nav-rail-icon"><i class="fa-solid fa-credit-card"></i></span>
+            <span class="nav-rail-tooltip">Cartões</span>
+          </button>
+          <button data-tab="7" class="nav-rail-button" aria-label="Fluxo">
+            <span class="nav-rail-icon"><i class="fa-solid fa-calendar-check"></i></span>
+            <span class="nav-rail-tooltip">Fluxo</span>
+          </button>
+          <button data-tab="8" class="nav-rail-button" aria-label="Investimentos">
+            <span class="nav-rail-icon"><i class="fa-solid fa-chart-line"></i></span>
+            <span class="nav-rail-tooltip">Investimentos</span>
+          </button>
+          <button data-tab="9" class="nav-rail-button" aria-label="Mercado">
+            <span class="nav-rail-icon"><i class="fa-solid fa-globe"></i></span>
+            <span class="nav-rail-tooltip">Mercado</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="space-y-4">
+        <div class="rounded-[26px] border border-white/8 bg-white/5 p-3 text-center">
+          <img data-profile-image="avatar" alt="Avatar" class="mx-auto h-14 w-14 rounded-2xl border border-white/10 object-cover">
+          <div class="mt-3 space-y-2">
+            <div class="rounded-2xl border border-white/8 bg-black/20 p-2">
+              <p class="text-[9px] uppercase tracking-[.24em] text-white/30">Score</p>
+              <p id="sidebar-score" class="mt-1 text-[11px] font-semibold text-cyan-200">--</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0 lg:pl-[6.5rem]">
+      <header class="sticky top-0 z-20 px-4 pt-4 sm:px-6 lg:px-8 lg:pt-6">
+        <div class="glass-panel rounded-2xl px-4 py-4 sm:px-6">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-lg font-black text-black shadow-brand lg:hidden">G</div>
+              <div class="min-w-[180px] flex-1">
+                <p class="text-[11px] font-semibold uppercase tracking-[.22em] text-white/35">Painel autônomo</p>
+                <div class="mt-1 flex flex-wrap items-center gap-3">
+                  <h2 class="text-lg font-semibold text-white">GrokFin Elite v6</h2>
+                  <span id="current-view-chip" class="pill"><i class="fa-solid fa-house text-cyan-300"></i> Home</span>
+                  <span class="hidden md:inline-flex pill"><i class="fa-solid fa-shield-halved text-cyan-300"></i> estado salvo localmente</span>
+                </div>
+              </div>
+            </div>
+
+            <label class="order-3 flex min-w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 md:order-none md:min-w-[320px] md:flex-1 md:max-w-xl">
+              <i class="fa-solid fa-magnifying-glass text-white/35"></i>
+              <input id="global-search" type="text" placeholder="Busque transações, metas ou mande um comando..." class="w-full bg-transparent outline-none placeholder:text-white/28">
+            </label>
+
+            <div class="hidden items-center gap-3 xl:flex">
+              <span class="pill"><i class="fa-regular fa-clock text-cyan-300"></i> <span id="header-ref-date">--</span></span>
+              <span class="pill"><i class="fa-solid fa-keyboard text-violet-300"></i> / para buscar</span>
+            </div>
+
+            <button id="refresh-btn" class="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-300 via-sky-300 to-emerald-300 px-5 py-3 font-bold text-black shadow-brand transition-transform hover:scale-[1.02]">
+              <i class="fa-solid fa-rotate"></i> Atualizar
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-14">
+        <div id="tab-0" class="tab-panel active">
+
+<!-- ══════════════════════════════════════════════════════
+     HOME — Layout inspirado no design de referência
+══════════════════════════════════════════════════════ -->
+
+<!-- Saudação + Saldo -->
+<div class="px-1 pt-2 pb-4">
+  <!-- Header saudação -->
+  <div class="flex items-center justify-between mb-5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-black"
+           style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+        <span id="home-avatar-initials">GF</span>
+      </div>
+      <div>
+        <p class="text-xs text-white/40 leading-none">Olá,</p>
+        <p class="text-sm font-bold text-white leading-tight" id="home-display-name">Usuário</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.8)]"></span>
+      <button class="w-9 h-9 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 transition-colors"
+              onclick="switchTab(5)" title="Perfil">
+        <i class="fa-regular fa-bell text-sm"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Saldo principal -->
+  <div class="mb-1">
+    <p class="text-xs font-semibold uppercase tracking-widest text-white/35 mb-2">SALDO ATUAL</p>
+    <p class="text-4xl font-black text-white tracking-tight" id="saldo-total">R$ 0,00</p>
+    <p class="text-xs text-white/40 mt-1.5">Média de gastos: <span class="text-white/60 font-semibold" id="home-burn-daily">R$ 0,00</span>/dia</p>
+  </div>
+
+  <!-- Entradas / Saídas row -->
+  <div class="flex gap-3 mt-4">
+    <div class="flex items-center gap-2 flex-1 rounded-2xl border border-emerald-400/15 bg-emerald-400/6 px-3 py-2.5">
+      <div class="w-7 h-7 rounded-full border border-emerald-400/30 bg-emerald-400/15 flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-trend-up text-emerald-400 text-xs"></i>
+      </div>
+      <div>
+        <p class="text-[10px] uppercase tracking-widest text-white/35">ENTRADA</p>
+        <p class="text-sm font-bold text-emerald-300 leading-tight" id="dashboard-income">R$ 0,00</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 flex-1 rounded-2xl border border-rose-400/15 bg-rose-400/6 px-3 py-2.5">
+      <div class="w-7 h-7 rounded-full border border-rose-400/30 bg-rose-400/15 flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-arrow-trend-down text-rose-400 text-xs"></i>
+      </div>
+      <div>
+        <p class="text-[10px] uppercase tracking-widest text-white/35">SAÍDA</p>
+        <p class="text-sm font-bold text-rose-300 leading-tight" id="dashboard-expense">R$ 0,00</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Metas (ring cards) -->
+<div class="mb-6">
+  <div class="flex items-center justify-between mb-3 px-1">
+    <p class="text-sm font-bold text-white">Metas</p>
+    <button class="text-xs text-cyan-300/70 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
+  </div>
+  <div class="overflow-x-auto pb-1 -mx-1 px-1" style="scrollbar-width:none">
+    <div class="flex gap-3 w-max" id="home-goals-rings">
+      <!-- Populado por dashboard-ui.js -->
+      <div class="flex flex-col items-center gap-2 w-16">
+        <div class="w-16 h-16 rounded-full border-2 border-white/10 flex items-center justify-center">
+          <span class="text-xs text-white/30">--</span>
+        </div>
+        <p class="text-[10px] text-white/35 text-center truncate w-16">Sem metas</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Análise IA -->
+<div class="mb-6">
+  <p class="text-sm font-bold text-white mb-3 px-1">Análise IA</p>
+  <div class="rounded-3xl border border-white/8 bg-white/4 p-5 relative overflow-hidden" style="backdrop-filter:blur(20px)">
+    <div class="absolute top-0 left-0 right-0 h-[2px] rounded-t-3xl"
+         style="background:linear-gradient(90deg,#00f5ff,#a855f7)"></div>
+    <!-- dots indicador -->
+    <div class="absolute top-4 right-4 flex gap-1.5">
+      <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+      <span class="w-1.5 h-1.5 rounded-full bg-white/20"></span>
+    </div>
+    <p class="text-sm leading-relaxed text-white/80 pr-8" id="home-ai-insight">
+      Carregando análise inteligente...
+    </p>
+  </div>
+</div>
+
+<!-- Próximos 7 Dias -->
+<div class="mb-6">
+  <div class="flex items-center justify-between mb-3 px-1">
+    <p class="text-sm font-bold text-white">Próximos 7 Dias</p>
+    <span class="w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white flex items-center justify-center" id="home-upcoming-count">0</span>
+  </div>
+  <div class="overflow-x-auto pb-1 -mx-1 px-1" style="scrollbar-width:none">
+    <div class="flex gap-3 w-max" id="home-upcoming-cards">
+      <div class="w-32 rounded-2xl border border-white/8 bg-white/4 p-3">
+        <p class="text-[10px] text-white/30">Sem eventos</p>
+      </div>
+    </div>
+  </div>
+  <!-- FAB adicionar -->
+  <div class="flex justify-end mt-3 pr-1">
+    <button onclick="document.getElementById('tx-add-btn')?.click()"
+            class="w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+            style="background:linear-gradient(135deg,#6366f1,#a855f7)">
+      <i class="fa-solid fa-plus text-white text-sm"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Top Gastos -->
+<div class="mb-6">
+  <div class="flex items-center justify-between mb-3 px-1">
+    <p class="text-sm font-bold text-white">Top Gastos</p>
+    <button class="text-xs text-white/40 hover:text-white/70 transition-colors" onclick="switchTab(2)">Ver conta →</button>
+  </div>
+  <div class="grid grid-cols-4 gap-2.5" id="home-top-gastos">
+    <!-- Populado por dashboard-ui.js -->
+    <div class="col-span-4 rounded-2xl border border-white/8 bg-white/4 p-4 text-center text-xs text-white/30">
+      Sem transações no mês
+    </div>
+  </div>
+</div>
+
+<!-- Scores ocultos usados pelo renderDashboard legado -->
+<span class="hidden" id="monthly-net-chip"></span>
+<span class="hidden" id="income-evo"></span>
+<span class="hidden" id="expense-evo"></span>
+<span class="hidden" id="dashboard-runway"></span>
+<span class="hidden" id="dashboard-burn"></span>
+<span class="hidden" id="usd-rate"></span>
+<span class="hidden" id="eur-rate"></span>
+<span class="hidden" id="btc-rate"></span>
+<span class="hidden" id="usd-trend"></span>
+<span class="hidden" id="eur-trend"></span>
+<span class="hidden" id="btc-trend"></span>
+<span class="hidden" id="health-score"></span>
+<span class="hidden" id="health-caption"></span>
+<span class="hidden" id="saving-rate-chip"></span>
+<span class="hidden" id="saving-rate-label"></span>
+<span class="hidden" id="saving-rate-bar"></span>
+<span class="hidden" id="urgent-goal-label"></span>
+<span class="hidden" id="urgent-goal-bar"></span>
+<span class="hidden" id="top-category-name"></span>
+<span class="hidden" id="top-category-value"></span>
+<span class="hidden" id="avg-ticket"></span>
+<span class="hidden" id="health-summary"></span>
+<span class="hidden" id="category-highlights"></span>
+<span class="hidden" id="insight-main"></span>
+<span class="hidden" id="insight-apply-btn"></span>
+<span class="hidden" id="chat-side-insight"></span>
+<span class="hidden" id="surplus-pct"></span>
+<span class="hidden" id="surplus-caption"></span>
+<span class="hidden" id="surplus-income"></span>
+<span class="hidden" id="surplus-expense"></span>
+<span class="hidden" id="surplus-ring-fill"></span>
+<canvas id="pieChart" class="hidden"></canvas>
+<canvas id="lineChart" class="hidden"></canvas>
+<canvas id="monthlyFlowChart" class="hidden"></canvas>
+<div id="smart-insights-grid" class="hidden"></div>
+
+<!-- Calendário Financeiro (mantido, mas agora mais abaixo) -->
+<div class="mb-2">
+  <p class="text-sm font-bold text-white mb-3 px-1">Calendário</p>
+</div>
+
+        </div>
+
+        <div id="tab-1" class="tab-panel space-y-10">
+<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+<div>
+<p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Relatório executivo</p>
+<h3 class="mt-2 text-4xl font-black tracking-tight text-white">Diagnóstico financeiro profundo</h3>
+<p class="mt-3 max-w-2xl text-white/55">
+                Em vez de um texto estático, o relatório agora nasce do estado atual: categorias, fluxo líquido, runway, metas e tendência mensal.
+              </p>
+</div>
+<div class="flex flex-wrap gap-3">
+<button class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8" data-quick-action="apply-insight">Aplicar recomendação</button>
+<button class="pill hover:border-violet-300/30 hover:bg-violet-300/8" data-quick-action="open-chat">Discutir com a IA</button>
+</div>
+</div>
+<div class="grid gap-4 md:grid-cols-3">
+<div class="glass-panel rounded-3xl p-5">
+<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Fluxo líquido</p>
+<p class="mt-3 text-3xl font-black text-white" id="report-net">R$ 0,00</p>
+</div>
+<div class="glass-panel rounded-3xl p-5">
+<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Taxa de poupança</p>
+<p class="mt-3 text-3xl font-black text-emerald-300" id="report-saving-rate">0%</p>
+</div>
+<div class="glass-panel rounded-3xl p-5">
+<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Runway estimado</p>
+<p class="mt-3 text-3xl font-black text-cyan-200" id="report-runway">0 meses</p>
+</div>
+</div>
+<div class="glass-panel rounded-[28px] p-7 sm:p-8">
+<div class="space-y-8" id="report-content"></div>
+</div>
+        </div>
+
+        <div id="tab-2" class="tab-panel space-y-10">
+<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+<div>
+<p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Extrato inteligente</p>
+<h3 class="mt-2 text-4xl font-black tracking-tight text-white">Transações com leitura real</h3>
+<p class="mt-3 max-w-2xl text-white/55">
+                Busca instantânea, filtro por categoria, filtro de período, ordenação por data ou valor e resumo operacional do mês em tempo real.
+              </p>
+</div>
+<div class="flex flex-col gap-3 w-full xl:max-w-5xl">
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+    <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+      <i class="fa-solid fa-magnifying-glass text-white/35"></i>
+      <input class="w-full bg-transparent outline-none placeholder:text-white/28" id="tx-search" placeholder="Buscar descrição..." type="text"/>
+    </label>
+    <select class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" id="tx-category">
+      <option value="all">Todas as categorias</option>
+    </select>
+    <select class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" id="tx-sort">
+      <option value="date-desc">Mais recentes</option>
+      <option value="date-asc">Mais antigas</option>
+      <option value="value-desc">Maior valor</option>
+      <option value="value-asc">Menor valor</option>
+    </select>
+    <button class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 flex items-center gap-2" id="tx-reset">
+      <i class="fa-solid fa-rotate-left"></i>Limpar filtros
+      <span id="tx-filter-badge" class="hidden items-center justify-center h-5 w-5 rounded-full text-[10px] font-black text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)"></span>
+    </button>
+  </div>
+  <div class="flex flex-wrap gap-3 items-center">
+    <!-- Period filter button -->
+    <div class="relative" id="tx-period-wrapper" style="isolation:isolate;">
+      <button id="tx-period-btn" class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:border-cyan-400/30">
+        <i class="fa-solid fa-calendar-days text-cyan-400/70"></i>
+        <span id="tx-period-label">Filtrar por período</span>
+        <i class="fa-solid fa-chevron-down text-white/30 text-xs ml-1" id="tx-period-chevron"></i>
+      </button>
+      <!-- Calendar Dropdown: renderizado via JS direto no <body> para escapar de backdrop-filter stacking contexts -->
+    </div>
+    <!-- Nova Transação button -->
+    <button id="tx-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90"
+            style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+      <i class="fa-solid fa-plus"></i> Nova Transação
+    </button>
+    <!-- Export buttons -->
+    <div class="flex gap-2">
+      <button id="tx-export-csv" class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors">
+        <i class="fa-solid fa-file-csv text-emerald-400/80"></i> CSV
+      </button>
+      <button id="tx-export-pdf" class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors">
+        <i class="fa-solid fa-file-pdf text-rose-400/80"></i> PDF
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+<div class="glass-panel rounded-3xl p-5">
+<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Itens visíveis</p>
+<p class="mt-3 text-3xl font-black text-white" id="tx-count">0</p>
+</div>
+<div class="glass-panel rounded-3xl p-5">
+<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Saídas filtradas</p>
+<p class="mt-3 text-3xl font-black text-rose-300" id="tx-expense-total">R$ 0,00</p>
+</div>
+<div class="glass-panel rounded-3xl p-5">
+<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Entradas filtradas</p>
+<p class="mt-3 text-3xl font-black text-emerald-300" id="tx-income-total">R$ 0,00</p>
+</div>
+<div class="glass-panel rounded-3xl p-5">
+<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Média por item</p>
+<p class="mt-3 text-3xl font-black text-white" id="tx-average-total">R$ 0,00</p>
+</div>
+</div>
+<div class="glass-panel overflow-hidden rounded-[28px]">
+<div class="overflow-x-auto">
+<table class="min-w-full text-left">
+<thead class="border-b border-white/8 bg-white/5 text-xs uppercase tracking-[.18em] text-white/38">
+<tr>
+<th class="px-6 py-5">Data</th>
+<th class="px-6 py-5">Descrição</th>
+<th class="px-6 py-5">Categoria</th>
+<th class="px-6 py-5 text-right">Valor</th>
+<th class="px-6 py-5 text-center">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5 text-sm" id="transactions-body"></tbody>
+</table>
+</div>
+</div>
+        </div>
+
+        <div id="tab-3" class="tab-panel space-y-10">
+<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+<div>
+<p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Chatbot financeiro</p>
+<h3 class="mt-2 text-4xl font-black tracking-tight text-white">Área exclusiva do assistente GrokFin</h3>
+<p class="mt-3 max-w-2xl text-white/55">
+                Agora o chat ganhou uma seção própria para você conversar sobre saldo, gastos, metas, câmbio e comprovantes sem misturar com o relatório.
+              </p>
+</div>
+<div class="flex flex-wrap gap-3 items-center">
+<button class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8" data-chat-prompt="Como está meu saldo?">Saldo</button>
+<button class="pill hover:border-violet-300/30 hover:bg-violet-300/8" data-chat-prompt="Onde estou gastando mais?">Gastos</button>
+<button class="pill hover:border-emerald-300/30 hover:bg-emerald-300/8" data-chat-prompt="Qual meta eu devo acelerar?">Metas</button>
+<button id="open-ai-settings" class="pill hover:border-violet-400/30 hover:bg-violet-400/8">
+  <i class="fa-solid fa-key text-violet-400"></i> <span id="ai-mode-label">Modo inteligente</span>
+</button>
+</div>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
+<div class="glass-panel flex min-h-[72vh] flex-col overflow-hidden rounded-[28px]">
+<div class="border-b border-white/8 px-6 py-5">
+<div class="flex flex-wrap items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-black shadow-brand">
+<i class="fa-solid fa-robot"></i>
+</span>
+<div>
+<div class="flex items-center gap-2 flex-wrap">
+                  <p class="text-lg font-semibold text-white">GrokFin Assistant</p>
+                  <span id="ai-active-indicator" class="hidden items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85);display:none"></span>
+                </div>
+                <p class="text-sm text-white/42" id="ai-chat-subtitle">Lê saldo, metas, categorias, câmbio e recomendação do mês</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<button class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8" data-chat-prompt="Como está meu saldo?">Saldo</button>
+<button class="pill hover:border-violet-300/30 hover:bg-violet-300/8" data-chat-prompt="Onde estou gastando mais?">Maiores gastos</button>
+<button class="pill hover:border-emerald-300/30 hover:bg-emerald-300/8" data-chat-prompt="Qual meta eu devo acelerar?">Melhor meta</button>
+</div>
+</div>
+</div>
+<div class="flex-1 space-y-5 overflow-y-auto px-6 py-6" id="chat-messages"></div>
+<div class="border-t border-white/8 bg-[#080c15]/88 px-6 py-5">
+<div class="flex flex-wrap items-center gap-3">
+<label class="flex h-14 w-14 cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lg text-white/70 transition-colors hover:bg-white/10">
+<i class="fa-solid fa-paperclip"></i>
+<input accept="image/*" class="hidden" id="file-upload" type="file"/>
+</label>
+<!-- [FIX #5] Botão de microfone para transcrição de áudio -->
+<button id="chat-mic-btn" title="Gravar áudio — clique para falar"
+  class="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lg text-white/70 transition-all hover:bg-white/10 hover:text-cyan-300"
+  style="flex-shrink:0">
+  <i class="fa-solid fa-microphone" id="chat-mic-icon"></i>
+</button>
+<div class="chat-input-wrap flex h-14 min-w-[240px] flex-1 items-center rounded-2xl border border-white/10 bg-white/5 px-5">
+<input class="w-full bg-transparent outline-none placeholder:text-white/28" id="chat-input" placeholder="Pergunte algo sobre fluxo, metas, câmbio ou fale com o microfone..." type="text"/>
+</div>
+<button class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r from-cyan-300 to-emerald-300 text-lg text-black shadow-brand transition-transform hover:scale-105" id="chat-send-btn">
+<i class="fa-solid fa-paper-plane"></i>
+</button>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="glass-panel rounded-[28px] p-6">
+<p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">O que a IA consegue responder</p>
+<div class="mt-5 space-y-3 text-sm text-white/72">
+<div class="rounded-2xl border border-white/8 bg-white/4 p-4">“Quanto estou poupando este mês?”</div>
+<div class="rounded-2xl border border-white/8 bg-white/4 p-4">“Onde meu orçamento está vazando?”</div>
+<div class="rounded-2xl border border-white/8 bg-white/4 p-4">“Qual meta vale acelerar agora?”</div>
+<div class="rounded-2xl border border-white/8 bg-white/4 p-4">“Como está o dólar, o euro e o BTC?”</div>
+</div>
+</div>
+<div class="gradient-border rounded-[28px]">
+<div class="glass-panel rounded-[27px] p-6">
+<p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Última recomendação</p>
+<p class="mt-4 text-base leading-relaxed text-white/82" id="chat-side-insight">
+                    --
+                  </p>
+<button class="mt-5 rounded-2xl bg-white/10 px-4 py-3 font-semibold text-white transition-colors hover:bg-white/16" data-chat-prompt="Explique essa recomendação">
+                    Detalhar recomendação
+                  </button>
+</div>
+</div>
+<div class="glass-panel rounded-[28px] p-6">
+<p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Atalhos úteis</p>
+<div class="mt-5 grid gap-3">
+<button class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/10" data-quick-action="open-transactions">
+                    Abrir transações e revisar despesas
+                  </button>
+<button class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/10" data-quick-action="apply-insight">
+                    Aplicar a sugestão principal
+                  </button>
+<button class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/10" data-quick-action="open-report">
+                    Abrir relatório executivo
+                  </button>
+</div>
+</div>
+</div>
+</div>
+        </div>
+
+        <div id="tab-4" class="tab-panel space-y-10">
+<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+<div>
+<p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Metas inteligentes</p>
+<h3 class="mt-2 text-4xl font-black tracking-tight text-white">Transforme vontade em plano</h3>
+<p class="mt-3 max-w-2xl text-white/55">
+                Agora cada meta tem uma área própria, estimativa de prazo, aporte mensal sugerido e um tema visual mais fiel ao objetivo — inclusive para games, consoles e eletrônicos.
+              </p>
+</div>
+
+<div class="flex flex-col justify-end">
+  <button id="goal-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+    <i class="fa-solid fa-plus"></i> Nova Meta
+  </button>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-4 md:grid-cols-3" id="goals-overview"></div>
+
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3" id="goals-container"></div>
+        </div>
+
+        <div id="tab-5" class="tab-panel space-y-6">
+  <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Perfil</p>
+      <h3 class="mt-2 text-4xl font-black tracking-tight text-white">Perfil com visualização primeiro, edição só quando você quiser</h3>
+      <p class="mt-3 max-w-2xl text-white/55">
+        O perfil agora abre em modo de visualização. Para editar banner, avatar, apelido, nome público e @handle, use a engrenagem e salve ao final.
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+
+      <button id="profile-edit-toggle-btn" class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8 transition-colors">
+        <i class="fa-solid fa-gear text-cyan-300"></i> <span id="profile-edit-toggle-label">Editar perfil</span>
+      </button>
+      <button id="profile-save-btn" class="hidden rounded-2xl bg-gradient-to-r from-cyan-300 to-emerald-300 px-6 py-3.5 font-bold text-black shadow-brand transition-transform hover:scale-[1.02]">
+        <i class="fa-solid fa-floppy-disk mr-2"></i>Salvar perfil
+      </button>
+      <button id="profile-logout-btn" class="pill hover:border-rose-400/30 hover:bg-rose-400/8 transition-colors text-white/70">
+        <i class="fa-solid fa-arrow-right-from-bracket text-rose-400"></i> Sair
+      </button>
+    </div>
+  </div>
+
+  <div class="glass-panel overflow-hidden rounded-[32px]">
+    <div data-profile-bg="banner" class="profile-banner relative h-56 sm:h-72">
+      <div class="absolute inset-0 bg-gradient-to-t from-[#060911]/95 via-[#060911]/35 to-transparent"></div>
+      <label class="profile-edit-only hidden absolute right-5 top-5 z-10 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-semibold text-white/85 backdrop-blur-md transition-colors hover:bg-black/45">
+        <i class="fa-solid fa-image mr-2"></i>Editar capa
+        <input id="profile-banner-input" type="file" accept="image/*" class="hidden">
+      </label>
+    </div>
+    <div class="px-5 pb-6 sm:px-6 sm:pb-7">
+      <div class="relative -mt-16 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div class="relative">
+            <img data-profile-image="avatar" alt="Avatar" class="h-28 w-28 rounded-[30px] border border-white/12 object-cover shadow-2xl ring-4 ring-[#070a13] sm:h-32 sm:w-32">
+            <label class="profile-edit-only hidden absolute -bottom-2 -right-2 flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-black/60 text-white shadow-2xl backdrop-blur-md transition-colors hover:bg-black/75">
+              <i class="fa-solid fa-camera"></i>
+              <input id="profile-avatar-input" type="file" accept="image/*" class="hidden">
+            </label>
+          </div>
+          <div class="pb-1">
+            <p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Identidade pública</p>
+            <h4 data-profile-text="displayName" class="mt-2 text-3xl font-black tracking-tight text-white">GrokFin User</h4>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/60">
+              <span data-profile-text="nickname">Navigator</span>
+              <span class="text-white/20">•</span>
+              <span data-profile-text="handle">@grokfin.user</span>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="pill"><i class="fa-solid fa-wallet text-emerald-300"></i> <span id="profile-balance-pill">R$ 0,00</span></span>
+              <span class="pill"><i class="fa-solid fa-sparkles text-violet-300"></i> Score <span id="profile-health-pill">0/100</span></span>
+              <span class="pill"><i class="fa-solid fa-cloud-arrow-down text-cyan-300"></i> <span id="profile-install-state">Pronto para instalar</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 xl:max-w-sm">
+          <div class="rounded-2xl border border-white/8 bg-black/20 p-4">
+            <p class="text-[11px] uppercase tracking-[.18em] text-white/34">Metas</p>
+            <p id="profile-metric-goals" class="mt-2 text-2xl font-black text-white">0</p>
+          </div>
+          <div class="rounded-2xl border border-white/8 bg-black/20 p-4">
+            <p class="text-[11px] uppercase tracking-[.18em] text-white/34">Movimentos</p>
+            <p id="profile-metric-transactions" class="mt-2 text-2xl font-black text-white">0</p>
+          </div>
+          <div class="rounded-2xl border border-white/8 bg-black/20 p-4">
+            <p class="text-[11px] uppercase tracking-[.18em] text-white/34">Concluídas</p>
+            <p id="profile-metric-completed" class="mt-2 text-2xl font-black text-white">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-6 xl:grid-cols-[1fr_.95fr]">
+    <div class="gradient-border rounded-[28px]">
+      <div class="glass-panel rounded-[27px] p-6">
+        <p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Preview compacto</p>
+        <div class="mt-5 overflow-hidden rounded-[28px] border border-white/8 bg-white/4">
+          <div data-profile-bg="banner" class="h-32 bg-cover bg-center"></div>
+          <div class="px-4 pb-4">
+            <div class="relative -mt-10 flex items-end gap-3">
+              <img data-profile-image="avatar" alt="Avatar" class="h-20 w-20 rounded-[22px] border border-white/10 object-cover ring-4 ring-[#09101a]">
+              <div class="pb-1">
+                <p data-profile-text="displayName" class="text-lg font-bold text-white">GrokFin User</p>
+                <p data-profile-text="handle" class="mt-1 text-sm text-white/55">@grokfin.user</p>
+              </div>
+            </div>
+            <p class="mt-4 text-sm leading-relaxed text-white/72">
+              Enquanto você estiver editando, a prévia acompanha as mudanças. Nada é gravado em definitivo até tocar em salvar.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <div class="glass-panel rounded-[28px] p-6">
+        <p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Instalação como app</p>
+        <p id="profile-install-copy" class="mt-4 text-sm leading-relaxed text-white/72">
+          Manifesto PWA, service worker e ícones nativos já estão incluídos neste pacote.
+        </p>
+        <div class="mt-5 grid gap-3">
+          
+          <div class="rounded-2xl border border-white/8 bg-black/20 p-4 text-sm leading-relaxed text-white/62">
+            Ao hospedar este diretório em HTTPS ou localhost, o navegador poderá oferecer “Instalar app” e criar atalho na área de trabalho ou grade de apps.
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-[28px] p-6">
+        <p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Fluxo de edição</p>
+        <p id="profile-edit-copy" class="mt-4 text-sm leading-relaxed text-white/72">
+          Use a engrenagem para abrir a edição. Ajuste capa, avatar e textos. Quando tudo estiver certo, salve para fixar o novo perfil no dispositivo.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="profile-edit-panel" class="hidden glass-panel rounded-[28px] p-6 sm:p-7">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p class="text-lg font-semibold text-white">Editar perfil</p>
+        <p class="text-sm text-white/42">Altere os campos abaixo, acompanhe a prévia e depois confirme em salvar.</p>
+      </div>
+      <span class="pill status-neutral"><i class="fa-solid fa-pen-to-square"></i> modo edição</span>
+    </div>
+    <div class="grid gap-5 md:grid-cols-2">
+      <label class="block space-y-2">
+        <span class="text-xs font-bold uppercase tracking-[.18em] text-white/38">Apelido</span>
+        <input id="profile-nickname-input" type="text" class="profile-input" placeholder="Ex: Navigator">
+      </label>
+      <label class="block space-y-2">
+        <span class="text-xs font-bold uppercase tracking-[.18em] text-white/38">Nome de exibição</span>
+        <input id="profile-displayname-input" type="text" class="profile-input" placeholder="Ex: Caio Silva">
+      </label>
+      <label class="block space-y-2 md:col-span-2">
+        <span class="text-xs font-bold uppercase tracking-[.18em] text-white/38">Nome de usuário (@handle)</span>
+        <input id="profile-handle-input" type="text" class="profile-input" placeholder="@grokfin.user">
+        <p id="profile-handle-feedback" class="hidden text-xs font-medium"></p>
+      </label>
+      <label class="block space-y-2 md:col-span-2">
+        <span class="text-xs font-bold uppercase tracking-[.18em] text-white/38">Ondas de Fundo (Tema)</span>
+        <select id="profile-theme-input" class="profile-input bg-[#08111c]">
+          <option value="cyber">Cyberpunk (Cyan / Esmeralda / Roxo)</option>
+          <option value="royal">Ametista (Violeta Profundo / Fúcsia)</option>
+          <option value="gold">Gold V.I.P (Âmbar / Dourado Clássico)</option>
+          <option value="minimal">Minimalista (Escuro Absoluto / Chumbo)</option>
+        </select>
+      </label>
+    </div>
+    <div class="mt-6 rounded-2xl border border-cyan-300/15 bg-cyan-300/6 p-4 text-sm leading-relaxed text-white/75">
+      O modo de edição respeita a estética atual do app: mesmas cores, mesmo vidro fosco, mesmas bordas suaves e o mesmo brilho dos cards já existentes.
+    </div>
+  </div>
+</div>
+
+
+        <!-- ═══════════════════════════ TAB 6: CARTÕES ═══════════════════════════ -->
+        <div id="tab-6" class="tab-panel space-y-8">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Gestão de cartões</p>
+              <h3 class="mt-2 text-4xl font-black tracking-tight text-white">Seus cartões em um lugar</h3>
+              <p class="mt-3 max-w-2xl text-white/55">Acompanhe limite, fatura e vencimento. Os lançamentos chegam automaticamente ao registrar uma saída na aba Conta com cartão de crédito.</p>
+            </div>
+            <button id="card-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black"
+                    style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+              <i class="fa-solid fa-plus"></i> Novo cartão
+            </button>
+          </div>
+          <!-- Cards grid -->
+          <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3" id="cards-grid"></div>
+          <!-- Card transactions -->
+          <div class="glass-panel rounded-[28px] p-6" id="card-invoice-panel">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-[.18em] text-white/35">Lançamentos do cartão</p>
+                <p class="font-semibold text-white mt-1" id="card-invoice-title">Selecione um cartão</p>
+              </div>
+              <p class="text-xs text-white/35"><i class="fa-solid fa-info-circle text-cyan-400/60 mr-1"></i>Lance pela aba Conta</p>
+            </div>
+            <div id="card-invoice-list">
+              <p class="text-white/40 text-sm">Clique em "Ver fatura" em um cartão para listar os lançamentos.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════ TAB 7: FLUXO DE CAIXA ═══════════════════════════ -->
+        <div id="tab-7" class="tab-panel space-y-8">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Fluxo de caixa</p>
+              <h3 class="mt-2 text-4xl font-black tracking-tight text-white">Seu dinheiro nos próximos dias</h3>
+              <p class="mt-3 max-w-2xl text-white/55">Projeção dia a dia dos próximos 30 dias, custos fixos, receitas agendadas e orçamento por envelope.</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button id="fixed-manage-btn" class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8">
+                <i class="fa-solid fa-sliders text-cyan-300"></i> Gerenciar fixos
+              </button>
+            </div>
+          </div>
+
+          <!-- Fluxo summary cards -->
+          <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div class="glass-panel rounded-3xl p-5">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Saldo hoje</p>
+              <p class="mt-3 text-3xl font-black text-white" id="cashflow-balance">R$ 0</p>
+            </div>
+            <div class="glass-panel rounded-3xl p-5">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Projeção 30d</p>
+              <p class="mt-3 text-3xl font-black text-cyan-200" id="cashflow-proj30">R$ 0</p>
+            </div>
+            <div class="glass-panel rounded-3xl p-5">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Fixos/mês</p>
+              <p class="mt-3 text-3xl font-black text-rose-300" id="cashflow-fixed">R$ 0</p>
+            </div>
+            <div class="glass-panel rounded-3xl p-5">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Livres/mês</p>
+              <p class="mt-3 text-3xl font-black text-emerald-300" id="cashflow-free">R$ 0</p>
+            </div>
+          </div>
+
+          <!-- Cashflow chart + calendar side by side -->
+          <div class="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
+            <div class="glass-panel rounded-[28px] p-6">
+              <p class="text-sm font-semibold text-white mb-4">Projeção de saldo — 30 dias</p>
+              <div class="relative h-56"><canvas id="cashflowChart"></canvas></div>
+            </div>
+            <div class="glass-panel rounded-[28px] p-6">
+              <p class="text-sm font-semibold text-white mb-4">Eventos do mês</p>
+              <div class="space-y-2 max-h-56 overflow-y-auto pr-1" id="cashflow-events"></div>
+            </div>
+          </div>
+
+          <!-- Envelope budgets -->
+          <div class="glass-panel rounded-[28px] p-6">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <p class="text-sm font-semibold text-white">Orçamento por envelope</p>
+                <p class="text-xs text-white/45 mt-1">Cada categoria tem um envelope — quando acaba, acabou</p>
+              </div>
+              <button id="envelope-reset-btn" class="pill hover:border-rose-300/30 hover:bg-rose-300/8 text-xs">
+                <i class="fa-solid fa-rotate-left text-rose-400"></i> Reiniciar mês
+              </button>
+            </div>
+            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3" id="envelope-grid"></div>
+          </div>
+
+          <!-- Fixed expenses table -->
+          <div class="glass-panel rounded-[28px] p-6">
+            <p class="text-sm font-semibold text-white mb-4">Compromissos fixos mensais</p>
+            <div class="space-y-2" id="fixed-expenses-list"></div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════ TAB 8: INVESTIMENTOS ═══════════════════════════ -->
+        <div id="tab-8" class="tab-panel space-y-8">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Carteira de investimentos</p>
+              <h3 class="mt-2 text-4xl font-black tracking-tight text-white">Patrimônio inteligente</h3>
+              <p class="mt-3 max-w-2xl text-white/55">Rentabilidade real, alocação por classe, comparativo com CDI/IPCA e recomendações de rebalanceamento.</p>
+            </div>
+            <button id="inv-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black"
+                    style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+              <i class="fa-solid fa-plus"></i> Novo ativo
+            </button>
+          </div>
+
+          <!-- Investment summary cards -->
+          <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div class="glass-panel rounded-3xl p-5">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Patrimônio total</p>
+              <p class="mt-3 text-3xl font-black text-white" id="inv-total">R$ 0</p>
+            </div>
+            <div class="glass-panel rounded-3xl p-5">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Lucro total</p>
+              <p class="mt-3 text-3xl font-black text-emerald-300" id="inv-profit">R$ 0</p>
+            </div>
+            <div class="glass-panel rounded-3xl p-5">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Rentab. média</p>
+              <p class="mt-3 text-3xl font-black text-cyan-200" id="inv-return-pct">0%</p>
+            </div>
+            <div class="glass-panel rounded-3xl p-5">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">vs CDI 13.75%</p>
+              <p class="mt-3 text-3xl font-black" id="inv-vs-cdi">0%</p>
+            </div>
+          </div>
+
+          <!-- Allocation chart + assets table -->
+          <div class="grid gap-5 xl:grid-cols-[1fr_1.6fr]">
+            <div class="glass-panel rounded-[28px] p-6">
+              <p class="text-sm font-semibold text-white mb-1">Alocação por classe</p>
+              <p class="text-xs text-white/40 mb-4">Distribuição atual da carteira</p>
+              <div class="relative h-56 flex items-center justify-center"><canvas id="invAllocChart"></canvas></div>
+              <div class="mt-4 flex flex-wrap gap-2" id="inv-alloc-legend"></div>
+            </div>
+            <div class="glass-panel rounded-[28px] p-6">
+              <p class="text-sm font-semibold text-white mb-4">Ativos</p>
+              <div class="space-y-3" id="inv-assets-list"></div>
+            </div>
+          </div>
+
+          <!-- Compound interest simulator -->
+          <div class="glass-panel rounded-[28px] p-6">
+            <p class="text-sm font-semibold text-white mb-1">Simulador de juros compostos</p>
+            <p class="text-xs text-white/40 mb-5">Quanto seu dinheiro pode virar investindo todo mês</p>
+            <div class="grid gap-4 md:grid-cols-4 mb-5">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold uppercase tracking-widest text-white/40">Aporte mensal</label>
+                <input id="sim-monthly" type="text" value="500" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50"/>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold uppercase tracking-widest text-white/40">Taxa anual %</label>
+                <input id="sim-rate" type="text" value="13.75" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50"/>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold uppercase tracking-widest text-white/40">Anos</label>
+                <input id="sim-years" type="text" value="10" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50"/>
+              </div>
+              <div class="flex flex-col gap-1 justify-end">
+                <button id="sim-calc-btn" class="rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Calcular</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-5" id="sim-results" style="display:none">
+              <div class="glass-panel rounded-2xl p-4 text-center">
+                <p class="text-xs text-white/40 uppercase tracking-widest">Total investido</p>
+                <p class="mt-2 text-xl font-black text-white" id="sim-invested">—</p>
+              </div>
+              <div class="glass-panel rounded-2xl p-4 text-center">
+                <p class="text-xs text-white/40 uppercase tracking-widest">Rendimento</p>
+                <p class="mt-2 text-xl font-black text-emerald-300" id="sim-earnings">—</p>
+              </div>
+              <div class="glass-panel rounded-2xl p-4 text-center" style="background:linear-gradient(135deg,rgba(0,245,255,.08),rgba(0,255,133,.08));border-color:rgba(0,245,255,.2)">
+                <p class="text-xs text-cyan-300/70 uppercase tracking-widest">Patrimônio final</p>
+                <p class="mt-2 text-xl font-black text-white" id="sim-final">—</p>
+              </div>
+            </div>
+            <div class="relative h-48"><canvas id="simChart"></canvas></div>
+          </div>
+
+          <!-- Rebalancing recommendations -->
+          <div class="glass-panel rounded-[28px] p-6">
+            <p class="text-sm font-semibold text-white mb-4">Recomendações de rebalanceamento</p>
+            <div id="inv-rebalance-tips" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════ TAB 9: MERCADO & DISCOVER ═══════════════════════════ -->
+        <div id="tab-9" class="tab-panel space-y-8">
+          <div class="flex flex-col gap-4">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Mercado Global</p>
+              <h3 class="mt-2 text-4xl font-black tracking-tight text-white">Cotações e Tendências</h3>
+              <p class="mt-3 max-w-2xl text-white/55">Criptoativos e moedas estrangeiras atualizados em tempo real.</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 lg:grid-cols-4" id="market-tickers">
+             <!-- Tickers carregados via market.js -->
+             <p class="text-xs text-white/40 italic">Aguardando dados...</p>
+          </div>
+          <div class="grid gap-5 xl:grid-cols-[1fr_1fr]">
+            <div class="glass-panel rounded-[28px] p-6">
+              <p class="text-sm font-semibold text-white mb-4">Cripto em destaque (Top 4)</p>
+              <div id="market-trending-crypto" class="space-y-3">
+                 <p class="text-xs text-white/40 italic">Carregando tendências...</p>
+              </div>
+            </div>
+            <div class="glass-panel rounded-[28px] p-6">
+              <p class="text-sm font-semibold text-white mb-4">Moedas Fiat</p>
+              <div id="market-trending-fiat" class="space-y-3">
+                 <p class="text-xs text-white/40 italic">Carregando cotações fiat...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Bottom nav "Mais" sheet -->
+  <div id="mais-sheet" class="hidden fixed inset-0 z-[60] lg:hidden" onclick="closeMaisSheet()">
+    <div class="absolute inset-0" style="background:rgba(0,0,0,.6);backdrop-filter:blur(8px)"></div>
+    <div id="mais-sheet-panel" class="absolute bottom-0 left-0 right-0"
+         style="background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.035));backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.085);border-bottom:none;border-radius:28px 28px 0 0;box-shadow:0 -18px 45px rgba(0,0,0,.35);transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0)">
+      <!-- drag handle -->
+      <div class="flex justify-center pt-3 pb-1">
+        <div class="h-1 w-10 rounded-full bg-white/20"></div>
+      </div>
+      <div class="px-6 pt-2 pb-2 flex items-center justify-between">
+        <p class="text-xs font-bold uppercase tracking-[.22em] text-white/35">Mais seções</p>
+        <button id="mais-sheet-close" onclick="event.stopPropagation();closeMaisSheet()" class="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50 hover:bg-white/10 transition-colors">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+      <div class="grid grid-cols-5 gap-2.5 px-5 pb-8">
+        <button data-tab="5" onclick="event.stopPropagation();closeMaisSheet();switchTab(5)" class="mais-tab-btn flex flex-col items-center gap-2.5 rounded-[20px] border border-white/8 bg-white/5 py-4 transition-all active:scale-95" style="backdrop-filter:blur(12px)">
+          <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+            <i class="fa-solid fa-user text-violet-300"></i>
+          </span>
+          <span class="text-[10px] font-bold text-white/80 tracking-wide uppercase">Perfil</span>
+        </button>
+        <button data-tab="6" onclick="event.stopPropagation();closeMaisSheet();switchTab(6)" class="mais-tab-btn flex flex-col items-center gap-2.5 rounded-[20px] border border-white/8 bg-white/5 py-4 transition-all active:scale-95" style="backdrop-filter:blur(12px)">
+          <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+            <i class="fa-solid fa-credit-card text-cyan-300"></i>
+          </span>
+          <span class="text-[10px] font-bold text-white/80 tracking-wide uppercase">Cartões</span>
+        </button>
+        <button data-tab="7" onclick="event.stopPropagation();closeMaisSheet();switchTab(7)" class="mais-tab-btn flex flex-col items-center gap-2.5 rounded-[20px] border border-white/8 bg-white/5 py-4 transition-all active:scale-95" style="backdrop-filter:blur(12px)">
+          <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+            <i class="fa-solid fa-calendar-check text-violet-300"></i>
+          </span>
+          <span class="text-[10px] font-bold text-white/80 tracking-wide uppercase">Fluxo</span>
+        </button>
+        <button data-tab="8" onclick="event.stopPropagation();closeMaisSheet();switchTab(8)" class="mais-tab-btn flex flex-col items-center gap-2.5 rounded-[20px] border border-white/8 bg-white/5 py-4 transition-all active:scale-95" style="backdrop-filter:blur(12px)">
+          <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+            <i class="fa-solid fa-chart-line text-emerald-300"></i>
+          </span>
+          <span class="text-[10px] font-bold text-white/80 tracking-wide uppercase">Invest.</span>
+        </button>
+        <button data-tab="9" onclick="event.stopPropagation();closeMaisSheet();switchTab(9)" class="mais-tab-btn flex flex-col items-center gap-2.5 rounded-[20px] border border-white/8 bg-white/5 py-4 transition-all active:scale-95" style="backdrop-filter:blur(12px)">
+          <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+            <i class="fa-solid fa-globe text-fuchsia-300"></i>
+          </span>
+          <span class="text-[10px] font-bold text-white/80 tracking-wide uppercase">Mercado</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav fixed inset-x-0 bottom-0 z-40 lg:hidden" id="bottom-nav-bar">
+    <div class="bottom-nav-grid mx-auto max-w-4xl px-2">
+      <!-- Esquerda 1: Home -->
+      <button data-tab="0" class="bottom-nav-button">
+        <span class="bottom-nav-icon"><i class="fa-solid fa-house"></i></span>
+      </button>
+      <!-- Esquerda 2: Contas -->
+      <button data-tab="2" class="bottom-nav-button">
+        <span class="bottom-nav-icon"><i class="fa-solid fa-wallet"></i></span>
+      </button>
+      <!-- Centro: Botão + Nova Transação (flutuante) -->
+      <div class="bottom-nav-fab-wrapper">
+        <button id="bottom-nav-fab" class="bottom-nav-fab" onclick="document.getElementById('tx-add-btn')?.click()">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+      <!-- Direita 1: Metas -->
+      <button data-tab="4" class="bottom-nav-button">
+        <span class="bottom-nav-icon"><i class="fa-solid fa-bullseye"></i></span>
+      </button>
+      <!-- Direita 2: Mais -->
+      <button id="mais-btn" class="bottom-nav-button" onclick="openMaisSheet()">
+        <span class="bottom-nav-icon" style="position:relative">
+          <i class="fa-solid fa-ellipsis"></i>
+          <span id="mais-active-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-[#0a0d16]" style="background:#00f5ff"></span>
+        </span>
+      </button>
+    </div>
+  </nav>
+  </div>
+
+  <!-- ─── Transaction Modal (Add / Edit) ─── -->
+  <div id="tx-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.65);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-md rounded-[24px] border border-white/10 p-0 overflow-hidden shadow-2xl"
+         style="background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))">
+      <!-- Modal header -->
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <div class="flex items-center gap-3">
+          <h3 class="text-lg font-bold text-white tracking-tight" id="tx-modal-title">Nova Transação</h3>
+          <!-- Botão Smart OCR -->
+          <button id="tx-ocr-btn" title="Ler Comprovante (Inteligência Offline)" class="flex h-8 px-3 items-center gap-2 rounded-lg bg-emerald-400/10 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-400/20">
+            <i class="fa-solid fa-camera"></i> <span class="hidden sm:inline">Scanner Inteligente</span>
+          </button>
+          <input type="file" id="tx-ocr-input" accept="image/*" class="hidden" />
+        </div>
+        <button id="tx-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- ── Tipo: Abas Entrada / Saída (logo abaixo do cabeçalho) ── -->
+      <div class="px-6 pt-4 pb-0">
+        <div class="tx-type-tabs" id="tx-type-tabs">
+          <button type="button" class="tx-type-tab tx-type-tab--entrada" data-type="entrada" id="tx-tab-entrada">
+            <i class="fa-solid fa-arrow-down-to-line"></i> Entrada
+          </button>
+          <button type="button" class="tx-type-tab tx-type-tab--saida active" data-type="saida" id="tx-tab-saida">
+            <i class="fa-solid fa-arrow-up-from-line"></i> Saída
+          </button>
+        </div>
+        <!-- Hidden select mantido para compatibilidade com JS existente -->
+        <select id="tx-modal-type" class="hidden">
+          <option value="saida" selected>Saída</option>
+          <option value="entrada">Entrada</option>
+        </select>
+      </div>
+
+      <div class="px-6 py-5 flex flex-col gap-4" style="max-height:72vh;overflow-y:auto">
+        <!-- Date with date picker -->
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Data</label>
+          <div class="tx-date-wrapper">
+            <input id="tx-modal-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric"
+                   autocomplete="off"
+                   class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 w-full"/>
+            <button type="button" id="tx-date-picker-btn" class="tx-date-picker-btn" title="Abrir calendário">
+              <i class="fa-regular fa-calendar"></i>
+            </button>
+            <!-- Native date input hidden — drives the picker -->
+            <input type="date" id="tx-modal-date-native" class="tx-date-native" />
+          </div>
+        </div>
+        <!-- Description -->
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Descrição</label>
+          <input id="tx-modal-desc" type="text" placeholder="Ex: Supermercado Extra"
+                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
+        </div>
+        <!-- Category -->
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Categoria</label>
+          <select id="tx-modal-cat"
+                  class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
+                  style="background-color:rgba(255,255,255,.05)">
+            <!-- Populado dinamicamente por transactions-ui.js (inclui categorias customizadas) -->
+            <option value="Alimentação">Alimentação</option>
+          </select>
+        </div>
+        <!-- Value (full width, since type moved to tabs) -->
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Valor (R$)</label>
+          <input id="tx-modal-value" type="text" placeholder="0,00"
+                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
+        </div>
+
+        <!-- Payment method — shown only for Saída -->
+        <div id="tx-payment-section" class="flex flex-col gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Forma de pagamento</label>
+            <select id="tx-modal-payment"
+                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
+                    style="background-color:rgba(255,255,255,.05)">
+              <option value="" disabled selected>Selecione a forma de pagamento</option>
+              <option value="pix">Pix</option>
+              <option value="dinheiro">Dinheiro / Espécie</option>
+              <option value="cartao_credito">Cartão de crédito</option>
+              <option value="cartao_debito">Cartão de débito</option>
+              <option value="conta">Transferência / TED</option>
+              <option value="boleto">Boleto bancário</option>
+            </select>
+          </div>
+          <!-- Card selector — only shows when cartao is selected -->
+          <div id="tx-card-selector-row" class="hidden flex-col gap-1">
+            <label id="tx-card-selector-label" class="text-xs font-semibold uppercase tracking-widest text-white/40">Cartão de crédito</label>
+            <select id="tx-modal-card"
+                    class="rounded-2xl border border-cyan-400/25 bg-cyan-400/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
+                    style="background-color:rgba(0,245,255,.05)">
+              <option value="">Selecione um cartão...</option>
+            </select>
+            <p id="tx-card-hint" class="text-xs text-cyan-300/60 px-1"><i class="fa-solid fa-circle-info mr-1"></i>O lançamento será adicionado à fatura do cartão.</p>
+          </div>
+        </div>
+        <!-- Recurring toggle -->
+        <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-rotate text-violet-400/70"></i>
+            <div>
+              <p class="text-sm font-semibold text-white/80">Transação recorrente</p>
+              <p class="text-xs text-white/40">Lançada automaticamente todo mês</p>
+            </div>
+          </div>
+          <label class="relative cursor-pointer">
+            <input type="checkbox" id="tx-modal-recurring" class="sr-only peer">
+            <div class="w-11 h-6 rounded-full border border-white/15 bg-white/10 peer-checked:bg-gradient-to-r peer-checked:from-violet-500 peer-checked:to-cyan-500 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-5 after:h-5 after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <!-- Campo de parcelas -->
+        <div class="flex flex-col gap-1" id="tx-split-section">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Parcelas (opcional)</label>
+          <input id="tx-modal-split" type="number" min="1" max="24" placeholder="1 = à vista"
+                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
+          <p class="text-xs text-white/35 px-1"><i class="fa-solid fa-circle-info mr-1"></i>Para compras parceladas no cartão de crédito.</p>
+        </div>
+
+        <!-- ── Botão Mais detalhes / Menos detalhes ── -->
+        <div>
+          <button type="button" id="tx-more-details-btn" class="tx-more-details-btn">
+            Mais detalhes <span id="tx-more-details-arrow">›</span>
+          </button>
+          <!-- Área expansível -->
+          <div id="tx-more-details-area" class="tx-more-details-area">
+            <!-- Observações -->
+            <div class="flex flex-col gap-1 mt-4">
+              <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Observações</label>
+              <textarea id="tx-modal-notes" rows="3" placeholder="Informações adicionais sobre esta transação..."
+                        class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 resize-none"></textarea>
+            </div>
+            <!-- Anexos -->
+            <div class="flex flex-col gap-2 mt-3">
+              <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Anexos</label>
+              <label class="tx-file-upload-label" for="tx-modal-attachment">
+                <i class="fa-solid fa-paperclip text-cyan-400/70"></i>
+                <span id="tx-attachment-name" class="text-white/50 text-sm">Clique para anexar imagem ou PDF</span>
+              </label>
+              <input type="file" id="tx-modal-attachment" accept="image/*,.pdf" class="hidden"
+                     onchange="document.getElementById('tx-attachment-name').textContent = this.files[0]?.name || 'Clique para anexar imagem ou PDF'" />
+              <p class="text-xs text-white/30 px-1">Aceita: imagens (JPG, PNG, WEBP) e arquivos PDF.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error message -->
+        <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-1"></p>
+      </div>
+      <div class="px-6 pb-6 flex gap-3">
+        <button id="tx-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="tx-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90"
+                style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Delete Confirm Dialog ─── -->
+  <div id="tx-delete-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.65);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-sm rounded-[24px] border border-white/10 p-6 text-center shadow-2xl"
+         style="background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))">
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/15 border border-rose-400/20">
+        <i class="fa-solid fa-trash-can text-rose-400 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-1">Excluir transação?</h3>
+      <p class="text-sm text-white/50 mb-6">Esta ação não pode ser desfeita.</p>
+      <div class="flex gap-3">
+        <button id="tx-delete-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="tx-delete-confirm" class="flex-1 rounded-2xl border border-rose-400/30 bg-rose-500/15 px-4 py-3 text-sm font-bold text-rose-300 hover:bg-rose-500/25 transition-colors">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Budget Management Modal ─── -->
+  <div id="budget-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.7);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-lg rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,13,22,.98))">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <div>
+          <h3 class="text-lg font-bold text-white">Gerenciar Orçamentos</h3>
+          <p class="text-xs text-white/45 mt-1">Defina limites mensais por categoria</p>
+        </div>
+        <button id="budget-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="px-6 py-5 max-h-[60vh] overflow-y-auto space-y-3" id="budget-rows"></div>
+      <div class="px-6 pb-6 pt-3 border-t border-white/8 flex gap-3">
+        <button id="budget-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="budget-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar orçamentos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Goal Edit Modal ─── -->
+  <div id="goal-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.7);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,13,22,.98))">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <h3 class="text-lg font-bold text-white" id="goal-modal-title">Editar Meta</h3>
+        <button id="goal-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="px-6 py-5 flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Nome da meta</label>
+          <input id="goal-modal-name" type="text" placeholder="Ex: Mac Studio, Viagem..." class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Valor alvo (R$)</label>
+            <input id="goal-modal-total" type="text" placeholder="Ex: 15.000,00" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"/>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Guardado (R$)</label>
+            <input id="goal-modal-atual" type="text" placeholder="Ex: 500,00" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Prazo Limite</label>
+            <input id="goal-modal-deadline" type="date" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors" style="color-scheme: dark;"/>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Tema visual</label>
+            <select id="goal-modal-theme" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors" style="background-color:rgba(255,255,255,.05)">
+              <option value="auto">Automático</option>
+              <option value="game">Games / Console</option>
+              <option value="travel">Viagem</option>
+              <option value="home">Casa / Imóvel</option>
+              <option value="vehicle">Carro / Moto</option>
+              <option value="reserve">Reserva</option>
+              <option value="tech">Tecnologia</option>
+              <option value="education">Educação</option>
+              <option value="celebration">Celebração</option>
+              <option value="bike">Bike / Mobilidade</option>
+            </select>
+          </div>
+        </div>
+        <p id="goal-modal-error" class="hidden text-xs text-rose-400 font-semibold px-1"></p>
+      </div>
+      <div class="px-6 pb-6 flex gap-3">
+        <button id="goal-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="goal-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Goal Delete Confirm ─── -->
+  <div id="goal-delete-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.7);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-sm rounded-[24px] border border-white/10 p-6 text-center shadow-2xl"
+         style="background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,13,22,.98))">
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/15 border border-rose-400/20">
+        <i class="fa-solid fa-bullseye text-rose-400 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-1">Excluir meta?</h3>
+      <p class="text-sm text-white/50 mb-6">Esta ação não pode ser desfeita.</p>
+      <div class="flex gap-3">
+        <button id="goal-delete-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="goal-delete-confirm" class="flex-1 rounded-2xl border border-rose-400/30 bg-rose-500/15 px-4 py-3 text-sm font-bold text-rose-300 hover:bg-rose-500/25 transition-colors">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── AI API Key Settings Modal ─── -->
+  <div id="ai-settings-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.7);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,13,22,.98))">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <div>
+          <h3 class="text-lg font-bold text-white">Chat com IA real</h3>
+          <p class="text-xs text-white/45 mt-1">Conecte sua chave Anthropic para respostas inteligentes</p>
+        </div>
+        <button id="ai-settings-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="px-6 py-5 flex flex-col gap-4">
+        <div class="rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 text-sm text-white/70">
+          <i class="fa-solid fa-shield-halved text-cyan-400 mr-2"></i>
+          Sua chave fica salva apenas neste dispositivo (localStorage). Nunca enviamos para servidores externos.
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Chave API Anthropic</label>
+          <input id="ai-api-key-input" type="password" placeholder="sk-ant-..." 
+                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors placeholder:text-white/25 font-mono"/>
+        </div>
+        <div class="flex items-center justify-between rounded-2xl border border-white/8 bg-white/4 px-4 py-3">
+          <div>
+            <span class="text-sm font-medium text-white/70">Status da IA</span>
+            <p class="text-xs text-white/35 mt-0.5">Gemini: chave começa com AIza • Claude: sk-ant-</p>
+          </div>
+          <span id="ai-status-badge" class="pill">Sem chave</span>
+        </div>
+        <button id="ai-test-btn" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors text-left">
+          <i class="fa-solid fa-flask-vial text-cyan-400 mr-2"></i>Testar conexão com a IA
+        </button>
+        <p id="ai-test-diag" class="hidden text-xs text-rose-400 px-1 leading-relaxed"></p>
+        <p class="text-xs text-white/40 leading-relaxed">
+          <strong class="text-emerald-300">Gemini (gratuito):</strong> Chave em <span class="text-cyan-300">aistudio.google.com</span> — começa com <code class="text-white/60">AIza</code><br>
+          <strong class="text-violet-300">Claude (pago):</strong> <span class="text-cyan-300">console.anthropic.com</span> — começa com <code class="text-white/60">sk-ant-</code><br>
+          <span class="text-amber-300/70">⚠️ Se der erro 429:</span> aguarde 1 min ou crie uma nova chave em aistudio.google.com
+        </p>
+      </div>
+      <div class="px-6 pb-6 flex gap-3">
+        <button id="ai-settings-clear" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Remover chave</button>
+        <button id="ai-settings-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar e ativar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Card Add/Edit Modal ═══ -->
+  <div id="card-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:#0f1829">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <h3 class="text-lg font-bold text-white" id="card-modal-title">Novo Cartão</h3>
+        <button id="card-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-6 py-5 flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-widest text-white/40">Nome do cartão</label>
+          <input id="card-modal-name" type="text" placeholder="Ex: Nubank Roxinho" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors placeholder:text-white/25"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Tipo do cartão</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 cursor-pointer transition-all has-[:checked]:border-cyan-400/40 has-[:checked]:bg-cyan-400/8">
+                <input type="radio" name="card-modal-type" id="card-type-credito" value="credito" checked class="accent-cyan-400"/>
+                <div>
+                  <p class="text-sm font-bold text-white">Crédito</p>
+                  <p class="text-xs text-white/40">Fatura mensal</p>
+                </div>
+              </label>
+              <label class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 cursor-pointer transition-all has-[:checked]:border-emerald-400/40 has-[:checked]:bg-emerald-400/8">
+                <input type="radio" name="card-modal-type" id="card-type-debito" value="debito" class="accent-emerald-400"/>
+                <div>
+                  <p class="text-sm font-bold text-white">Débito</p>
+                  <p class="text-xs text-white/40">Débito imediato</p>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-bold uppercase tracking-widest text-white/40">Bandeira</label>
+              <select id="card-modal-flag" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+                <option value="visa">Visa</option>
+                <option value="mastercard">Mastercard</option>
+                <option value="elo">Elo</option>
+                <option value="amex">Amex</option>
+                <option value="hipercard">Hipercard</option>
+              </select>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-bold uppercase tracking-widest text-white/40">Cor</label>
+              <input id="card-modal-color" type="color" value="#7c3aed" class="w-full h-[46px] rounded-2xl border border-white/10 bg-white/5 cursor-pointer"/>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label id="card-modal-limit-label" class="text-xs font-bold uppercase tracking-widest text-white/40">Limite (R$)</label>
+          <input id="card-modal-limit" type="text" placeholder="5.000,00" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors placeholder:text-white/25"/>
+        </div>
+        <div id="card-closing-due-row" class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Fechamento (dia)</label>
+            <input id="card-modal-closing" type="number" min="1" max="28" placeholder="15" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"/>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Vencimento (dia)</label>
+            <input id="card-modal-due" type="number" min="1" max="28" placeholder="22" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"/>
+          </div>
+        </div>
+        <p id="card-modal-error" class="hidden text-xs text-rose-400 font-semibold"></p>
+      </div>
+      <div class="px-6 pb-6 flex gap-3">
+        <button id="card-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="card-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Card Transaction Modal ═══ -->
+  <div id="card-tx-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:#0f1829">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <h3 class="text-lg font-bold text-white">Lançar no Cartão</h3>
+        <button id="card-tx-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-6 py-5 flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-widest text-white/40">Descrição</label>
+          <input id="card-tx-desc" type="text" placeholder="Ex: Supermercado" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors placeholder:text-white/25"/>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-widest text-white/40">Categoria</label>
+          <select id="card-tx-cat" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+            <option>Alimentação</option><option>Assinaturas</option><option>Lazer</option>
+            <option>Moradia</option><option>Saúde</option><option>Transporte</option><option>Rotina</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Valor (R$)</label>
+            <input id="card-tx-value" type="text" placeholder="150,00" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors placeholder:text-white/25"/>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Parcelas</label>
+            <select id="card-tx-installments" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+              <option value="1">À vista</option><option value="2">2x</option><option value="3">3x</option>
+              <option value="4">4x</option><option value="6">6x</option><option value="10">10x</option>
+              <option value="12">12x</option>
+            </select>
+          </div>
+        </div>
+        <p id="card-tx-error" class="hidden text-xs text-rose-400 font-semibold"></p>
+      </div>
+      <div class="px-6 pb-6 flex gap-3">
+        <button id="card-tx-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="card-tx-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Lançar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Investment Add/Edit Modal ═══ -->
+  <div id="inv-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:#0f1829">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <h3 class="text-lg font-bold text-white" id="inv-modal-title">Novo Ativo</h3>
+        <button id="inv-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-6 py-5 flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase tracking-widest text-white/40">Nome / Ticker</label>
+          <input id="inv-modal-name" type="text" placeholder="Ex: ITSA4, Tesouro Selic" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors placeholder:text-white/25"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Tipo</label>
+            <select id="inv-modal-type" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+              <option value="renda_fixa">Renda Fixa</option>
+              <option value="renda_variavel">Renda Variável</option>
+              <option value="cripto">Cripto</option>
+              <option value="exterior">Internacional</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Subtipo</label>
+            <select id="inv-modal-subtype" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+              <option value="tesouro">Tesouro Direto</option>
+              <option value="cdb">CDB</option>
+              <option value="lci_lca">LCI/LCA</option>
+              <option value="acao">Ação</option>
+              <option value="fii">FII</option>
+              <option value="etf">ETF</option>
+              <option value="btc">Bitcoin</option>
+              <option value="outro_cripto">Outra cripto</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Valor atual (R$)</label>
+            <input id="inv-modal-value" type="text" placeholder="10.000,00" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors placeholder:text-white/25"/>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Custo total (R$)</label>
+            <input id="inv-modal-cost" type="text" placeholder="9.000,00" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors placeholder:text-white/25"/>
+          </div>
+        </div>
+        <p id="inv-modal-error" class="hidden text-xs text-rose-400 font-semibold"></p>
+      </div>
+      <div class="px-6 pb-6 flex gap-3">
+        <button id="inv-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="inv-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Fixed Expenses Manager Modal ═══ -->
+  <div id="fixed-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
+    <div class="w-full max-w-lg rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:#0f1829">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <div>
+          <h3 class="text-lg font-bold text-white">Custos & Receitas Fixas</h3>
+          <p class="text-xs text-white/40 mt-1">Salário, aluguel, assinaturas — tudo que é recorrente</p>
+        </div>
+        <button id="fixed-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-6 py-4 max-h-[55vh] overflow-y-auto space-y-2" id="fixed-modal-rows"></div>
+      <div class="px-6 py-3 border-t border-white/8">
+        <button id="fixed-add-row-btn" class="w-full rounded-2xl border border-dashed border-white/20 bg-white/3 px-4 py-3 text-sm font-semibold text-white/50 hover:bg-white/8 hover:text-white/80 transition-colors">
+          <i class="fa-solid fa-plus mr-2 text-cyan-400"></i>Adicionar item
+        </button>
+      </div>
+      <div class="px-6 pb-6 pt-2 flex gap-3">
+        <button id="fixed-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
+        <button id="fixed-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="fixed bottom-24 right-4 z-50 flex w-[min(92vw,420px)] flex-col gap-3 lg:bottom-5 lg:right-5" aria-live="polite" aria-atomic="false"></div>
+  <!-- Módulos ES6 (migração incremental) -->
+  <script type="module" src="./js/app.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       NOVOS COMPONENTES — inline script (não-módulo para acesso global)
+       ═══════════════════════════════════════════════════════════════ -->
+  <script>
+  /* ────────────────────────────────────────────────────────────────
+     1. MODAL — Tipo Abas (Entrada / Saída)
+     ──────────────────────────────────────────────────────────────── */
+  (function initTxTypeTabs() {
+    function setup() {
+      const tabEntrada = document.getElementById('tx-tab-entrada');
+      const tabSaida   = document.getElementById('tx-tab-saida');
+      const selType    = document.getElementById('tx-modal-type');
+      const paySection = document.getElementById('tx-payment-section');
+
+      if (!tabEntrada || !tabSaida || !selType) return;
+
+      function setType(type) {
+        selType.value = type;
+        // Sincroniza aparência das abas
+        tabEntrada.classList.toggle('active', type === 'entrada');
+        tabSaida.classList.toggle('active',   type === 'saida');
+        // Mostra/oculta seção de pagamento (só para saída)
+        if (paySection) {
+          paySection.style.display = type === 'saida' ? '' : 'none';
+        }
+        // Dispara evento change para que o JS existente reaja
+        selType.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      tabEntrada.addEventListener('click', () => setType('entrada'));
+      tabSaida.addEventListener('click',   () => setType('saida'));
+
+      // Observa mudanças externas no select (ex: ao abrir modal de edição)
+      selType.addEventListener('change', () => {
+        const v = selType.value;
+        tabEntrada.classList.toggle('active', v === 'entrada');
+        tabSaida.classList.toggle('active',   v === 'saida');
+      });
+
+      // Estado inicial
+      setType(selType.value || 'saida');
+    }
+
+    // O modal pode não estar no DOM ainda na carga; usar MutationObserver
+    if (document.getElementById('tx-tab-entrada')) {
+      setup();
+    } else {
+      const obs = new MutationObserver(() => {
+        if (document.getElementById('tx-tab-entrada')) { obs.disconnect(); setup(); }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    }
+  })();
+
+  /* ────────────────────────────────────────────────────────────────
+     2. MODAL — Date Picker (calendar button → native input)
+     ──────────────────────────────────────────────────────────────── */
+  (function initDatePicker() {
+    function setup() {
+      const btn    = document.getElementById('tx-date-picker-btn');
+      const native = document.getElementById('tx-modal-date-native');
+      const text   = document.getElementById('tx-modal-date');
+      if (!btn || !native || !text) return;
+
+      // Abrir o picker nativo ao clicar no ícone
+      btn.addEventListener('click', () => {
+        native.showPicker ? native.showPicker() : native.click();
+      });
+
+      // Quando o picker nativo muda, formata DD/MM/AAAA no campo de texto
+      native.addEventListener('change', () => {
+        if (!native.value) return;
+        const [y, m, d] = native.value.split('-');
+        text.value = `${d}/${m}/${y}`;
+        // Mantém sincronia reversa caso o JS existente leia o campo texto
+        text.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+
+      // Sincronia reversa: ao digitar manualmente no campo texto,
+      // atualiza o input nativo (para consistência visual)
+      text.addEventListener('input', () => {
+        const parts = text.value.split('/');
+        if (parts.length === 3 && parts[2].length === 4) {
+          const iso = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+          native.value = iso;
+        }
+      });
+    }
+
+    if (document.getElementById('tx-date-picker-btn')) {
+      setup();
+    } else {
+      const obs = new MutationObserver(() => {
+        if (document.getElementById('tx-date-picker-btn')) { obs.disconnect(); setup(); }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    }
+  })();
+
+  /* ────────────────────────────────────────────────────────────────
+     3. MODAL — "Mais detalhes / Menos detalhes"
+     ──────────────────────────────────────────────────────────────── */
+  (function initMoreDetails() {
+    function setup() {
+      const btn   = document.getElementById('tx-more-details-btn');
+      const area  = document.getElementById('tx-more-details-area');
+      const arrow = document.getElementById('tx-more-details-arrow');
+      if (!btn || !area) return;
+
+      let open = false;
+      btn.addEventListener('click', () => {
+        open = !open;
+        area.classList.toggle('open', open);
+        if (arrow) arrow.textContent = open ? '∧' : '›';
+        btn.textContent = '';
+        if (arrow) btn.appendChild(arrow);
+        btn.insertAdjacentText('afterbegin', open ? 'Menos detalhes ' : 'Mais detalhes ');
+      });
+    }
+
+    if (document.getElementById('tx-more-details-btn')) {
+      setup();
+    } else {
+      const obs = new MutationObserver(() => {
+        if (document.getElementById('tx-more-details-btn')) { obs.disconnect(); setup(); }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    }
+  })();
+
+  /* ────────────────────────────────────────────────────────────────
+     4. CALENDÁRIO FINANCEIRO — Home Tab
+     ──────────────────────────────────────────────────────────────── */
+  (function initFinancialCalendar() {
+
+    /* ── [FIX] Lê transações reais do state da aplicação ── */
+    function getRealTransactions() {
+      return (window.appState && Array.isArray(window.appState.transactions))
+        ? window.appState.transactions
+        : [];
+    }
+
+    /* ── Agrupa transações por data (YYYY-MM-DD) ── */
+    /* Transações no state usam formato "DD/MM/YYYY" → convertemos aqui */
+    function buildDayMap(transactions) {
+      const map = {};
+      transactions.forEach(tx => {
+        if (!tx.date) return;
+        let key = tx.date;
+        // Converte "DD/MM/YYYY" → "YYYY-MM-DD"
+        if (tx.date.includes('/')) {
+          const parts = tx.date.split('/');
+          if (parts.length === 3) key = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        if (!map[key]) map[key] = { entrada: 0, saida: 0 };
+        const v = Math.abs(tx.value ?? tx.amount ?? tx.valor ?? 0);
+        const isIncome = tx.value > 0 || tx.tipo === 'entrada';
+        if (isIncome) map[key].entrada += v;
+        else           map[key].saida  += v;
+      });
+      return map;
+    }
+
+    /* ── Formata moeda compacta (R$ 1.200 → "1,2k") ── */
+    function fmtCompact(val) {
+      if (val >= 1000) return 'R$ ' + (val/1000).toFixed(1).replace('.',',') + 'k';
+      return 'R$ ' + val.toFixed(2).replace('.',',');
+    }
+
+    /* ── Renderiza o grid do calendário ── */
+    function renderCalendar(year, month) {
+      const grid  = document.getElementById('fin-cal-grid');
+      const label = document.getElementById('fin-cal-month-label');
+      if (!grid || !label) return;
+
+      const today = new Date();
+      const firstDay = new Date(year, month, 1);
+      const lastDay  = new Date(year, month + 1, 0);
+      const startDow = firstDay.getDay(); // 0 = Dom
+      const daysInMonth = lastDay.getDate();
+
+      // Rótulo
+      const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      label.textContent = `${monthNames[month]} ${year}`;
+
+      // [FIX] Usa transações reais do state em vez de dados mock
+      const dayMap = buildDayMap(getRealTransactions());
+
+      grid.innerHTML = '';
+
+      // Dias do mês anterior (fill start)
+      const prevLastDay = new Date(year, month, 0).getDate();
+      for (let i = startDow - 1; i >= 0; i--) {
+        const d = prevLastDay - i;
+        const cell = document.createElement('div');
+        cell.className = 'fin-cal-day other-month';
+        cell.innerHTML = `<span class="fin-cal-day-num">${d}</span>`;
+        grid.appendChild(cell);
+      }
+
+      // Dias do mês atual
+      for (let d = 1; d <= daysInMonth; d++) {
+        const mm = String(month + 1).padStart(2, '0');
+        const dd = String(d).padStart(2, '0');
+        const key = `${year}-${mm}-${dd}`;
+        const isToday = (d === today.getDate() && month === today.getMonth() && year === today.getFullYear());
+
+        const cell = document.createElement('div');
+        cell.className = 'fin-cal-day' + (isToday ? ' today' : '');
+
+        let html = `<span class="fin-cal-day-num">${d}</span>`;
+
+        if (dayMap[key]) {
+          const { entrada, saida } = dayMap[key];
+          if (entrada > 0) {
+            html += `<span class="fin-cal-tag fin-cal-tag--in">+${fmtCompact(entrada)}</span>`;
+          }
+          if (saida > 0) {
+            html += `<span class="fin-cal-tag fin-cal-tag--out">-${fmtCompact(saida)}</span>`;
+          }
+        }
+
+        cell.innerHTML = html;
+        grid.appendChild(cell);
+      }
+
+      // Dias do próximo mês (fill end — até completar 6 linhas se necessário)
+      const totalCells = grid.children.length;
+      const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+      for (let d = 1; d <= remaining; d++) {
+        const cell = document.createElement('div');
+        cell.className = 'fin-cal-day other-month';
+        cell.innerHTML = `<span class="fin-cal-day-num">${d}</span>`;
+        grid.appendChild(cell);
+      }
+    }
+
+    /* ── Estado e event listeners ── */
+    function setup() {
+      const prevBtn = document.getElementById('fin-cal-prev');
+      const nextBtn = document.getElementById('fin-cal-next');
+      if (!prevBtn || !nextBtn) return;
+
+      const now = new Date();
+      let curYear  = now.getFullYear();
+      let curMonth = now.getMonth();
+
+      renderCalendar(curYear, curMonth);
+
+      // [FIX] Expõe a função para que o renderAll do app refresque o calendário
+      // ao salvar/editar transações sem precisar navegar de aba
+      window.finCalRender = () => renderCalendar(curYear, curMonth);
+
+      prevBtn.addEventListener('click', () => {
+        curMonth--;
+        if (curMonth < 0) { curMonth = 11; curYear--; }
+        renderCalendar(curYear, curMonth);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        curMonth++;
+        if (curMonth > 11) { curMonth = 0; curYear++; }
+        renderCalendar(curYear, curMonth);
+      });
+    }
+
+    if (document.getElementById('fin-cal-grid')) {
+      setup();
+    } else {
+      const obs = new MutationObserver(() => {
+        if (document.getElementById('fin-cal-grid')) { obs.disconnect(); setup(); }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    }
+
+  })();
+  </script>
+
+</body>
+</html>
