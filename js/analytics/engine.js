@@ -74,7 +74,10 @@ export function getReferenceDate(state) {
 // ── Meta helpers ──────────────────────────────────────────────────────────────
 
 export function getGoalProgress(goal) {
-  return clamp(Math.round((goal.atual / goal.total) * 100), 0, 100);
+  const atual = Number(goal.atual ?? goal.current ?? 0);
+  const total = Number(goal.total ?? goal.target ?? 0);
+  if (!total) return 0;
+  return clamp(Math.round((atual / total) * 100), 0, 100);
 }
 
 export function getMonthlyNeed(goal, refDate = new Date()) {

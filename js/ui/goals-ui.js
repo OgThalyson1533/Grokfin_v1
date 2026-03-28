@@ -102,6 +102,13 @@ export function renderGoals(analytics) {
 
   goalsContainer.innerHTML = state.goals.length
     ? state.goals.map(goal => {
+        // Normalise field names (support both local keys and Supabase-mapped keys)
+        goal = {
+          ...goal,
+          nome: goal.nome ?? goal.name ?? 'Meta',
+          atual: Number(goal.atual ?? goal.current ?? 0),
+          total: Number(goal.total ?? goal.target ?? 0),
+        };
         const progress = getGoalProgress(goal);
         const monthlyNeed = getMonthlyNeed(goal);
         const remaining = Math.max(0, goal.total - goal.atual);

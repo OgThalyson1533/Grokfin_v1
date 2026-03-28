@@ -383,11 +383,13 @@ export function bindDashboardEvents() {
 export function renderHomeHeader() {
   const profile = state.profile || {};
   const name = profile.displayName || profile.nickname || 'Usuário';
-  const initials = name.trim().split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase() || 'GF';
 
   const el = id => document.getElementById(id);
-  if (el('home-display-name')) el('home-display-name').textContent = name.split(' ')[0];
-  if (el('home-avatar-initials')) el('home-avatar-initials').textContent = initials;
+  // Nome no header (aparece em 2 lugares)
+  ['home-display-name'].forEach(id => { if (el(id)) el(id).textContent = name.split(' ')[0]; });
+  // Avatar no header
+  const headerAvatar = el('header-avatar-img');
+  if (headerAvatar && profile.avatarImage) headerAvatar.src = profile.avatarImage;
 }
 
 /** Renderiza rings de metas no home */
@@ -407,33 +409,38 @@ export function renderHomeGoals() {
     return;
   }
 
-  const CIRCUMFERENCE = 2 * Math.PI * 26; // r=26
-  const icons = ['fa-bag-shopping','fa-house','fa-car-side','fa-utensils','fa-heart-pulse','fa-bullseye','fa-seedling','fa-plane'];
+  const R = 28, C = 2 * Math.PI * R; // circumference
 
-  container.innerHTML = goals.slice(0, 8).map((g, i) => {
-    const pct = Math.min(100, g.target > 0 ? Math.round((g.current / g.target) * 100) : 0);
-    const offset = CIRCUMFERENCE * (1 - pct / 100);
-    const color = pct >= 80 ? '#00ff85' : pct >= 40 ? '#00f5ff' : '#a855f7';
-    const icon = icons[i % icons.length];
-    const shortName = (g.name || 'Meta').slice(0, 8);
+  container.innerHTML = goals.slice(0, 8).map((g) => {
+    const nome = g.nome || g.name || 'Meta';
+    const atual = Number(g.atual ?? g.current ?? 0);
+    const total = Number(g.total ?? g.target ?? 0);
+    const pct   = total > 0 ? Math.min(100, Math.round((atual / total) * 100)) : 0;
+    const offset = C * (1 - pct / 100);
+    const color  = pct >= 80 ? '#00ff85' : pct >= 40 ? '#00f5ff' : '#a855f7';
+    const shortName = nome.slice(0, 10);
+
+    // Try to show goal image as ring background thumbnail
+    const imgUrl = g.customImage || g.img || '';
+    const innerContent = imgUrl
+      ? `<div class="absolute inset-[5px] rounded-full bg-cover bg-center opacity-60" style="background-image:url('${imgUrl}')"></div>`
+      : `<i class="fa-solid fa-bullseye text-white/30 text-sm"></i>`;
 
     return `
-      <div class="flex flex-col items-center gap-1.5 cursor-pointer" onclick="switchTab(4)" title="${escapeHtml(g.name||'Meta')} — ${pct}%">
-        <div class="relative w-16 h-16">
-          <svg width="64" height="64" viewBox="0 0 64 64" class="absolute inset-0 -rotate-90">
-            <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>
-            <circle cx="32" cy="32" r="26" fill="none" stroke="${color}" stroke-width="3"
-              stroke-dasharray="${CIRCUMFERENCE.toFixed(1)}"
-              stroke-dashoffset="${offset.toFixed(1)}"
-              stroke-linecap="round"
-              style="filter:drop-shadow(0 0 4px ${color}88)"/>
+      <div class="flex flex-col items-center gap-1.5 cursor-pointer shrink-0" onclick="switchTab(4)" title="${escapeHtml(nome)} — ${pct}%">
+        <div class="relative w-[68px] h-[68px]">
+          <svg width="68" height="68" viewBox="0 0 68 68" style="position:absolute;inset:0;transform:rotate(-90deg)">
+            <circle cx="34" cy="34" r="${R}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3.5"/>
+            <circle cx="34" cy="34" r="${R}" fill="none" stroke="${color}" stroke-width="3.5"
+              stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+              stroke-linecap="round"/>
           </svg>
           <div class="absolute inset-0 flex items-center justify-center">
-            <i class="fa-solid ${icon} text-white/60 text-sm"></i>
+            ${innerContent}
           </div>
+          <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none" style="background:${color}22;color:${color};border:1px solid ${color}44">${pct}%</div>
         </div>
-        <p class="text-[9px] font-semibold text-white/50 text-center truncate w-16">${escapeHtml(shortName)}</p>
-        <p class="text-[9px] font-bold text-center" style="color:${color}">${pct}%</p>
+        <p class="text-[9px] font-semibold text-white/45 text-center truncate w-[68px] mt-1">${escapeHtml(shortName)}</p>
       </div>`;
   }).join('');
 }
@@ -538,9 +545,31 @@ export function renderHomeTopGastos(analytics) {
 /** Renderiza todos os widgets do novo home */
 export function renderHomeWidgets(analytics) {
   renderHomeHeader();
-  // burn diário no subtitle
-  const burnEl = document.getElementById('home-burn-daily');
-  if (burnEl) burnEl.textContent = formatMoney(analytics.burnDaily || 0);
+
+  const el = id => document.getElementById(id);
+
+  // Burn diário
+  if (el('home-burn-daily')) el('home-burn-daily').textContent = formatMoney(analytics.burnDaily || 0);
+
+  // Net chip
+  const netChip = el('home-net-chip');
+  if (netChip) {
+    const net = analytics.net || 0;
+    netChip.className = `inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border ${net >= 0 ? 'border-emerald-400/20 bg-emerald-400/8 text-emerald-300' : 'border-rose-400/20 bg-rose-400/8 text-rose-300'}`;
+    netChip.innerHTML = `<i class="fa-solid ${net >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'} text-[10px]"></i> ${net >= 0 ? '+' : ''}${formatMoneyShort(net)}`;
+  }
+
+  // Score / runway / saving — desktop e mobile (ids diferentes)
+  const score = analytics.healthScore ?? '--';
+  const caption = getHealthCaption(analytics.healthScore || 0);
+  const runway = analytics.runwayMonths != null ? `${formatNumber(analytics.runwayMonths, 1)} m` : '--';
+  const saving = analytics.savingRate != null ? `${formatNumber(analytics.savingRate, 0)}%` : '0%';
+
+  ['home-health-score', 'home-health-score-m'].forEach(id => { if (el(id)) el(id).textContent = score; });
+  if (el('home-health-caption')) el('home-health-caption').textContent = caption;
+  ['home-runway', 'home-runway-m'].forEach(id => { if (el(id)) el(id).textContent = runway; });
+  ['home-saving', 'home-saving-m'].forEach(id => { if (el(id)) el(id).textContent = saving; });
+
   renderHomeGoals();
   renderHomeAIInsight(analytics);
   renderHomeUpcoming();

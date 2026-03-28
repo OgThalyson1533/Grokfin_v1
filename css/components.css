@@ -452,41 +452,79 @@
   .fin-cal-tag { font-size: .52rem; }
 }
 
-/* ══════════════════════════════════════════════════════════
-   NOVO HOME — estilos mobile-first
-══════════════════════════════════════════════════════════ */
 
-/* Aba home: padding lateral uniforme no mobile */
-#tab-0 {
-  padding: 1rem 1rem 6rem;
+/* ═══════════════════════════════════════════════════════════
+   HOME — grid responsivo mobile-first
+═══════════════════════════════════════════════════════════ */
+
+/* Tab-0 padding */
+#tab-0 { padding-bottom: 5rem; }
+
+/* scrollbar oculta nos carousels */
+#home-goals-rings,
+#home-upcoming-cards {
+  scrollbar-width: none;
 }
-
-/* Goals rings: scroll horizontal sem barra */
 #home-goals-rings::-webkit-scrollbar,
-.overflow-x-auto::-webkit-scrollbar {
-  display: none;
+#home-upcoming-cards::-webkit-scrollbar { display: none; }
+
+/* Grid mobile: empilhado em col única */
+.home-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-/* Card de análise IA */
-#tab-0 .ai-card-glow {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(0,245,255,.04), rgba(168,85,247,.04));
-  border-radius: inherit;
-  pointer-events: none;
+/* Desktop: grid de 2 colunas com áreas nomeadas */
+@media (min-width: 1024px) {
+  .home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 1.25rem;
+    grid-template-areas:
+      "colA colB"
+      "colC colD"
+      "colE colE";
+  }
+  .home-col-a { grid-area: colA; }
+  .home-col-b { grid-area: colB; }
+  .home-col-c { grid-area: colC; }
+  .home-col-d { grid-area: colD; }
+  .home-col-e { grid-area: colE; }
 }
 
-/* Upcoming cards — animação sutil de entrada */
+/* Wide desktop: 3 colunas */
+@media (min-width: 1440px) {
+  .home-grid {
+    grid-template-columns: 1.1fr 1fr 1fr;
+    grid-template-areas:
+      "colA colB colB"
+      "colC colC colD"
+      "colE colE colE";
+  }
+}
+
+/* Balance card glow */
+.home-balance-card {
+  background: linear-gradient(135deg, rgba(0,245,255,.04), rgba(0,0,0,.2));
+}
+
+/* Goal ring animations */
+.home-col-b #home-goals-rings > * {
+  animation: fadeUp 0.3s ease both;
+}
+.home-col-b #home-goals-rings > *:nth-child(2) { animation-delay: .05s; }
+.home-col-b #home-goals-rings > *:nth-child(3) { animation-delay: .1s; }
+.home-col-b #home-goals-rings > *:nth-child(4) { animation-delay: .15s; }
+.home-col-b #home-goals-rings > *:nth-child(5) { animation-delay: .2s; }
+
+/* Upcoming cards */
 #home-upcoming-cards > * {
   animation: slideInRight .25s ease both;
 }
 
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(12px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-/* Top gastos grid */
+/* Top gastos */
 #home-top-gastos > * {
   animation: fadeUp .3s ease both;
 }
@@ -495,12 +533,7 @@
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* Responsive: no desktop, aplica layout 2 colunas no home */
-@media (min-width: 768px) {
-  #tab-0 {
-    padding: 1.5rem 2rem 4rem;
-    max-width: 600px;
-    margin: 0 auto;
-  }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
 }

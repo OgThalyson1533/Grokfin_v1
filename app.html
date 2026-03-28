@@ -113,34 +113,32 @@
     </aside>
 
     <main class="min-w-0 lg:pl-[6.5rem]">
-      <header class="sticky top-0 z-20 px-4 pt-4 sm:px-6 lg:px-8 lg:pt-6">
-        <div class="glass-panel rounded-2xl px-4 py-4 sm:px-6">
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-3">
-              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-lg font-black text-black shadow-brand lg:hidden">G</div>
-              <div class="min-w-[180px] flex-1">
-                <p class="text-[11px] font-semibold uppercase tracking-[.22em] text-white/35">Painel autônomo</p>
-                <div class="mt-1 flex flex-wrap items-center gap-3">
-                  <h2 class="text-lg font-semibold text-white">GrokFin Elite v6</h2>
-                  <span id="current-view-chip" class="pill"><i class="fa-solid fa-house text-cyan-300"></i> Home</span>
-                  <span class="hidden md:inline-flex pill"><i class="fa-solid fa-shield-halved text-cyan-300"></i> estado salvo localmente</span>
-                </div>
+      <header class="sticky top-0 z-20 px-4 pt-3 sm:px-6 lg:px-8 lg:pt-4">
+        <div class="glass-panel rounded-2xl px-4 py-3 sm:px-5">
+          <div class="flex items-center gap-3">
+            <!-- Logo mobile -->
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-base font-black text-black shadow-brand lg:hidden">G</div>
+            <!-- Saudação + nome (topo, substituiu a busca) -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span id="current-view-chip" class="pill text-xs"><i class="fa-solid fa-house text-cyan-300"></i> Home</span>
+                <span class="hidden sm:inline-flex pill text-xs"><i class="fa-solid fa-shield-halved text-cyan-300/70"></i> <span class="text-white/50">salvo localmente</span></span>
+              </div>
+              <div class="mt-0.5 flex items-center gap-2">
+                <p class="text-sm font-semibold text-white/80">Olá, <span id="home-display-name" class="text-white font-bold">Usuário</span></p>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,.8)]"></span>
               </div>
             </div>
-
-            <label class="order-3 flex min-w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 md:order-none md:min-w-[320px] md:flex-1 md:max-w-xl">
-              <i class="fa-solid fa-magnifying-glass text-white/35"></i>
-              <input id="global-search" type="text" placeholder="Busque transações, metas ou mande um comando..." class="w-full bg-transparent outline-none placeholder:text-white/28">
-            </label>
-
-            <div class="hidden items-center gap-3 xl:flex">
-              <span class="pill"><i class="fa-regular fa-clock text-cyan-300"></i> <span id="header-ref-date">--</span></span>
-              <span class="pill"><i class="fa-solid fa-keyboard text-violet-300"></i> / para buscar</span>
-            </div>
-
-            <button id="refresh-btn" class="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-300 via-sky-300 to-emerald-300 px-5 py-3 font-bold text-black shadow-brand transition-transform hover:scale-[1.02]">
-              <i class="fa-solid fa-rotate"></i> Atualizar
+            <!-- Data de referência (desktop) -->
+            <span class="hidden xl:inline-flex pill text-xs shrink-0"><i class="fa-regular fa-clock text-cyan-300"></i> <span id="header-ref-date">--</span></span>
+            <!-- Avatar / perfil -->
+            <button onclick="switchTab(5)" title="Perfil"
+                    class="shrink-0 w-9 h-9 rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/30 transition-colors">
+              <img id="header-avatar-img" data-profile-image="avatar" alt="Avatar" class="w-full h-full object-cover">
             </button>
+            <!-- hidden legacy ids -->
+            <span class="hidden" id="refresh-btn"></span>
+            <input class="hidden" id="global-search" type="text">
           </div>
         </div>
       </header>
@@ -148,176 +146,188 @@
       <section class="px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-14">
         <div id="tab-0" class="tab-panel active">
 
-<!-- ══════════════════════════════════════════════════════
-     HOME — Layout inspirado no design de referência
-══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+     HOME — responsive: mobile-first + desktop grid
+══════════════════════════════════════════ -->
 
-<!-- Saudação + Saldo -->
-<div class="px-1 pt-2 pb-4">
-  <!-- Header saudação -->
-  <div class="flex items-center justify-between mb-5">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-black"
-           style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
-        <span id="home-avatar-initials">GF</span>
-      </div>
-      <div>
-        <p class="text-xs text-white/40 leading-none">Olá,</p>
-        <p class="text-sm font-bold text-white leading-tight" id="home-display-name">Usuário</p>
+<!-- MOBILE layout (< lg) + DESKTOP col-left (lg+) via grid -->
+<div class="home-grid">
+
+  <!-- ─── Col A: Saldo + Entradas/Saídas ─────── -->
+  <div class="home-col-a">
+    <!-- Saldo principal -->
+    <div class="rounded-3xl border border-white/8 bg-white/4 p-5 relative overflow-hidden home-balance-card">
+      <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-[60px] pointer-events-none" style="background:radial-gradient(circle,rgba(0,245,255,.15),transparent 70%)"></div>
+      <p class="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-1">SALDO ATUAL</p>
+      <p class="text-4xl font-black text-white tracking-tight leading-none" id="saldo-total">R$ 0,00</p>
+      <p class="text-xs text-white/40 mt-2">Média: <span class="text-white/65 font-semibold" id="home-burn-daily">R$ 0,00</span>/dia</p>
+      <!-- Net chip -->
+      <div class="mt-3 flex items-center gap-2 flex-wrap">
+        <span id="home-net-chip" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border border-emerald-400/20 bg-emerald-400/8 text-emerald-300">
+          <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> --
+        </span>
+        <span class="text-[10px] text-white/30">no mês</span>
       </div>
     </div>
-    <div class="flex items-center gap-3">
-      <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.8)]"></span>
-      <button class="w-9 h-9 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 transition-colors"
-              onclick="switchTab(5)" title="Perfil">
-        <i class="fa-regular fa-bell text-sm"></i>
+
+    <!-- Entradas / Saídas -->
+    <div class="grid grid-cols-2 gap-3 mt-3">
+      <div class="flex items-center gap-2.5 rounded-2xl border border-emerald-400/15 bg-emerald-400/5 px-3.5 py-3">
+        <div class="w-8 h-8 rounded-xl border border-emerald-400/25 bg-emerald-400/12 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-arrow-up text-emerald-400 text-xs"></i>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-white/35 leading-none">Entrada</p>
+          <p class="text-sm font-bold text-emerald-300 mt-0.5 leading-none" id="dashboard-income">R$ 0,00</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2.5 rounded-2xl border border-rose-400/15 bg-rose-400/5 px-3.5 py-3">
+        <div class="w-8 h-8 rounded-xl border border-rose-400/25 bg-rose-400/12 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-arrow-down text-rose-400 text-xs"></i>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-white/35 leading-none">Saída</p>
+          <p class="text-sm font-bold text-rose-300 mt-0.5 leading-none" id="dashboard-expense">R$ 0,00</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score + Métricas (desktop: visível; mobile: oculto, está no col-B) -->
+    <div class="hidden lg:grid grid-cols-3 gap-3 mt-3">
+      <div class="rounded-2xl border border-white/8 bg-white/4 p-3 text-center">
+        <p class="text-[9px] uppercase tracking-widest text-white/30">Score IA</p>
+        <p class="text-xl font-black text-violet-200 mt-1" id="home-health-score">--</p>
+        <p class="text-[9px] text-white/35 mt-0.5" id="home-health-caption">...</p>
+      </div>
+      <div class="rounded-2xl border border-white/8 bg-white/4 p-3 text-center">
+        <p class="text-[9px] uppercase tracking-widest text-white/30">Runway</p>
+        <p class="text-xl font-black text-cyan-200 mt-1" id="home-runway">-- m</p>
+        <p class="text-[9px] text-white/35 mt-0.5">de reserva</p>
+      </div>
+      <div class="rounded-2xl border border-white/8 bg-white/4 p-3 text-center">
+        <p class="text-[9px] uppercase tracking-widest text-white/30">Poupança</p>
+        <p class="text-xl font-black text-emerald-300 mt-1" id="home-saving">0%</p>
+        <p class="text-[9px] text-white/35 mt-0.5">da renda</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Col B: Metas rings ─────────────────── -->
+  <div class="home-col-b">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Metas</p>
+      <button class="text-xs text-cyan-300/60 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
+    </div>
+    <!-- Score mobile: abaixo do título de Metas -->
+    <div class="flex gap-2 mb-3 lg:hidden">
+      <div class="flex-1 rounded-2xl border border-white/8 bg-white/4 py-2 px-3 flex items-center gap-2">
+        <i class="fa-solid fa-brain text-violet-300 text-xs"></i>
+        <div>
+          <p class="text-[9px] text-white/30 uppercase tracking-widest leading-none">Score</p>
+          <p class="text-sm font-black text-violet-200 leading-none mt-0.5" id="home-health-score-m">--</p>
+        </div>
+      </div>
+      <div class="flex-1 rounded-2xl border border-white/8 bg-white/4 py-2 px-3 flex items-center gap-2">
+        <i class="fa-solid fa-gauge-high text-cyan-300 text-xs"></i>
+        <div>
+          <p class="text-[9px] text-white/30 uppercase tracking-widest leading-none">Runway</p>
+          <p class="text-sm font-black text-cyan-200 leading-none mt-0.5" id="home-runway-m">--</p>
+        </div>
+      </div>
+      <div class="flex-1 rounded-2xl border border-white/8 bg-white/4 py-2 px-3 flex items-center gap-2">
+        <i class="fa-solid fa-piggy-bank text-emerald-300 text-xs"></i>
+        <div>
+          <p class="text-[9px] text-white/30 uppercase tracking-widest leading-none">Poupança</p>
+          <p class="text-sm font-black text-emerald-300 leading-none mt-0.5" id="home-saving-m">0%</p>
+        </div>
+      </div>
+    </div>
+    <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+      <div class="flex gap-3 pb-1 w-max" id="home-goals-rings">
+        <div class="flex flex-col items-center gap-1.5 w-[68px]">
+          <div class="w-[68px] h-[68px] rounded-full border-2 border-dashed border-white/12 flex items-center justify-center">
+            <i class="fa-solid fa-plus text-white/20 text-lg"></i>
+          </div>
+          <p class="text-[9px] text-white/30 text-center">Sem metas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Col C: Análise IA ──────────────────── -->
+  <div class="home-col-c">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Análise IA</p>
+      <i class="fa-solid fa-microchip-ai text-cyan-400/50 text-xs"></i>
+    </div>
+    <div class="rounded-3xl border border-white/8 bg-white/4 p-4 relative overflow-hidden" style="backdrop-filter:blur(16px)">
+      <div class="absolute top-0 left-0 right-0 h-[2px] rounded-t-3xl" style="background:linear-gradient(90deg,#00f5ff,#a855f7,#00ff85)"></div>
+      <div class="absolute top-3.5 right-3.5 flex gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-80"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></span>
+      </div>
+      <p class="text-sm leading-relaxed text-white/75 pr-6" id="home-ai-insight">Carregando análise...</p>
+    </div>
+  </div>
+
+  <!-- ─── Col D: Próximos 7 dias ────────────── -->
+  <div class="home-col-d">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Próximos 7 Dias</p>
+      <span class="min-w-[22px] h-[22px] rounded-full bg-violet-500/25 border border-violet-400/25 text-[10px] font-bold text-violet-300 flex items-center justify-center px-1" id="home-upcoming-count">0</span>
+    </div>
+    <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+      <div class="flex gap-2.5 pb-1 w-max" id="home-upcoming-cards">
+        <div class="w-36 rounded-2xl border border-white/8 bg-white/4 p-3">
+          <p class="text-xs text-white/25">Sem compromissos</p>
+        </div>
+      </div>
+    </div>
+    <!-- FAB nova transação -->
+    <div class="flex justify-end mt-3">
+      <button onclick="document.getElementById('tx-add-btn')?.click()"
+              title="Nova transação"
+              class="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-black transition-all hover:scale-105 active:scale-95 shadow-lg"
+              style="background:linear-gradient(135deg,#6366f1,#a855f7)">
+        <i class="fa-solid fa-plus text-white text-xs"></i>
+        <span class="text-white text-xs">Novo lançamento</span>
       </button>
     </div>
   </div>
 
-  <!-- Saldo principal -->
-  <div class="mb-1">
-    <p class="text-xs font-semibold uppercase tracking-widest text-white/35 mb-2">SALDO ATUAL</p>
-    <p class="text-4xl font-black text-white tracking-tight" id="saldo-total">R$ 0,00</p>
-    <p class="text-xs text-white/40 mt-1.5">Média de gastos: <span class="text-white/60 font-semibold" id="home-burn-daily">R$ 0,00</span>/dia</p>
-  </div>
-
-  <!-- Entradas / Saídas row -->
-  <div class="flex gap-3 mt-4">
-    <div class="flex items-center gap-2 flex-1 rounded-2xl border border-emerald-400/15 bg-emerald-400/6 px-3 py-2.5">
-      <div class="w-7 h-7 rounded-full border border-emerald-400/30 bg-emerald-400/15 flex items-center justify-center shrink-0">
-        <i class="fa-solid fa-arrow-trend-up text-emerald-400 text-xs"></i>
-      </div>
-      <div>
-        <p class="text-[10px] uppercase tracking-widest text-white/35">ENTRADA</p>
-        <p class="text-sm font-bold text-emerald-300 leading-tight" id="dashboard-income">R$ 0,00</p>
-      </div>
+  <!-- ─── Col E: Top Gastos ─────────────────── -->
+  <div class="home-col-e">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Top Gastos</p>
+      <button class="text-xs text-white/35 hover:text-white/60 transition-colors" onclick="switchTab(2)">Extrato →</button>
     </div>
-    <div class="flex items-center gap-2 flex-1 rounded-2xl border border-rose-400/15 bg-rose-400/6 px-3 py-2.5">
-      <div class="w-7 h-7 rounded-full border border-rose-400/30 bg-rose-400/15 flex items-center justify-center shrink-0">
-        <i class="fa-solid fa-arrow-trend-down text-rose-400 text-xs"></i>
-      </div>
-      <div>
-        <p class="text-[10px] uppercase tracking-widest text-white/35">SAÍDA</p>
-        <p class="text-sm font-bold text-rose-300 leading-tight" id="dashboard-expense">R$ 0,00</p>
+    <div class="grid grid-cols-4 gap-2" id="home-top-gastos">
+      <div class="col-span-4 rounded-2xl border border-white/8 bg-white/4 p-4 text-center text-xs text-white/25">
+        Sem transações no mês
       </div>
     </div>
   </div>
-</div>
 
-<!-- Metas (ring cards) -->
-<div class="mb-6">
-  <div class="flex items-center justify-between mb-3 px-1">
-    <p class="text-sm font-bold text-white">Metas</p>
-    <button class="text-xs text-cyan-300/70 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
-  </div>
-  <div class="overflow-x-auto pb-1 -mx-1 px-1" style="scrollbar-width:none">
-    <div class="flex gap-3 w-max" id="home-goals-rings">
-      <!-- Populado por dashboard-ui.js -->
-      <div class="flex flex-col items-center gap-2 w-16">
-        <div class="w-16 h-16 rounded-full border-2 border-white/10 flex items-center justify-center">
-          <span class="text-xs text-white/30">--</span>
-        </div>
-        <p class="text-[10px] text-white/35 text-center truncate w-16">Sem metas</p>
-      </div>
-    </div>
-  </div>
-</div>
+</div><!-- end .home-grid -->
 
-<!-- Análise IA -->
-<div class="mb-6">
-  <p class="text-sm font-bold text-white mb-3 px-1">Análise IA</p>
-  <div class="rounded-3xl border border-white/8 bg-white/4 p-5 relative overflow-hidden" style="backdrop-filter:blur(20px)">
-    <div class="absolute top-0 left-0 right-0 h-[2px] rounded-t-3xl"
-         style="background:linear-gradient(90deg,#00f5ff,#a855f7)"></div>
-    <!-- dots indicador -->
-    <div class="absolute top-4 right-4 flex gap-1.5">
-      <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-      <span class="w-1.5 h-1.5 rounded-full bg-white/20"></span>
-    </div>
-    <p class="text-sm leading-relaxed text-white/80 pr-8" id="home-ai-insight">
-      Carregando análise inteligente...
-    </p>
-  </div>
-</div>
-
-<!-- Próximos 7 Dias -->
-<div class="mb-6">
-  <div class="flex items-center justify-between mb-3 px-1">
-    <p class="text-sm font-bold text-white">Próximos 7 Dias</p>
-    <span class="w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white flex items-center justify-center" id="home-upcoming-count">0</span>
-  </div>
-  <div class="overflow-x-auto pb-1 -mx-1 px-1" style="scrollbar-width:none">
-    <div class="flex gap-3 w-max" id="home-upcoming-cards">
-      <div class="w-32 rounded-2xl border border-white/8 bg-white/4 p-3">
-        <p class="text-[10px] text-white/30">Sem eventos</p>
-      </div>
-    </div>
-  </div>
-  <!-- FAB adicionar -->
-  <div class="flex justify-end mt-3 pr-1">
-    <button onclick="document.getElementById('tx-add-btn')?.click()"
-            class="w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-            style="background:linear-gradient(135deg,#6366f1,#a855f7)">
-      <i class="fa-solid fa-plus text-white text-sm"></i>
-    </button>
-  </div>
-</div>
-
-<!-- Top Gastos -->
-<div class="mb-6">
-  <div class="flex items-center justify-between mb-3 px-1">
-    <p class="text-sm font-bold text-white">Top Gastos</p>
-    <button class="text-xs text-white/40 hover:text-white/70 transition-colors" onclick="switchTab(2)">Ver conta →</button>
-  </div>
-  <div class="grid grid-cols-4 gap-2.5" id="home-top-gastos">
-    <!-- Populado por dashboard-ui.js -->
-    <div class="col-span-4 rounded-2xl border border-white/8 bg-white/4 p-4 text-center text-xs text-white/30">
-      Sem transações no mês
-    </div>
-  </div>
-</div>
-
-<!-- Scores ocultos usados pelo renderDashboard legado -->
-<span class="hidden" id="monthly-net-chip"></span>
-<span class="hidden" id="income-evo"></span>
-<span class="hidden" id="expense-evo"></span>
-<span class="hidden" id="dashboard-runway"></span>
-<span class="hidden" id="dashboard-burn"></span>
-<span class="hidden" id="usd-rate"></span>
-<span class="hidden" id="eur-rate"></span>
-<span class="hidden" id="btc-rate"></span>
-<span class="hidden" id="usd-trend"></span>
-<span class="hidden" id="eur-trend"></span>
-<span class="hidden" id="btc-trend"></span>
-<span class="hidden" id="health-score"></span>
-<span class="hidden" id="health-caption"></span>
-<span class="hidden" id="saving-rate-chip"></span>
-<span class="hidden" id="saving-rate-label"></span>
-<span class="hidden" id="saving-rate-bar"></span>
-<span class="hidden" id="urgent-goal-label"></span>
-<span class="hidden" id="urgent-goal-bar"></span>
-<span class="hidden" id="top-category-name"></span>
-<span class="hidden" id="top-category-value"></span>
-<span class="hidden" id="avg-ticket"></span>
-<span class="hidden" id="health-summary"></span>
-<span class="hidden" id="category-highlights"></span>
-<span class="hidden" id="insight-main"></span>
-<span class="hidden" id="insight-apply-btn"></span>
-<span class="hidden" id="chat-side-insight"></span>
-<span class="hidden" id="surplus-pct"></span>
-<span class="hidden" id="surplus-caption"></span>
-<span class="hidden" id="surplus-income"></span>
-<span class="hidden" id="surplus-expense"></span>
-<span class="hidden" id="surplus-ring-fill"></span>
-<canvas id="pieChart" class="hidden"></canvas>
-<canvas id="lineChart" class="hidden"></canvas>
-<canvas id="monthlyFlowChart" class="hidden"></canvas>
-<div id="smart-insights-grid" class="hidden"></div>
-
-<!-- Calendário Financeiro (mantido, mas agora mais abaixo) -->
-<div class="mb-2">
-  <p class="text-sm font-bold text-white mb-3 px-1">Calendário</p>
+<!-- Hidden legacy IDs (preservam funcionalidade de outros módulos) -->
+<div class="hidden" aria-hidden="true">
+  <span id="monthly-net-chip"></span>
+  <span id="income-evo"></span><span id="expense-evo"></span>
+  <span id="dashboard-runway"></span><span id="dashboard-burn"></span>
+  <span id="usd-rate"></span><span id="eur-rate"></span><span id="btc-rate"></span>
+  <span id="usd-trend"></span><span id="eur-trend"></span><span id="btc-trend"></span>
+  <span id="health-score"></span><span id="health-caption"></span>
+  <span id="saving-rate-chip"></span><span id="saving-rate-label"></span><span id="saving-rate-bar"></span>
+  <span id="urgent-goal-label"></span><span id="urgent-goal-bar"></span>
+  <span id="top-category-name"></span><span id="top-category-value"></span>
+  <span id="avg-ticket"></span><span id="health-summary"></span>
+  <span id="category-highlights"></span>
+  <span id="insight-main"></span><span id="insight-apply-btn"></span><span id="chat-side-insight"></span>
+  <span id="surplus-pct"></span><span id="surplus-caption"></span>
+  <span id="surplus-income"></span><span id="surplus-expense"></span><span id="surplus-ring-fill"></span>
+  <canvas id="pieChart"></canvas><canvas id="lineChart"></canvas><canvas id="monthlyFlowChart"></canvas>
+  <div id="smart-insights-grid"></div>
 </div>
 
         </div>
