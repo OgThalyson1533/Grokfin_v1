@@ -1,47 +1,48 @@
 /**
- * js/ui/goals-ui.js
- * Lógica de metas, temas, aportes e modais.
+ * js/ui/goals-ui.js — v2 (Reformulação completa)
+ * Cards com ring SVG, countdown de dias, velocidade de aporte,
+ * modal com preview de imagem, estado vazio ilustrado.
  */
 
-import { state, saveState } from '../state.js';
-import { uid } from '../utils/math.js';
-import { formatMoney, formatPercent, escapeHtml, richText, parseCurrencyInput } from '../utils/format.js';
-import { addMonths, formatDateBR } from '../utils/date.js';
-import { getGoalProgress, getMonthlyNeed } from '../analytics/engine.js';
-import { showToast, normalizeText } from '../utils/dom.js';
+import { state, saveState }                        from '../state.js';
+import { uid }                                     from '../utils/math.js';
+import { formatMoney, formatPercent, escapeHtml,
+         richText, parseCurrencyInput }             from '../utils/format.js';
+import { addMonths, formatDateBR }                 from '../utils/date.js';
+import { getGoalProgress, getMonthlyNeed }         from '../analytics/engine.js';
+import { showToast, normalizeText }                from '../utils/dom.js';
 
-/* --- Goal Themes Catalog --- */
+/* ─── Catálogo de temas ───────────────────────────────────────── */
 export const GOAL_THEME_CATALOG = {
-  generic: { label: 'Objetivo', img: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=1200&auto=format&fit=crop' },
-  home: { label: 'Casa', img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop' },
-  travel: { label: 'Viagem', img: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=1200&auto=format&fit=crop' },
-  vehicle: { label: 'Veículo', img: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1200&auto=format&fit=crop' },
-  reserve: { label: 'Reserva', img: 'https://images.unsplash.com/photo-1616432043562-3671ea2e5242?q=80&w=1200&auto=format&fit=crop' },
-  game: { label: 'Games', img: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop' },
-  tech: { label: 'Tecnologia', img: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=1200&auto=format&fit=crop' },
-  education: { label: 'Educação', img: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1200&auto=format&fit=crop' },
-  celebration: { label: 'Celebração', img: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1200&auto=format&fit=crop' },
-  bike: { label: 'Mobilidade', img: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?q=80&w=1200&auto=format&fit=crop' }
+  generic:     { label: 'Objetivo',   icon: 'fa-bullseye',          img: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=1200&auto=format&fit=crop', color: '#00f5ff' },
+  home:        { label: 'Casa',        icon: 'fa-house',             img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1200&auto=format&fit=crop', color: '#f59e0b' },
+  travel:      { label: 'Viagem',      icon: 'fa-plane',             img: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=1200&auto=format&fit=crop', color: '#06b6d4' },
+  vehicle:     { label: 'Veículo',     icon: 'fa-car-side',          img: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1200&auto=format&fit=crop', color: '#8b5cf6' },
+  reserve:     { label: 'Reserva',     icon: 'fa-shield-halved',     img: 'https://images.unsplash.com/photo-1616432043562-3671ea2e5242?q=80&w=1200&auto=format&fit=crop', color: '#10b981' },
+  game:        { label: 'Games',       icon: 'fa-gamepad',           img: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop', color: '#a855f7' },
+  tech:        { label: 'Tecnologia',  icon: 'fa-microchip',         img: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=1200&auto=format&fit=crop', color: '#3b82f6' },
+  education:   { label: 'Educação',    icon: 'fa-graduation-cap',    img: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1200&auto=format&fit=crop', color: '#f97316' },
+  celebration: { label: 'Celebração',  icon: 'fa-champagne-glasses', img: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1200&auto=format&fit=crop', color: '#ec4899' },
+  bike:        { label: 'Mobilidade',  icon: 'fa-person-biking',     img: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?q=80&w=1200&auto=format&fit=crop', color: '#84cc16' },
 };
 
 export const GOAL_THEME_RULES = [
-  { theme: 'game', keys: ['videogame', 'video game', 'video-game', 'game', 'gamer', 'console', 'ps5', 'playstation', 'xbox', 'nintendo', 'switch'] },
-  { theme: 'home', keys: ['casa', 'imovel', 'imóvel', 'apto', 'apartamento', 'condominio', 'condomínio'] },
-  { theme: 'travel', keys: ['japao', 'japão', 'viagem', 'praia', 'rio', 'fortaleza', 'europa', 'ferias', 'férias', 'intercambio', 'intercâmbio'] },
-  { theme: 'vehicle', keys: ['carro', 'moto', 'veiculo', 'veículo'] },
-  { theme: 'reserve', keys: ['reserva', 'emergencia', 'emergência', 'seguranca', 'segurança'] },
-  { theme: 'tech', keys: ['pc', 'notebook', 'setup', 'studio', 'escritorio', 'escritório', 'macbook', 'iphone', 'celular', 'tablet', 'camera', 'câmera'] },
-  { theme: 'education', keys: ['faculdade', 'curso', 'mba', 'pos', 'pós', 'idioma', 'certificacao', 'certificação', 'estudo', 'educacao', 'educação'] },
-  { theme: 'celebration', keys: ['casamento', 'festa', 'aniversario', 'aniversário', 'lua de mel', 'evento'] },
-  { theme: 'bike', keys: ['bike', 'bicicleta', 'ciclismo'] }
+  { theme: 'game',        keys: ['videogame','video game','video-game','game','gamer','console','ps5','playstation','xbox','nintendo','switch'] },
+  { theme: 'home',        keys: ['casa','imovel','imóvel','apto','apartamento','condominio','condomínio'] },
+  { theme: 'travel',      keys: ['japao','japão','viagem','praia','rio','fortaleza','europa','ferias','férias','intercambio','intercâmbio'] },
+  { theme: 'vehicle',     keys: ['carro','moto','veiculo','veículo'] },
+  { theme: 'reserve',     keys: ['reserva','emergencia','emergência','seguranca','segurança'] },
+  { theme: 'tech',        keys: ['pc','notebook','setup','studio','escritorio','escritório','macbook','iphone','celular','tablet','camera','câmera'] },
+  { theme: 'education',   keys: ['faculdade','curso','mba','pos','pós','idioma','certificacao','certificação','estudo','educacao','educação'] },
+  { theme: 'celebration', keys: ['casamento','festa','aniversario','aniversário','lua de mel','evento'] },
+  { theme: 'bike',        keys: ['bike','bicicleta','ciclismo'] },
 ];
 
+/* ─── Helpers ────────────────────────────────────────────────── */
 export function detectGoalTheme(name = '', explicitTheme = 'auto') {
-  if (explicitTheme && explicitTheme !== 'auto' && GOAL_THEME_CATALOG[explicitTheme]) {
-    return explicitTheme;
-  }
+  if (explicitTheme && explicitTheme !== 'auto' && GOAL_THEME_CATALOG[explicitTheme]) return explicitTheme;
   const normalized = normalizeText(name);
-  const rule = GOAL_THEME_RULES.find(item => item.keys.some(key => normalized.includes(normalizeText(key))));
+  const rule = GOAL_THEME_RULES.find(item => item.keys.some(k => normalized.includes(normalizeText(k))));
   return rule?.theme || 'generic';
 }
 
@@ -56,7 +57,7 @@ export function pickGoalImage(name, explicitTheme = 'auto') {
 
 export function estimateGoalTarget(name, explicitTheme = 'auto') {
   const theme = detectGoalTheme(name, explicitTheme);
-  const map = { reserve: 30000, home: 90000, vehicle: 65000, travel: 18000, game: 4500, tech: 9000, education: 15000, celebration: 20000, bike: 6500 };
+  const map = { reserve:30000, home:90000, vehicle:65000, travel:18000, game:4500, tech:9000, education:15000, celebration:20000, bike:6500 };
   return map[theme] || 18000;
 }
 
@@ -65,7 +66,7 @@ export function estimateGoalDeadline(name, explicitTheme = 'auto') {
   const explicitYear = normalized.match(/20\d{2}/);
   if (explicitYear) return new Date(Number(explicitYear[0]), 11, 1).toISOString();
   const theme = detectGoalTheme(name, explicitTheme);
-  const mapMonths = { reserve: 6, travel: 12, home: 24, vehicle: 18, education: 14 };
+  const mapMonths = { reserve:6, travel:12, home:24, vehicle:18, education:14 };
   return addMonths(new Date(), mapMonths[theme] || 10).toISOString();
 }
 
@@ -73,408 +74,451 @@ export function formatMonthYear(dateIso) {
   return new Intl.DateTimeFormat('pt-BR', { month: 'short', year: 'numeric' }).format(new Date(dateIso));
 }
 
-let _editingGoalId = null;
-let _goalToDelete = null;
+function daysUntil(dateIso) {
+  const now  = new Date(); now.setHours(0,0,0,0);
+  const dead = new Date(dateIso); dead.setHours(0,0,0,0);
+  return Math.ceil((dead - now) / 86400000);
+}
 
+function buildRingSVG(pct, color, size) {
+  size = size || 108;
+  const R   = (size / 2) - 10;
+  const C   = 2 * Math.PI * R;
+  const off = C * (1 - Math.min(pct, 100) / 100);
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" style="transform:rotate(-90deg)" aria-hidden="true">' +
+    '<circle cx="' + (size/2) + '" cy="' + (size/2) + '" r="' + R + '" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/>' +
+    '<circle cx="' + (size/2) + '" cy="' + (size/2) + '" r="' + R + '" fill="none" stroke="' + color + '" stroke-width="7"' +
+    ' stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '"' +
+    ' stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>' +
+    '</svg>';
+}
+
+/* ─── Estado interno ──────────────────────────────────────────── */
+let _editingGoalId = null;
+let _goalToDelete  = null;
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER PRINCIPAL
+══════════════════════════════════════════════════════════════ */
 export function renderGoals(analytics) {
-  const goalsContainer = document.getElementById('goals-container');
+  const goalsContainer    = document.getElementById('goals-container');
   const overviewContainer = document.getElementById('goals-overview');
   if (!goalsContainer || !overviewContainer) return;
 
-  const totalSaved = state.goals.reduce((acc, goal) => acc + goal.atual, 0);
-  const avgProgress = analytics.goalsProgress || 0;
-  const monthlyNeedTotal = state.goals.reduce((acc, goal) => acc + getMonthlyNeed(goal), 0);
+  const totalSaved     = state.goals.reduce(function(a, g) { return a + Number(g.atual || 0); }, 0);
+  const totalTarget    = state.goals.reduce(function(a, g) { return a + Number(g.total || 0); }, 0);
+  const avgProgress    = analytics.goalsProgress || 0;
+  const monthlyNeedAll = state.goals.reduce(function(a, g) { return a + getMonthlyNeed(g); }, 0);
+  const activeGoals    = state.goals.filter(function(g) { return getGoalProgress(g) < 100; }).length;
+  const completedGoals = state.goals.length - activeGoals;
 
-  overviewContainer.innerHTML = `
-    <div class="glass-panel rounded-3xl p-5">
-      <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Guardado em metas</p>
-      <p class="mt-3 text-3xl font-black text-white">${formatMoney(totalSaved)}</p>
-    </div>
-    <div class="glass-panel rounded-3xl p-5">
-      <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Aporte mensal sugerido</p>
-      <p class="mt-3 text-3xl font-black text-cyan-200">${formatMoney(monthlyNeedTotal)}</p>
-    </div>
-    <div class="glass-panel rounded-3xl p-5">
-      <p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Progresso médio</p>
-      <p class="mt-3 text-3xl font-black text-emerald-300">${formatPercent(avgProgress, 0)}</p>
-    </div>
-  `;
+  var miniBarHtml = state.goals.slice(0,6).map(function(g) {
+    var p = getGoalProgress(g);
+    var c = p >= 80 ? '#10b981' : p >= 40 ? '#06b6d4' : '#a855f7';
+    var op = (0.4 + (p/100)*0.6).toFixed(2);
+    return '<div class="h-1.5 rounded-full flex-1 min-w-[18px]" style="background:' + c + ';opacity:' + op + '"></div>';
+  }).join('');
 
-  goalsContainer.innerHTML = state.goals.length
-    ? state.goals.map(goal => {
-        // Normalise field names (support both local keys and Supabase-mapped keys)
-        goal = {
-          ...goal,
-          nome: goal.nome ?? goal.name ?? 'Meta',
-          atual: Number(goal.atual ?? goal.current ?? 0),
-          total: Number(goal.total ?? goal.target ?? 0),
-        };
-        const progress = getGoalProgress(goal);
-        const monthlyNeed = getMonthlyNeed(goal);
-        const remaining = Math.max(0, goal.total - goal.atual);
-        const statusClass = progress >= 80 ? 'status-up' : progress >= 45 ? 'status-neutral' : 'status-down';
-        const theme = detectGoalTheme(goal.nome, goal.theme || 'auto');
-        const themeLabel = getGoalThemeLabel(theme);
-        const goalImage = goal.customImage || pickGoalImage(goal.nome, goal.theme || theme);
-
-        // Valor sugerido para o aporte (ideal mensal; sem dependencia do saldo)
-        const suggestedAporte = monthlyNeed > 0 ? monthlyNeed : remaining;
-
-        let smartTip = '';
-        if (progress >= 100) {
-          smartTip = '<i class="fa-solid fa-trophy text-emerald-300"></i> Meta atingida! Considere investir o valor ou iniciar um novo objetivo.';
-        } else if (monthlyNeed > 0 && state.balance < monthlyNeed) {
-          smartTip = `<i class="fa-solid fa-arrow-trend-up text-fuchsia-300"></i> Aporte ideal ${formatMoney(monthlyNeed)}/mês. Qualquer valor que você conseguir guardar já ajuda.`;
-        } else if (monthlyNeed > 0) {
-          smartTip = `<i class="fa-solid fa-fire text-orange-400"></i> Aporte ideal de ${formatMoney(monthlyNeed)}/mês para bater o prazo. No caminho certo!`;
-        } else {
-          smartTip = '<i class="fa-solid fa-lightbulb text-cyan-300"></i> Qualquer valor poupado agora acelera o seu prazo original.';
-        }
-
-        // Botao de aporte: aparece SEMPRE se a meta nao esta concluida
-        const aporteBtnHtml = progress >= 100
-          ? `<button class="flex-1 min-w-[120px] rounded-2xl bg-emerald-500/10 border border-emerald-400/20 px-4 py-3 sm:py-3.5 text-sm font-black text-emerald-300 pointer-events-none">
-               <i class="fa-solid fa-trophy mr-1"></i> Meta Concluida
-             </button>`
-          : `<div class="flex-1 min-w-[160px] flex items-stretch rounded-2xl bg-black/40 border border-white/20 p-1 focus-within:border-cyan-400/50 transition-colors shadow-inner">
-               <div class="flex items-center pl-3">
-                 <span class="text-xs font-bold text-white/40 mr-1">R$</span>
-                 <input id="goal-invest-${goal.id}" type="text" inputmode="decimal"
-                   class="w-full bg-transparent text-sm font-black text-white outline-none placeholder-white/20"
-                   placeholder="${suggestedAporte > 0 ? suggestedAporte.toFixed(2).replace('.', ',') : '0,00'}"
-                   value="" />
-               </div>
-               <button data-goal-contribute="${goal.id}"
-                 class="rounded-xl shrink-0 bg-gradient-to-r from-cyan-300 to-emerald-300 px-4 py-2 text-xs font-black tracking-wide text-black shadow-[0_0_12px_rgba(0,245,255,0.2)] transition-transform hover:scale-[1.02] active:scale-95">
-                 NOVO APORTE
-               </button>
-             </div>`;
-
-        return `
-          <article class="goal-card group glass-panel card-hover relative isolate min-h-[24rem] flex flex-col overflow-hidden rounded-[30px] p-6 sm:p-7">
-            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-70" style="background-image:url('${goalImage}')"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-[#060911]/72 via-[#060911]/45 to-transparent z-0"></div>
-            
-            <div class="relative z-10 flex h-full flex-col">
-              <div class="flex items-start justify-between gap-3 mb-auto">
-                <div class="flex flex-wrap gap-2">
-                  <span class="pill ${statusClass}">${progress}% concluída</span>
-                  <span class="pill tone-slate"><i class="fa-solid fa-image text-cyan-300"></i> ${escapeHtml(themeLabel)}</span>
-                </div>
-                <span class="pill shrink-0 whitespace-nowrap">${escapeHtml(formatMonthYear(goal.deadline))}</span>
-              </div>
-
-              <div class="mt-6 flex flex-col gap-5">
-                <div>
-                  <h4 class="text-2xl font-black text-white leading-tight">${escapeHtml(goal.nome)}</h4>
-                  <p class="mt-2 text-sm font-medium text-white/70">Alvo ${formatMoney(goal.total)} <span class="mx-1">•</span> Faltam ${formatMoney(remaining)}</p>
-                </div>
-
-                <div>
-                  <div class="mb-2 flex items-center justify-between text-sm">
-                    <span class="font-semibold text-white/80"><span class="text-white">${formatMoney(goal.atual)}</span> guardados</span>
-                    <strong class="text-white bg-white/10 px-2 py-0.5 rounded-md">${progress}%</strong>
-                  </div>
-                  <div class="progress-track h-2.5 bg-black/40 border border-white/5"><div class="progress-fill shadow-[0_0_10px_rgba(0,245,255,0.4)]" style="width:${progress}%"></div></div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                  <div class="rounded-2xl border border-white/10 bg-black/30 p-4 backdrop-blur-sm">
-                    <p class="text-[10px] sm:text-xs uppercase tracking-[.15em] text-white/40 font-bold">Aporte ideal</p>
-                    <p class="mt-1.5 text-lg font-black text-cyan-300">${formatMoney(monthlyNeed)}</p>
-                  </div>
-                  <div class="rounded-2xl border border-white/10 bg-black/30 p-4 backdrop-blur-sm">
-                    <p class="text-[10px] sm:text-xs uppercase tracking-[.15em] text-white/40 font-bold">Prazo</p>
-                    <p class="mt-1.5 text-lg font-black text-white">${escapeHtml(formatMonthYear(goal.deadline))}</p>
-                  </div>
-                </div>
-
-                <!-- Smart Intelligence Box -->
-                <div class="rounded-xl bg-gradient-to-r from-white/5 to-transparent border-l-2 border-cyan-400 p-3 text-[13px] leading-relaxed text-white/75 font-medium shadow-inner">
-                  ${smartTip}
-                </div>
-
-                <div class="mt-2 flex flex-wrap gap-2 sm:gap-3 items-center">
-                  ${aporteBtnHtml}
-                  <button data-goal-brief="${goal.id}" class="shrink-0 flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 w-12 h-11 sm:h-12 text-white transition-colors hover:bg-white/15" title="Ler com IA">
-                    <i class="fa-solid fa-robot"></i>
-                  </button>
-                  <button onclick="openEditGoal('${goal.id}')" class="shrink-0 flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 w-12 h-11 sm:h-12 text-white transition-colors hover:bg-white/15" title="Editar meta">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-                  <button onclick="confirmDeleteGoal('${goal.id}')" class="shrink-0 flex items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 w-12 h-11 sm:h-12 text-rose-400 transition-colors hover:bg-rose-500/20" title="Excluir meta">
-                    <i class="fa-solid fa-trash-can"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join('')
-    : `
-      <div class="glass-panel col-span-full rounded-[28px] p-10 text-center text-white/55">
-        Ainda não existem metas cadastradas.
-      </div>
-    `;
-}
-
-export function openAddGoal() {
-  _editingGoalId = null;
-  document.getElementById('goal-modal-title').textContent = 'Nova Meta';
-  document.getElementById('goal-modal-name').value = '';
-  document.getElementById('goal-modal-total').value = '';
-  document.getElementById('goal-modal-atual').value = '';
-  document.getElementById('goal-modal-theme').value = 'auto';
-  
-  // Set default deadline to 1 year from now
-  const d = new Date();
-  d.setFullYear(d.getFullYear() + 1);
-  document.getElementById('goal-modal-deadline').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  
-  document.getElementById('goal-modal-error')?.classList.add('hidden');
-  document.getElementById('goal-modal-overlay')?.classList.remove('hidden');
-}
-
-export function applyGoalContribution(goalId, amount, options = {}) {
-  const goal = state.goals.find(item => item.id === goalId);
-  if (!goal) return { ok: false, message: 'Meta não encontrada.' };
-
-  const remaining = Math.max(0, goal.total - goal.atual);
-  if (remaining <= 0) return { ok: false, message: 'Já concluída.' };
-
-  // Usa exatamente o valor digitado, limitado ao restante da meta
-  const requested = Math.min(Number(amount) || 0, remaining);
-  if (requested <= 0) return { ok: false, message: 'Informe um valor válido.' };
-
-  // Valida saldo disponível
-  if (requested > state.balance) {
-    if (options.notify !== false) showToast(`Saldo insuficiente. Disponível: ${formatMoney(state.balance)}.`, 'danger');
-    return { ok: false, message: 'Saldo insuficiente.' };
+  var totalBarHtml = '';
+  if (totalTarget > 0) {
+    var tPct = Math.min(100, (totalSaved/totalTarget)*100).toFixed(1);
+    totalBarHtml = '<div class="mt-3 progress-track h-1.5"><div class="progress-fill" style="width:' + tPct + '%"></div></div>' +
+      '<p class="mt-1.5 text-[10px] text-white/35">' + formatPercent((totalSaved/totalTarget)*100,0) + ' do total alvo ' + formatMoney(totalTarget) + '</p>';
   }
 
-  const applied = requested;
+  var activeLbl = activeGoals + ' meta' + (activeGoals !== 1 ? 's' : '') + ' ativa' + (activeGoals !== 1 ? 's' : '');
+  if (completedGoals > 0) activeLbl += ' \u2022 ' + completedGoals + ' conclu\u00edda' + (completedGoals !== 1 ? 's' : '');
 
-  goal.atual = Number((goal.atual + applied).toFixed(2));
-  state.balance = Number((state.balance - applied).toFixed(2));
-  state.transactions.unshift({
-    id: uid('tx'),
-    date: formatDateBR(new Date()),
-    desc: `Aporte meta: ${goal.nome}`,
-    cat: 'Metas',
-    value: -applied
+  overviewContainer.innerHTML =
+    '<div class="goal-overview-card">' +
+      '<div class="flex items-center gap-3 mb-3">' +
+        '<div class="w-9 h-9 rounded-xl bg-emerald-400/12 border border-emerald-400/20 flex items-center justify-center shrink-0">' +
+          '<i class="fa-solid fa-piggy-bank text-emerald-300 text-sm"></i>' +
+        '</div>' +
+        '<p class="text-xs font-bold uppercase tracking-[.18em] text-white/40">Total guardado</p>' +
+      '</div>' +
+      '<p class="text-3xl font-black text-white">' + formatMoney(totalSaved) + '</p>' +
+      totalBarHtml +
+    '</div>' +
+    '<div class="goal-overview-card">' +
+      '<div class="flex items-center gap-3 mb-3">' +
+        '<div class="w-9 h-9 rounded-xl bg-cyan-400/12 border border-cyan-400/20 flex items-center justify-center shrink-0">' +
+          '<i class="fa-solid fa-calendar-check text-cyan-300 text-sm"></i>' +
+        '</div>' +
+        '<p class="text-xs font-bold uppercase tracking-[.18em] text-white/40">Aporte mensal</p>' +
+      '</div>' +
+      '<p class="text-3xl font-black text-cyan-200">' + formatMoney(monthlyNeedAll) + '</p>' +
+      '<p class="mt-2 text-[11px] text-white/40">' + activeLbl + '</p>' +
+    '</div>' +
+    '<div class="goal-overview-card">' +
+      '<div class="flex items-center gap-3 mb-3">' +
+        '<div class="w-9 h-9 rounded-xl bg-violet-400/12 border border-violet-400/20 flex items-center justify-center shrink-0">' +
+          '<i class="fa-solid fa-chart-line text-violet-300 text-sm"></i>' +
+        '</div>' +
+        '<p class="text-xs font-bold uppercase tracking-[.18em] text-white/40">Progresso m\u00e9dio</p>' +
+      '</div>' +
+      '<p class="text-3xl font-black text-violet-200">' + formatPercent(avgProgress, 0) + '</p>' +
+      '<div class="mt-3 flex gap-1 flex-wrap">' + miniBarHtml + '</div>' +
+    '</div>';
+
+  /* Estado vazio */
+  if (!state.goals.length) {
+    goalsContainer.innerHTML =
+      '<div class="goal-empty-state col-span-full">' +
+        '<div class="goal-empty-icon">' +
+          '<i class="fa-solid fa-bullseye text-4xl" style="background:linear-gradient(135deg,#00f5ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></i>' +
+        '</div>' +
+        '<h4 class="text-xl font-black text-white mt-4">Nenhuma meta criada ainda</h4>' +
+        '<p class="text-sm text-white/45 mt-2 max-w-xs text-center leading-relaxed">Defina para onde quer levar seu dinheiro. Cada meta vira um plano com data, aporte mensal e progresso visual.</p>' +
+        '<button onclick="document.getElementById(\'goal-add-btn\').click()" class="mt-6 flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-black transition-transform hover:scale-105 active:scale-95" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">' +
+          '<i class="fa-solid fa-plus"></i> Criar primeira meta' +
+        '</button>' +
+      '</div>';
+    return;
+  }
+
+  /* Cards */
+  goalsContainer.innerHTML = state.goals.map(function(rawGoal) {
+    var goal = Object.assign({}, rawGoal, {
+      nome:  rawGoal.nome  || rawGoal.name   || 'Meta',
+      atual: Number(rawGoal.atual || rawGoal.current || 0),
+      total: Number(rawGoal.total || rawGoal.target  || 0),
+    });
+
+    var progress    = getGoalProgress(goal);
+    var monthlyNeed = getMonthlyNeed(goal);
+    var remaining   = Math.max(0, goal.total - goal.atual);
+    var days        = daysUntil(goal.deadline);
+    var theme       = detectGoalTheme(goal.nome, goal.theme || 'auto');
+    var catalog     = GOAL_THEME_CATALOG[theme] || GOAL_THEME_CATALOG.generic;
+    var themeColor  = catalog.color;
+    var goalImage   = goal.customImage || goal.img || catalog.img;
+    var suggested   = monthlyNeed > 0 ? monthlyNeed : (remaining > 0 ? Math.min(remaining, 500) : 0);
+
+    /* Chip velocidade */
+    var velocityHtml = '';
+    if (progress < 100 && monthlyNeed > 0) {
+      if (days <= 0) {
+        velocityHtml = '<span class="goal-chip" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.25);color:#fca5a5"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Prazo vencido</span>';
+      } else if (state.balance >= monthlyNeed) {
+        velocityHtml = '<span class="goal-chip" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.2);color:#6ee7b7"><i class="fa-solid fa-bolt mr-1"></i>No ritmo</span>';
+      } else {
+        velocityHtml = '<span class="goal-chip" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.2);color:#fde68a"><i class="fa-solid fa-gauge mr-1"></i>Aten\u00e7\u00e3o</span>';
+      }
+    }
+
+    /* Chip dias */
+    var daysHtml = '';
+    if (progress < 100) {
+      if (days <= 0)
+        daysHtml = '<span class="goal-chip" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.2);color:#fca5a5">Vencida</span>';
+      else if (days <= 30)
+        daysHtml = '<span class="goal-chip" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.2);color:#fde68a">' + days + 'd restantes</span>';
+      else
+        daysHtml = '<span class="goal-chip">' + Math.ceil(days/30) + 'm restantes</span>';
+    }
+
+    /* Smart tip */
+    var smartIcon, smartTip;
+    if (progress >= 100) {
+      smartIcon = '🏆'; smartTip = 'Meta atingida! Considere investir o valor ou criar um novo objetivo.';
+    } else if (days <= 0) {
+      smartIcon = '⚠️'; smartTip = 'Prazo vencido. Atualize a data ou faça um aporte para retomar o plano.';
+    } else if (state.balance >= monthlyNeed && monthlyNeed > 0) {
+      smartIcon = '🔥'; smartTip = 'Você tem saldo para o aporte ideal de ' + formatMoney(monthlyNeed) + '/mês. Mantenha o ritmo!';
+    } else if (monthlyNeed > 0) {
+      smartIcon = '💡'; smartTip = 'Aporte ideal: ' + formatMoney(monthlyNeed) + '/mês. Qualquer valor guardado agora já acelera o prazo.';
+    } else {
+      smartIcon = '✨'; smartTip = 'Guarde o que puder — cada aporte conta para bater o prazo.';
+    }
+
+    /* Botão aporte */
+    var aporteBtnHtml;
+    if (progress >= 100) {
+      aporteBtnHtml = '<div class="goal-done-badge"><i class="fa-solid fa-trophy"></i> Meta Conclu\u00edda</div>';
+    } else {
+      var ph = suggested > 0 ? suggested.toFixed(2).replace('.', ',') : '0,00';
+      aporteBtnHtml =
+        '<div class="goal-aporte-wrap">' +
+          '<div class="goal-aporte-input-row">' +
+            '<span class="goal-aporte-prefix">R$</span>' +
+            '<input id="goal-invest-' + goal.id + '" type="text" inputmode="decimal" class="goal-aporte-input" placeholder="' + ph + '" />' +
+          '</div>' +
+          '<button data-goal-contribute="' + goal.id + '" class="goal-aporte-btn">' +
+            '<i class="fa-solid fa-circle-plus mr-1.5"></i>Aportar' +
+          '</button>' +
+        '</div>';
+    }
+
+    return '<article class="goal-card group" data-goal-id="' + goal.id + '">' +
+      '<div class="goal-card-bg" style="background-image:url(\'' + goalImage + '\')"></div>' +
+      '<div class="goal-card-overlay"></div>' +
+      '<div class="goal-card-body">' +
+
+        /* Topo */
+        '<div class="goal-card-top">' +
+          '<span class="goal-chip" style="background:' + themeColor + '1a;border-color:' + themeColor + '30;color:' + themeColor + '">' +
+            '<i class="fa-solid ' + catalog.icon + ' mr-1"></i>' + escapeHtml(catalog.label) +
+          '</span>' +
+          '<div class="flex items-center gap-1.5 flex-wrap justify-end">' + velocityHtml + daysHtml + '</div>' +
+        '</div>' +
+
+        /* Centro: ring + info */
+        '<div class="goal-card-center">' +
+          '<div class="goal-ring-wrap">' +
+            buildRingSVG(progress, themeColor, 108) +
+            '<div class="goal-ring-inner">' +
+              '<span class="goal-ring-pct" style="color:' + themeColor + '">' + progress + '%</span>' +
+              '<span class="goal-ring-label">conclu\u00eddo</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="goal-card-info">' +
+            '<h4 class="goal-card-name">' + escapeHtml(goal.nome) + '</h4>' +
+            '<p class="goal-card-target">Alvo <strong>' + formatMoney(goal.total) + '</strong></p>' +
+            '<div class="goal-card-numbers">' +
+              '<div><p class="goal-card-num-label">Guardado</p><p class="goal-card-num-value" style="color:' + themeColor + '">' + formatMoney(goal.atual) + '</p></div>' +
+              '<div><p class="goal-card-num-label">Faltam</p><p class="goal-card-num-value text-white/80">' + formatMoney(remaining) + '</p></div>' +
+              '<div><p class="goal-card-num-label">Aporte/mês</p><p class="goal-card-num-value text-cyan-300">' + formatMoney(monthlyNeed) + '</p></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        /* Smart tip */
+        '<div class="goal-smart-tip">' +
+          '<span class="goal-tip-icon">' + smartIcon + '</span>' +
+          '<p class="goal-tip-text">' + smartTip + '</p>' +
+        '</div>' +
+
+        /* Ações */
+        '<div class="goal-card-actions">' +
+          aporteBtnHtml +
+          '<div class="goal-action-btns">' +
+            '<button data-goal-brief="' + goal.id + '" class="goal-icon-btn" title="Analisar com IA"><i class="fa-solid fa-robot"></i></button>' +
+            '<button onclick="openEditGoal(\'' + goal.id + '\')" class="goal-icon-btn" title="Editar meta"><i class="fa-solid fa-pen"></i></button>' +
+            '<button onclick="confirmDeleteGoal(\'' + goal.id + '\')" class="goal-icon-btn goal-icon-btn-danger" title="Excluir meta"><i class="fa-solid fa-trash-can"></i></button>' +
+          '</div>' +
+        '</div>' +
+
+      '</div>' +
+    '</article>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════════════ */
+export function openAddGoal() {
+  _editingGoalId = null;
+  _resetModal();
+  document.getElementById('goal-modal-title').textContent = 'Nova Meta';
+  var d = new Date(); d.setFullYear(d.getFullYear() + 1);
+  document.getElementById('goal-modal-deadline').value =
+    d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('goal-modal-overlay')?.classList.remove('hidden');
+  _updateModalPreview();
+}
+
+function _resetModal() {
+  ['goal-modal-name','goal-modal-total','goal-modal-atual'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
   });
-  
-  saveState();
-  if (options.notify !== false) showToast(`Aporte de ${formatMoney(applied)} aplicado.`, 'success');
-  if (window.appRenderAll) window.appRenderAll();
-
-  return { ok: true, message: `Apliquei ${formatMoney(applied)} em ${goal.nome}.` };
+  var t = document.getElementById('goal-modal-theme'); if (t) t.value = 'auto';
+  document.getElementById('goal-modal-error')?.classList.add('hidden');
 }
 
 export function openEditGoal(id) {
-  const goal = state.goals.find(g => g.id === id);
+  var goal = state.goals.find(function(g) { return g.id === id; });
   if (!goal) return;
   _editingGoalId = id;
-  
   document.getElementById('goal-modal-title').textContent = 'Editar Meta';
-  document.getElementById('goal-modal-name').value = goal.nome;
-  // [FIX #2] IDs corretos conforme o HTML: goal-modal-total e goal-modal-atual
+  document.getElementById('goal-modal-name').value  = goal.nome;
   document.getElementById('goal-modal-total').value = goal.total.toFixed(2).replace('.', ',');
   document.getElementById('goal-modal-atual').value = goal.atual.toFixed(2).replace('.', ',');
   document.getElementById('goal-modal-theme').value = goal.theme || 'auto';
-  
-  const d = goal.deadline ? new Date(goal.deadline) : addMonths(new Date(), 12);
-  const safeDate = Number.isNaN(d.getTime()) ? addMonths(new Date(), 12) : d;
-  document.getElementById('goal-modal-deadline').value = `${safeDate.getFullYear()}-${String(safeDate.getMonth() + 1).padStart(2, '0')}-${String(safeDate.getDate()).padStart(2, '0')}`;
-  
-  // Sem campo customimg no HTML — ignorado
+  var d = goal.deadline ? new Date(goal.deadline) : addMonths(new Date(), 12);
+  if (Number.isNaN(d.getTime())) d = addMonths(new Date(), 12);
+  document.getElementById('goal-modal-deadline').value =
+    d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   document.getElementById('goal-modal-error')?.classList.add('hidden');
   document.getElementById('goal-modal-overlay')?.classList.remove('hidden');
+  _updateModalPreview();
 }
 
+function _updateModalPreview() {
+  var nameEl    = document.getElementById('goal-modal-name');
+  var themeEl   = document.getElementById('goal-modal-theme');
+  var previewEl = document.getElementById('goal-modal-img-preview');
+  var iconEl    = document.getElementById('goal-modal-theme-icon');
+  if (!previewEl) return;
+  var name     = (nameEl && nameEl.value) || '';
+  var theme    = (themeEl && themeEl.value) || 'auto';
+  var resolved = detectGoalTheme(name, theme);
+  var catalog  = GOAL_THEME_CATALOG[resolved] || GOAL_THEME_CATALOG.generic;
+  previewEl.style.backgroundImage = "url('" + catalog.img + "')";
+  if (iconEl) { iconEl.className = 'fa-solid ' + catalog.icon; iconEl.style.color = catalog.color; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   APORTE
+══════════════════════════════════════════════════════════════ */
+export function applyGoalContribution(goalId, amount, options) {
+  options = options || {};
+  var goal = state.goals.find(function(item) { return item.id === goalId; });
+  if (!goal) return { ok: false, message: 'Meta não encontrada.' };
+  var remaining = Math.max(0, goal.total - goal.atual);
+  if (remaining <= 0) return { ok: false, message: 'Já concluída.' };
+  var requested = Math.min(Number(amount) || 0, remaining);
+  if (requested <= 0) {
+    if (options.notify !== false) showToast('Informe um valor acima de zero.', 'warning');
+    return { ok: false, message: 'Valor inválido.' };
+  }
+  if (requested > state.balance) {
+    if (options.notify !== false) showToast('Saldo insuficiente. Disponível: ' + formatMoney(state.balance) + '.', 'danger');
+    return { ok: false, message: 'Saldo insuficiente.' };
+  }
+  goal.atual    = Number((goal.atual + requested).toFixed(2));
+  state.balance = Number((state.balance - requested).toFixed(2));
+  state.transactions.unshift({ id: uid('tx'), date: formatDateBR(new Date()), desc: 'Aporte meta: ' + goal.nome, cat: 'Metas', value: -requested });
+  saveState();
+  if (options.notify !== false) showToast(formatMoney(requested) + ' aportado em "' + goal.nome + '". 🎯', 'success');
+  if (window.appRenderAll) window.appRenderAll();
+  return { ok: true, message: 'Apliquei ' + formatMoney(requested) + ' em ' + goal.nome + '.' };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SALVAR MODAL
+══════════════════════════════════════════════════════════════ */
+export function saveGoalModal() {
+  var name        = document.getElementById('goal-modal-name').value.trim();
+  var target      = parseCurrencyInput(document.getElementById('goal-modal-total').value);
+  var current     = parseCurrencyInput(document.getElementById('goal-modal-atual').value) || 0;
+  var deadlineStr = document.getElementById('goal-modal-deadline').value;
+  var themeInput  = document.getElementById('goal-modal-theme').value;
+  var errEl       = document.getElementById('goal-modal-error');
+  if (!name) { _showModalErr(errEl, 'Preencha o nome da meta.'); return; }
+  var resolvedTheme = detectGoalTheme(name, themeInput);
+  if (!target) target = estimateGoalTarget(name, resolvedTheme);
+  if (!target) { _showModalErr(errEl, 'Informe o valor alvo.'); return; }
+  var deadline = deadlineStr ? new Date(deadlineStr + 'T12:00:00Z').toISOString() : estimateGoalDeadline(name, resolvedTheme);
+  if (errEl) errEl.classList.add('hidden');
+
+  if (_editingGoalId) {
+    var idx = state.goals.findIndex(function(g) { return g.id === _editingGoalId; });
+    if (idx >= 0) {
+      var g = state.goals[idx];
+      var diff = current - g.atual;
+      if (diff > 0 && state.balance < diff) { _showModalErr(errEl, 'Saldo insuficiente para atualizar o valor guardado.'); return; }
+      state.balance -= diff;
+      state.goals[idx] = Object.assign({}, g, { nome: name, total: target, atual: current, deadline: deadline, theme: resolvedTheme, img: pickGoalImage(name, themeInput) });
+      saveState(); showToast('Meta atualizada com sucesso.', 'success');
+    }
+  } else {
+    if (current > 0 && state.balance < current) { _showModalErr(errEl, 'Saldo insuficiente para o valor inicial.'); return; }
+    if (current > 0) {
+      state.balance -= current;
+      state.transactions.unshift({ id: uid('tx'), date: formatDateBR(new Date()), desc: 'Depósito inicial: ' + name, cat: 'Metas', value: -current });
+    }
+    state.goals.unshift({ id: uid('goal'), nome: name, atual: current, total: target, theme: resolvedTheme, img: pickGoalImage(name, themeInput), deadline: deadline });
+    saveState(); showToast('Meta "' + name + '" criada! 🎯', 'success');
+  }
+  document.getElementById('goal-modal-overlay')?.classList.add('hidden');
+  if (window.appRenderAll) window.appRenderAll();
+}
+
+function _showModalErr(el, msg) {
+  if (!el) return;
+  el.textContent = msg; el.classList.remove('hidden');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EXCLUIR
+══════════════════════════════════════════════════════════════ */
 export function confirmDeleteGoal(id) {
   _goalToDelete = id;
+  var goal = state.goals.find(function(g) { return g.id === id; });
+  var nameEl = document.getElementById('goal-delete-name');
+  if (nameEl && goal) nameEl.textContent = goal.nome;
   document.getElementById('goal-delete-overlay')?.classList.remove('hidden');
 }
 
 export function deleteGoal() {
   if (!_goalToDelete) return;
-  const goal = state.goals.find(g => g.id === _goalToDelete);
-  if (goal) {
+  var goal = state.goals.find(function(g) { return g.id === _goalToDelete; });
+  if (goal && goal.atual > 0) {
     state.balance += goal.atual;
-    state.transactions.unshift({
-      id: uid('tx'),
-      date: formatDateBR(new Date()),
-      desc: `Resgate meta: ${goal.nome}`,
-      cat: 'Metas',
-      value: goal.atual
-    });
+    state.transactions.unshift({ id: uid('tx'), date: formatDateBR(new Date()), desc: 'Resgate meta: ' + goal.nome, cat: 'Metas', value: goal.atual });
   }
-
-  // [FIX] Metas excluídas localmente voltavam no próximo syncFromSupabase
-  const goalIdToDelete = _goalToDelete;
-  import('../services/supabase.js').then(({ supabase, isSupabaseConfigured }) => {
-    if (!isSupabaseConfigured || !supabase) return;
-    supabase.from('goals').delete().eq('id', goalIdToDelete)
-      .catch(e => console.error('[Goals] Falha ao deletar meta remota:', e));
+  var goalIdToDelete = _goalToDelete;
+  import('../services/supabase.js').then(function(m) {
+    if (!m.isSupabaseConfigured || !m.supabase) return;
+    m.supabase.from('goals').delete().eq('id', goalIdToDelete).catch(function(e) { console.error('[Goals] Falha ao deletar remoto:', e); });
   });
-
-  state.goals = state.goals.filter(g => g.id !== _goalToDelete);
+  state.goals = state.goals.filter(function(g) { return g.id !== _goalToDelete; });
   _goalToDelete = null;
   saveState();
   document.getElementById('goal-delete-overlay')?.classList.add('hidden');
-  showToast('Meta excluída e valor devolvido.', 'info');
+  showToast('Meta excluída. Valor devolvido ao saldo.', 'info');
   if (window.appRenderAll) window.appRenderAll();
 }
 
-export function saveGoalModal() {
-  const name = document.getElementById('goal-modal-name').value.trim();
-  const targetInputVal = document.getElementById('goal-modal-total').value;
-  let target = parseCurrencyInput(targetInputVal);
-  const current = parseCurrencyInput(document.getElementById('goal-modal-atual').value) || 0;
-  const deadlineStr = document.getElementById('goal-modal-deadline').value;
-  const themeInput = document.getElementById('goal-modal-theme').value;
-  const errEl = document.getElementById('goal-modal-error');
-
-  if (!name) {
-    errEl.textContent = 'Preencha o nome da meta.';
-    errEl.classList.remove('hidden');
-    return;
-  }
-
-  // Preenchimento inteligente se o alvo não foi informado ou for 0
-  const resolvedTheme = detectGoalTheme(name, themeInput);
-  if (!target) {
-     target = estimateGoalTarget(name, resolvedTheme);
-  }
-  
-  // Se ainda for inválido
-  if (!target) {
-     errEl.textContent = 'Preencha o valor alvo válido.';
-     errEl.classList.remove('hidden');
-     return;
-  }
-
-  let deadline = deadlineStr ? new Date(deadlineStr + 'T12:00:00Z').toISOString() : estimateGoalDeadline(name, resolvedTheme);
-
-  if (_editingGoalId) {
-    const idx = state.goals.findIndex(g => g.id === _editingGoalId);
-    if (idx >= 0) {
-      const g = state.goals[idx];
-      const diff = current - g.atual;
-      if (diff > 0 && state.balance < diff) {
-        errEl.textContent = 'Saldo insuficiente para atualizar o valor guardado.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-      state.balance -= diff;
-      
-      state.goals[idx] = { 
-        ...g, nome: name, total: target, atual: current, deadline, 
-        theme: resolvedTheme
-      };
-      
-      // Atualizar img se mudou o tema
-      state.goals[idx].img = pickGoalImage(name, themeInput);
-      
-      saveState();
-      showToast('Meta atualizada com sucesso.', 'success');
-    }
-  } else {
-    // Modo de criação de nova meta
-    const goal = {
-      id: uid('goal'),
-      nome: name,
-      atual: current,
-      total: target,
-      theme: resolvedTheme,
-      img: pickGoalImage(name, themeInput),
-      deadline: deadline
-    };
-    
-    // Se a meta já começar com saldo guardado
-    if (current > 0) {
-      if (state.balance < current) {
-        errEl.textContent = 'Saldo insuficiente para o valor inicial guardado.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-      state.balance -= current;
-      state.transactions.unshift({
-        id: uid('tx'),
-        date: formatDateBR(new Date()),
-        desc: `Depósito inicial: ${name}`,
-        cat: 'Metas',
-        value: -current
-      });
-    }
-
-    state.goals.unshift(goal);
-    saveState();
-    showToast(`Meta "${name}" criada com sucesso.`, 'success');
-  }
-  
-  document.getElementById('goal-modal-overlay')?.classList.add('hidden');
-  if (window.appRenderAll) window.appRenderAll();
-}
-
-// Expõe IMEDIATAMENTE no escopo global — antes do bindGoalEvents —
-// para que os onclick inline dos cards de meta funcionem assim que forem
-// renderizados, inclusive em re-renders via appRenderAll.
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL + BIND EVENTOS
+══════════════════════════════════════════════════════════════ */
 window.openEditGoal      = openEditGoal;
 window.confirmDeleteGoal = confirmDeleteGoal;
 
 export function bindGoalEvents() {
-  // Bind Nova Meta button to open the modal
   document.getElementById('goal-add-btn')?.addEventListener('click', openAddGoal);
-  document.getElementById('goal-modal-cancel')?.addEventListener('click', () => document.getElementById('goal-modal-overlay')?.classList.add('hidden'));
-  document.getElementById('goal-modal-close')?.addEventListener('click', () => document.getElementById('goal-modal-overlay')?.classList.add('hidden'));
-  document.getElementById('goal-modal-save')?.addEventListener('click', saveGoalModal);
-  
-  document.getElementById('goal-delete-cancel')?.addEventListener('click', () => document.getElementById('goal-delete-overlay')?.classList.add('hidden'));
-  document.getElementById('goal-delete-confirm')?.addEventListener('click', deleteGoal);
-  document.getElementById('goal-modal-overlay')?.addEventListener('click', (e) => {
-    if (e.target === document.getElementById('goal-modal-overlay')) {
+  ['goal-modal-cancel','goal-modal-close'].forEach(function(id) {
+    document.getElementById(id)?.addEventListener('click', function() {
       document.getElementById('goal-modal-overlay')?.classList.add('hidden');
-    }
+    });
   });
-  document.getElementById('goal-delete-overlay')?.addEventListener('click', (e) => {
+  document.getElementById('goal-modal-save')?.addEventListener('click', saveGoalModal);
+  document.getElementById('goal-modal-overlay')?.addEventListener('click', function(e) {
+    if (e.target === document.getElementById('goal-modal-overlay'))
+      document.getElementById('goal-modal-overlay')?.classList.add('hidden');
+  });
+  document.getElementById('goal-modal-name')?.addEventListener('input', _updateModalPreview);
+  document.getElementById('goal-modal-theme')?.addEventListener('change', _updateModalPreview);
+  document.getElementById('goal-delete-cancel')?.addEventListener('click', function() {
+    document.getElementById('goal-delete-overlay')?.classList.add('hidden');
+  });
+  document.getElementById('goal-delete-confirm')?.addEventListener('click', deleteGoal);
+  document.getElementById('goal-delete-overlay')?.addEventListener('click', function(e) {
     if (e.target === document.getElementById('goal-delete-overlay')) {
       _goalToDelete = null;
       document.getElementById('goal-delete-overlay')?.classList.add('hidden');
     }
   });
 
-  // Delegate contribution/brief events
-  document.getElementById('goals-container')?.addEventListener('click', e => {
-    const contBtn = e.target.closest('[data-goal-contribute]');
+  var container = document.getElementById('goals-container');
+  container?.addEventListener('click', function(e) {
+    var contBtn = e.target.closest('[data-goal-contribute]');
     if (contBtn) {
-      const gid = contBtn.dataset.goalContribute;
-      const inputEl = document.getElementById(`goal-invest-${gid}`);
-      const val = inputEl ? parseCurrencyInput(inputEl.value) : Number(contBtn.dataset.amount);
-      if (val > 0) {
-        applyGoalContribution(gid, val);
-      } else {
-        import('../utils/dom.js').then(m => m.showToast('Informe um valor acima de zero.', 'warning'));
-      }
+      var gid     = contBtn.dataset.goalContribute;
+      var inputEl = document.getElementById('goal-invest-' + gid);
+      var val     = inputEl ? parseCurrencyInput(inputEl.value) : 0;
+      if (val <= 0 && inputEl && inputEl.placeholder) val = parseCurrencyInput(inputEl.placeholder);
+      if (val > 0) applyGoalContribution(gid, val);
+      else showToast('Informe um valor acima de zero.', 'warning');
+      return;
     }
-    const briefBtn = e.target.closest('[data-goal-brief]');
+    var briefBtn = e.target.closest('[data-goal-brief]');
     if (briefBtn && window.switchTab && window.sendChatPrompt) {
-      const g = state.goals.find(x => x.id === briefBtn.dataset.goalBrief);
-      if (g) {
-        window.switchTab(3);
-        window.sendChatPrompt(`Resuma o plano para a meta "${g.nome}". O que devo fazer este mês?`);
-      }
+      var g = state.goals.find(function(x) { return x.id === briefBtn.dataset.goalBrief; });
+      if (g) { window.switchTab(3); window.sendChatPrompt('Resuma o plano para a meta "' + g.nome + '". O que devo fazer este mês?'); }
     }
   });
-  document.getElementById('goals-container')?.addEventListener('keydown', e => {
+  container?.addEventListener('keydown', function(e) {
     if (e.key !== 'Enter') return;
-    const inputEl = e.target.closest('input[id^="goal-invest-"]');
+    var inputEl = e.target.closest('input[id^="goal-invest-"]');
     if (!inputEl) return;
     e.preventDefault();
-    const gid = inputEl.id.replace('goal-invest-', '');
-    const val = parseCurrencyInput(inputEl.value);
+    var gid = inputEl.id.replace('goal-invest-', '');
+    var val = parseCurrencyInput(inputEl.value);
+    if (val <= 0 && inputEl.placeholder) val = parseCurrencyInput(inputEl.placeholder);
     if (val > 0) applyGoalContribution(gid, val);
-    else import('../utils/dom.js').then(m => m.showToast('Informe um valor acima de zero.', 'warning'));
+    else showToast('Informe um valor acima de zero.', 'warning');
   });
 }

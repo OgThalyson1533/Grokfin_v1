@@ -1300,75 +1300,113 @@
     </div>
   </div>
 
-  <!-- ─── Goal Edit Modal ─── -->
+  <!-- ─── Goal Edit Modal (v2) ─── -->
   <div id="goal-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
-       style="background:rgba(0,0,0,.7);backdrop-filter:blur(6px)">
-    <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
-         style="background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,13,22,.98))">
-      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
-        <h3 class="text-lg font-bold text-white" id="goal-modal-title">Editar Meta</h3>
-        <button id="goal-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors">
+       style="background:rgba(0,0,0,.75);backdrop-filter:blur(8px)">
+    <div class="w-full max-w-lg rounded-[28px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:linear-gradient(180deg,rgba(13,18,32,.99),rgba(8,11,22,.99))">
+
+      <!-- Preview de imagem do tema -->
+      <div id="goal-modal-img-preview" class="relative h-36 bg-cover bg-center transition-all duration-500"
+           style="background-image:url('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=1200&auto=format&fit=crop')">
+        <div class="absolute inset-0" style="background:linear-gradient(to bottom,rgba(0,0,0,.1),rgba(13,18,32,.95))"></div>
+        <div class="absolute bottom-4 left-6 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-sm flex items-center justify-center">
+            <i id="goal-modal-theme-icon" class="fa-solid fa-bullseye" style="color:#00f5ff"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white" id="goal-modal-title">Nova Meta</h3>
+        </div>
+        <button id="goal-modal-close"
+          class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-xl border border-white/15 bg-black/40 text-white/70 hover:bg-black/60 transition-colors backdrop-blur-sm">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
+
+      <!-- Campos -->
       <div class="px-6 py-5 flex flex-col gap-4">
-        <div class="flex flex-col gap-1">
-          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Nome da meta</label>
-          <input id="goal-modal-name" type="text" placeholder="Ex: Mac Studio, Viagem..." class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"/>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Nome da meta</label>
+          <input id="goal-modal-name" type="text" placeholder="Ex: Mac Studio, Viagem para o Japão..."
+            class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40 transition-colors placeholder-white/20"/>
         </div>
+
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Valor alvo (R$)</label>
-            <input id="goal-modal-total" type="text" placeholder="Ex: 15.000,00" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"/>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Valor alvo (R$)</label>
+            <input id="goal-modal-total" type="text" inputmode="decimal" placeholder="15.000,00"
+              class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40 transition-colors placeholder-white/20"/>
           </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Guardado (R$)</label>
-            <input id="goal-modal-atual" type="text" placeholder="Ex: 500,00" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"/>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Já guardado (R$)</label>
+            <input id="goal-modal-atual" type="text" inputmode="decimal" placeholder="0,00"
+              class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40 transition-colors placeholder-white/20"/>
           </div>
         </div>
+
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Prazo Limite</label>
-            <input id="goal-modal-deadline" type="date" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors" style="color-scheme: dark;"/>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Prazo limite</label>
+            <input id="goal-modal-deadline" type="date"
+              class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40 transition-colors"
+              style="color-scheme:dark"/>
           </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Tema visual</label>
-            <select id="goal-modal-theme" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors" style="background-color:rgba(255,255,255,.05)">
-              <option value="auto">Automático</option>
-              <option value="game">Games / Console</option>
-              <option value="travel">Viagem</option>
-              <option value="home">Casa / Imóvel</option>
-              <option value="vehicle">Carro / Moto</option>
-              <option value="reserve">Reserva</option>
-              <option value="tech">Tecnologia</option>
-              <option value="education">Educação</option>
-              <option value="celebration">Celebração</option>
-              <option value="bike">Bike / Mobilidade</option>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Tema visual</label>
+            <select id="goal-modal-theme"
+              class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40 transition-colors"
+              style="background-color:rgba(255,255,255,.05)">
+              <option value="auto">🎯 Automático</option>
+              <option value="game">🎮 Games / Console</option>
+              <option value="travel">✈️ Viagem</option>
+              <option value="home">🏠 Casa / Imóvel</option>
+              <option value="vehicle">🚗 Carro / Moto</option>
+              <option value="reserve">🛡️ Reserva</option>
+              <option value="tech">💻 Tecnologia</option>
+              <option value="education">🎓 Educação</option>
+              <option value="celebration">🎉 Celebração</option>
+              <option value="bike">🚴 Bike / Mobilidade</option>
             </select>
           </div>
         </div>
-        <p id="goal-modal-error" class="hidden text-xs text-rose-400 font-semibold px-1"></p>
+
+        <p id="goal-modal-error" class="hidden rounded-xl bg-rose-500/10 border border-rose-500/20 px-3 py-2 text-xs text-rose-300 font-semibold"></p>
       </div>
+
+      <!-- Rodapé -->
       <div class="px-6 pb-6 flex gap-3">
-        <button id="goal-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="goal-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+        <button id="goal-modal-cancel"
+          class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold text-white/60 hover:bg-white/10 transition-colors">
+          Cancelar
+        </button>
+        <button id="goal-modal-save"
+          class="flex-1 rounded-2xl px-4 py-3.5 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-95"
+          style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+          <i class="fa-solid fa-floppy-disk mr-2"></i>Salvar meta
+        </button>
       </div>
     </div>
   </div>
 
   <!-- ─── Goal Delete Confirm ─── -->
   <div id="goal-delete-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
-       style="background:rgba(0,0,0,.7);backdrop-filter:blur(6px)">
-    <div class="w-full max-w-sm rounded-[24px] border border-white/10 p-6 text-center shadow-2xl"
-         style="background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(10,13,22,.98))">
-      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/15 border border-rose-400/20">
-        <i class="fa-solid fa-bullseye text-rose-400 text-xl"></i>
+       style="background:rgba(0,0,0,.75);backdrop-filter:blur(8px)">
+    <div class="w-full max-w-sm rounded-[28px] border border-white/10 p-7 text-center shadow-2xl"
+         style="background:linear-gradient(180deg,rgba(13,18,32,.99),rgba(8,11,22,.99))">
+      <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/12 border border-rose-400/20">
+        <i class="fa-solid fa-trash-can text-rose-400 text-2xl"></i>
       </div>
       <h3 class="text-lg font-bold text-white mb-1">Excluir meta?</h3>
-      <p class="text-sm text-white/50 mb-6">Esta ação não pode ser desfeita.</p>
+      <p class="text-sm text-white/45 mb-1">A meta <strong id="goal-delete-name" class="text-white/80"></strong> será removida.</p>
+      <p class="text-xs text-white/35 mb-6">O valor guardado será devolvido ao saldo.</p>
       <div class="flex gap-3">
-        <button id="goal-delete-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="goal-delete-confirm" class="flex-1 rounded-2xl border border-rose-400/30 bg-rose-500/15 px-4 py-3 text-sm font-bold text-rose-300 hover:bg-rose-500/25 transition-colors">Excluir</button>
+        <button id="goal-delete-cancel"
+          class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold text-white/60 hover:bg-white/10 transition-colors">
+          Cancelar
+        </button>
+        <button id="goal-delete-confirm"
+          class="flex-1 rounded-2xl border border-rose-400/30 bg-rose-500/12 px-4 py-3.5 text-sm font-bold text-rose-300 hover:bg-rose-500/22 transition-colors">
+          <i class="fa-solid fa-trash-can mr-1.5"></i>Excluir
+        </button>
       </div>
     </div>
   </div>
