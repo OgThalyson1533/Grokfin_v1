@@ -9,7 +9,7 @@ import { isSupabaseConfigured } from './services/supabase.js';
 import { syncFromSupabase } from './services/sync.js';
 import { fetchExchangeRates } from './services/exchange.js';
 import { bindNavigationEvents, syncLocationHash, syncActiveViewLabel, switchTab } from './ui/navigation.js';
-import { bindDashboardEvents, renderDashboard, renderHeaderMeta, renderReport, renderHomeWidgets } from './ui/dashboard-ui.js';
+import { bindDashboardEvents, renderDashboard, renderHeaderMeta, renderReport, renderHomeWidgets, renderHomeWidgetsV2, renderHomeCategoryBars, renderHomeGauge, renderHomePerformance, renderHomePaymentMethods, getFilteredTransactions, homePeriod } from './ui/dashboard-ui.js';
 import { renderCharts } from './ui/charts.js';
 import { bindTxEvents, renderTransactions } from './ui/transactions-ui.js';
 import { bindGoalEvents, renderGoals } from './ui/goals-ui.js';
@@ -34,7 +34,7 @@ window.renderAll = function() {
     renderHeaderMeta(analytics);
     renderProfile(analytics);
     renderDashboard(analytics);
-    renderHomeWidgets(analytics);
+    renderHomeWidgetsV2(analytics);
     renderReport(analytics);
     renderCharts(analytics);
     renderTransactions();
@@ -55,6 +55,12 @@ window.appRenderAll = window.renderAll;
 window.renderHeaderMeta = renderHeaderMeta;
 // [FIX CAL] Expõe state globalmente para o calendário financeiro embutido no HTML
 window.appState = state;
+// Expõe funções do novo Home v2 globalmente
+window._homeRenderCategoryBars = renderHomeCategoryBars;
+window._homeRenderGauge = renderHomeGauge;
+window._homeRenderPerformance = renderHomePerformance;
+window._homeRenderPayment = renderHomePaymentMethods;
+window._homeGetTxs = getFilteredTransactions;
 
 async function initApp() {
   // 0. Autenticação restrita (bloquear se Supabase estiver configurado e o usuário não existir)

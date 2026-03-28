@@ -174,33 +174,40 @@
       </header>
 
       <section class="px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-14">
-        <div id="tab-0" class="tab-panel active">
+                <div id="tab-0" class="tab-panel active">
 
-<!-- ══════════════════════════════════════════
+<!-- ═══════════════════════════════════════════
      HOME — responsive: mobile-first + desktop grid
-══════════════════════════════════════════ -->
+═══════════════════════════════════════════ -->
 
-<!-- MOBILE layout (< lg) + DESKTOP col-left (lg+) via grid -->
+<!-- ─── FILTRO DE PERÍODO ─────────────────── -->
+<div class="flex items-center gap-2 mb-4 overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+  <span class="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0">Período:</span>
+  <div class="flex gap-2 pb-0.5 w-max">
+    <button class="home-period-btn active" data-period="month" onclick="setHomePeriod('month',this)">Este mês</button>
+    <button class="home-period-btn" data-period="lastmonth" onclick="setHomePeriod('lastmonth',this)">Mês anterior</button>
+    <button class="home-period-btn" data-period="3m" onclick="setHomePeriod('3m',this)">3 meses</button>
+    <button class="home-period-btn" data-period="6m" onclick="setHomePeriod('6m',this)">6 meses</button>
+    <button class="home-period-btn" data-period="year" onclick="setHomePeriod('year',this)">Este ano</button>
+  </div>
+</div>
+
 <div class="home-grid">
 
   <!-- ─── Col A: Saldo + Entradas/Saídas ─────── -->
   <div class="home-col-a">
-    <!-- Saldo principal -->
     <div class="rounded-3xl border border-white/8 bg-white/4 p-5 relative overflow-hidden home-balance-card">
       <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-[60px] pointer-events-none" style="background:radial-gradient(circle,rgba(0,245,255,.15),transparent 70%)"></div>
       <p class="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-1">SALDO ATUAL</p>
       <p class="text-4xl font-black text-white tracking-tight leading-none" id="saldo-total">R$ 0,00</p>
       <p class="text-xs text-white/40 mt-2">Média: <span class="text-white/65 font-semibold" id="home-burn-daily">R$ 0,00</span>/dia</p>
-      <!-- Net chip -->
       <div class="mt-3 flex items-center gap-2 flex-wrap">
         <span id="home-net-chip" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border border-emerald-400/20 bg-emerald-400/8 text-emerald-300">
           <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> --
         </span>
-        <span class="text-[10px] text-white/30">no mês</span>
+        <span class="text-[10px] text-white/30" id="home-period-label">no mês</span>
       </div>
     </div>
-
-    <!-- Entradas / Saídas -->
     <div class="grid grid-cols-2 gap-3 mt-3">
       <div class="flex items-center gap-2.5 rounded-2xl border border-emerald-400/15 bg-emerald-400/5 px-3.5 py-3">
         <div class="w-8 h-8 rounded-xl border border-emerald-400/25 bg-emerald-400/12 flex items-center justify-center shrink-0">
@@ -221,8 +228,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Score + Métricas (desktop: visível; mobile: oculto, está no col-B) -->
     <div class="hidden lg:grid grid-cols-3 gap-3 mt-3">
       <div class="rounded-2xl border border-white/8 bg-white/4 p-3 text-center">
         <p class="text-[9px] uppercase tracking-widest text-white/30">Score IA</p>
@@ -248,7 +253,6 @@
       <p class="text-sm font-bold text-white">Metas</p>
       <button class="text-xs text-cyan-300/60 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
     </div>
-    <!-- Score mobile: abaixo do título de Metas -->
     <div class="flex gap-2 mb-3 lg:hidden">
       <div class="flex-1 rounded-2xl border border-white/8 bg-white/4 py-2 px-3 flex items-center gap-2">
         <i class="fa-solid fa-brain text-violet-300 text-xs"></i>
@@ -313,11 +317,10 @@
         </div>
       </div>
     </div>
-    <!-- FAB nova transação -->
     <div class="flex justify-end mt-3">
       <button onclick="document.getElementById('tx-add-btn')?.click()"
               title="Nova transação"
-              class="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-black transition-all hover:scale-105 active:scale-95 shadow-lg"
+              class="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg"
               style="background:linear-gradient(135deg,#6366f1,#a855f7)">
         <i class="fa-solid fa-plus text-white text-xs"></i>
         <span class="text-white text-xs">Novo lançamento</span>
@@ -325,15 +328,168 @@
     </div>
   </div>
 
-  <!-- ─── Col E: Top Gastos ─────────────────── -->
+  <!-- ─── Col E: Gastos por Categoria (bar chart) ─────────────────── -->
   <div class="home-col-e">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Top Gastos</p>
+      <p class="text-sm font-bold text-white">Gastos por Categoria</p>
       <button class="text-xs text-white/35 hover:text-white/60 transition-colors" onclick="switchTab(2)">Extrato →</button>
     </div>
-    <div class="grid grid-cols-4 gap-2" id="home-top-gastos">
-      <div class="col-span-4 rounded-2xl border border-white/8 bg-white/4 p-4 text-center text-xs text-white/25">
-        Sem transações no mês
+    <div id="home-cat-bars" class="space-y-2">
+      <div class="rounded-2xl border border-white/8 bg-white/4 p-4 text-center text-xs text-white/25">Sem transações no período</div>
+    </div>
+    <!-- compat: manter id original oculto -->
+    <div id="home-top-gastos" class="hidden"></div>
+  </div>
+
+  <!-- ─── NOVO: Gauge de Saúde Financeira ──────────────────── -->
+  <div style="grid-column:1/-1">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Saúde Financeira</p>
+      <span class="text-[10px] text-white/35">Gastos vs Receita</span>
+    </div>
+    <div class="rounded-3xl border border-white/8 bg-white/4 p-5 relative overflow-hidden">
+      <div class="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-[80px] pointer-events-none" style="background:radial-gradient(circle,rgba(168,85,247,.12),transparent 70%)"></div>
+      <div class="grid gap-5 lg:grid-cols-3">
+
+        <!-- Gauge principal (semicírculo) -->
+        <div class="flex flex-col items-center justify-center py-2">
+          <div class="relative" style="width:180px;height:100px">
+            <svg width="180" height="110" viewBox="0 0 180 110" style="overflow:visible;display:block;margin:0 auto">
+              <defs>
+                <linearGradient id="gaugeGreen" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#00ff85"/>
+                  <stop offset="100%" stop-color="#00f5ff"/>
+                </linearGradient>
+                <linearGradient id="gaugeOrange" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#facc15"/>
+                  <stop offset="100%" stop-color="#f97316"/>
+                </linearGradient>
+                <linearGradient id="gaugeRed" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#f97316"/>
+                  <stop offset="100%" stop-color="#ff4466"/>
+                </linearGradient>
+              </defs>
+              <!-- Track completo -->
+              <path d="M 18 98 A 72 72 0 0 1 162 98" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="12" stroke-linecap="round"/>
+              <!-- Zona verde (0-50%) -->
+              <path d="M 18 98 A 72 72 0 0 1 90 26" fill="none" stroke="url(#gaugeGreen)" stroke-width="12" stroke-linecap="round" opacity="0.22"/>
+              <!-- Zona laranja (50-80%) -->
+              <path d="M 90 26 A 72 72 0 0 1 145 55" fill="none" stroke="url(#gaugeOrange)" stroke-width="12" stroke-linecap="round" opacity="0.18"/>
+              <!-- Zona vermelha (80-100%) -->
+              <path d="M 145 55 A 72 72 0 0 1 162 98" fill="none" stroke="url(#gaugeRed)" stroke-width="12" stroke-linecap="round" opacity="0.22"/>
+              <!-- Preenchimento dinâmico -->
+              <path id="gauge-fill-path" d="M 18 98 A 72 72 0 0 1 18 98" fill="none" stroke="url(#gaugeGreen)" stroke-width="12" stroke-linecap="round" style="transition:all .8s cubic-bezier(.4,0,.2,1)"/>
+              <!-- Marcadores de zona -->
+              <line x1="90" y1="26" x2="90" y2="34" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
+              <line x1="145" y1="55" x2="140" y2="62" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
+              <!-- Labels -->
+              <text x="4" y="110" text-anchor="middle" font-size="8" fill="rgba(0,255,133,.65)" font-family="Inter,sans-serif" font-weight="700">0%</text>
+              <text x="90" y="18" text-anchor="middle" font-size="8" fill="rgba(250,204,21,.65)" font-family="Inter,sans-serif" font-weight="700">50%</text>
+              <text x="176" y="110" text-anchor="middle" font-size="8" fill="rgba(255,68,102,.65)" font-family="Inter,sans-serif" font-weight="700">100%</text>
+            </svg>
+            <!-- Valor central sobreposto -->
+            <div class="absolute inset-0 flex flex-col items-center justify-end pb-1">
+              <p class="text-3xl font-black text-white leading-none" id="gauge-pct-label">--%</p>
+              <p class="text-[9px] text-white/35 mt-0.5">gastos / receita</p>
+            </div>
+          </div>
+          <p class="text-xs font-bold mt-2 text-center px-3 py-1 rounded-full" id="gauge-status-label" style="color:#00ff85;background:rgba(0,255,133,.08);border:1px solid rgba(0,255,133,.2)">Saudável</p>
+        </div>
+
+        <!-- Breakdown de barras -->
+        <div class="flex flex-col gap-4 justify-center">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] text-white/50 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full inline-block" style="background:#00f5ff"></span>
+                Gastos variáveis
+              </span>
+              <span class="text-[10px] font-bold text-white/80" id="gauge-var-pct">0%</span>
+            </div>
+            <div class="h-2 rounded-full bg-white/6">
+              <div class="h-full rounded-full" id="gauge-var-bar" style="width:0%;background:linear-gradient(90deg,#00f5ff,#a855f7);transition:width .7s ease"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] text-white/50 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full inline-block" style="background:#f97316"></span>
+                Custos fixos
+              </span>
+              <span class="text-[10px] font-bold text-white/80" id="gauge-fixed-pct">0%</span>
+            </div>
+            <div class="h-2 rounded-full bg-white/6">
+              <div class="h-full rounded-full" id="gauge-fixed-bar" style="width:0%;background:linear-gradient(90deg,#f97316,#ff4466);transition:width .7s ease"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] text-white/50 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full inline-block" style="background:#00ff85"></span>
+                Sobra / poupança
+              </span>
+              <span class="text-[10px] font-bold text-white/80" id="gauge-save-pct">0%</span>
+            </div>
+            <div class="h-2 rounded-full bg-white/6">
+              <div class="h-full rounded-full" id="gauge-save-bar" style="width:0%;background:linear-gradient(90deg,#00ff85,#00f5ff);transition:width .7s ease"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPIs rápidos -->
+        <div class="grid grid-cols-2 gap-2 lg:flex lg:flex-col lg:justify-center">
+          <div class="rounded-2xl border border-white/8 bg-white/4 p-3">
+            <p class="text-[9px] uppercase tracking-widest text-white/30">Total gastos</p>
+            <p class="text-base font-black text-rose-300 mt-0.5" id="gauge-total-expense">R$ 0</p>
+          </div>
+          <div class="rounded-2xl border border-white/8 bg-white/4 p-3">
+            <p class="text-[9px] uppercase tracking-widest text-white/30">Total entrada</p>
+            <p class="text-base font-black text-emerald-300 mt-0.5" id="gauge-total-income">R$ 0</p>
+          </div>
+          <div class="rounded-2xl border border-white/8 bg-white/4 p-3">
+            <p class="text-[9px] uppercase tracking-widest text-white/30">Fixos/mês</p>
+            <p class="text-base font-black text-amber-300 mt-0.5" id="gauge-fixed-value">R$ 0</p>
+          </div>
+          <div class="rounded-2xl border border-white/8 bg-white/4 p-3">
+            <p class="text-[9px] uppercase tracking-widest text-white/30">Saldo líquido</p>
+            <p class="text-base font-black mt-0.5" id="gauge-net-value" style="color:#00ff85">R$ 0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── NOVO: Comparativo de Desempenho ──────────────────── -->
+  <div style="grid-column:1/-1">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Comparativo de Desempenho</p>
+      <span class="text-[10px] text-white/35" id="perf-period-label">vs mês anterior</span>
+    </div>
+    <div id="home-performance-cards" class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <!-- Renderizado via JS -->
+    </div>
+  </div>
+
+  <!-- ─── NOVO: Método de Pagamento ──────────────────── -->
+  <div style="grid-column:1/-1">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Método de Pagamento</p>
+      <span class="text-[10px] text-white/35">Entradas &amp; Saídas</span>
+    </div>
+    <div class="rounded-3xl border border-white/8 bg-white/4 p-5">
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-rose-300/60 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-down text-[9px]"></i> Como você paga (saídas)
+          </p>
+          <div id="home-payment-out" class="space-y-2.5"></div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-300/60 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-up text-[9px]"></i> Como entra seu dinheiro
+          </p>
+          <div id="home-payment-in" class="space-y-2.5"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -360,7 +516,6 @@
       <span class="text-[10px] text-white/35" id="home-cal-month-label"></span>
     </div>
     <div id="home-financial-calendar" class="rounded-3xl border border-white/8 bg-white/4 p-4">
-      <!-- Renderizado via JS -->
     </div>
   </div>
 
