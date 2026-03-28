@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com 'unsafe-inline'; connect-src 'self' *.supabase.co economia.awesomeapi.com.br api.coingecko.com fonts.googleapis.com api.anthropic.com generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data: blob:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com 'unsafe-inline'; connect-src 'self' *.supabase.co economia.awesomeapi.com.br api.coingecko.com fonts.googleapis.com api.anthropic.com generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data: blob: https://images.unsplash.com;">
   <title>GrokFin Elite v6 • Hybrid PWA Organizado</title>
   <meta name="theme-color" content="#0b0f1b">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -39,6 +39,36 @@
   <link rel="stylesheet" href="./css/glass.css">
   <link rel="stylesheet" href="./css/nav.css">
   <link rel="stylesheet" href="./css/components.css">
+  <script>
+    // ══════════════════════════════════════════════════════
+    // Utilitário global: redimensiona imagem via Canvas
+    // Usado pelo profile-ui.js para upload de avatar e capa
+    // ══════════════════════════════════════════════════════
+    window.resizeImageFile = function(file, options = {}) {
+      return new Promise((resolve, reject) => {
+        const { width = 512, height = 512, quality = 0.88 } = options;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            // Calcular dimensões mantendo proporção
+            let sw = img.width, sh = img.height;
+            const ratio = Math.min(width / sw, height / sh);
+            canvas.width  = Math.round(sw * ratio);
+            canvas.height = Math.round(sh * ratio);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = () => reject(new Error('Falha ao carregar imagem'));
+          img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+        reader.readAsDataURL(file);
+      });
+    };
+  </script>
 </head>
 <body class="selection:bg-cyan-300 selection:text-black">
   <div class="pointer-events-none fixed inset-0 overflow-hidden" id="app-glow-container">
@@ -305,6 +335,32 @@
       <div class="col-span-4 rounded-2xl border border-white/8 bg-white/4 p-4 text-center text-xs text-white/25">
         Sem transações no mês
       </div>
+    </div>
+  </div>
+
+  <!-- ─── Col F: Receita vs Despesa (Line Chart) ── -->
+  <div class="home-col-f" style="grid-column:1/-1">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Receita vs Despesa</p>
+      <div class="flex items-center gap-3 text-[10px] text-white/40">
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-0.5 rounded-full bg-emerald-400"></span>Receita</span>
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-0.5 rounded-full bg-rose-400"></span>Despesa</span>
+      </div>
+    </div>
+    <div class="rounded-3xl border border-white/8 bg-white/4 p-4 relative" style="height:200px">
+      <canvas id="home-line-chart" style="width:100%;height:100%"></canvas>
+      <div id="home-line-chart-empty" class="hidden absolute inset-0 flex items-center justify-center text-sm text-white/30 italic">Adicione transações para ver o gráfico</div>
+    </div>
+  </div>
+
+  <!-- ─── Col G: Calendário Financeiro ─────────── -->
+  <div class="home-col-g" style="grid-column:1/-1">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-bold text-white">Calendário Financeiro</p>
+      <span class="text-[10px] text-white/35" id="home-cal-month-label"></span>
+    </div>
+    <div id="home-financial-calendar" class="rounded-3xl border border-white/8 bg-white/4 p-4">
+      <!-- Renderizado via JS -->
     </div>
   </div>
 

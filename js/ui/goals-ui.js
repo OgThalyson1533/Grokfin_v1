@@ -112,23 +112,43 @@ export function renderGoals(analytics) {
         const progress = getGoalProgress(goal);
         const monthlyNeed = getMonthlyNeed(goal);
         const remaining = Math.max(0, goal.total - goal.atual);
-        const contribution = Math.max(0, Math.min(monthlyNeed || remaining, remaining, Math.max(state.balance - 800, 0) || Math.min(state.balance, remaining)));
         const statusClass = progress >= 80 ? 'status-up' : progress >= 45 ? 'status-neutral' : 'status-down';
         const theme = detectGoalTheme(goal.nome, goal.theme || 'auto');
         const themeLabel = getGoalThemeLabel(theme);
         const goalImage = goal.customImage || pickGoalImage(goal.nome, goal.theme || theme);
 
+        // Valor sugerido para o aporte (ideal mensal; sem dependencia do saldo)
+        const suggestedAporte = monthlyNeed > 0 ? monthlyNeed : remaining;
+
         let smartTip = '';
         if (progress >= 100) {
           smartTip = '<i class="fa-solid fa-trophy text-emerald-300"></i> Meta atingida! Considere investir o valor ou iniciar um novo objetivo.';
-        } else if (contribution > 0 && contribution < monthlyNeed) {
-          const shortage = monthlyNeed - contribution;
-          smartTip = `<i class="fa-solid fa-arrow-trend-up text-fuchsia-300"></i> Aporte sugerido de ${formatMoney(monthlyNeed)}. Faltam ${formatMoney(shortage)} este mês para manter o prazo.`;
-        } else if (contribution >= monthlyNeed && monthlyNeed > 0) {
-          smartTip = '<i class="fa-solid fa-fire text-orange-400"></i> No ritmo perfeito! Você está cobrindo o aporte mensal necessário.';
+        } else if (monthlyNeed > 0 && state.balance < monthlyNeed) {
+          smartTip = `<i class="fa-solid fa-arrow-trend-up text-fuchsia-300"></i> Aporte ideal ${formatMoney(monthlyNeed)}/mês. Qualquer valor que você conseguir guardar já ajuda.`;
+        } else if (monthlyNeed > 0) {
+          smartTip = `<i class="fa-solid fa-fire text-orange-400"></i> Aporte ideal de ${formatMoney(monthlyNeed)}/mês para bater o prazo. No caminho certo!`;
         } else {
           smartTip = '<i class="fa-solid fa-lightbulb text-cyan-300"></i> Qualquer valor poupado agora acelera o seu prazo original.';
         }
+
+        // Botao de aporte: aparece SEMPRE se a meta nao esta concluida
+        const aporteBtnHtml = progress >= 100
+          ? `<button class="flex-1 min-w-[120px] rounded-2xl bg-emerald-500/10 border border-emerald-400/20 px-4 py-3 sm:py-3.5 text-sm font-black text-emerald-300 pointer-events-none">
+               <i class="fa-solid fa-trophy mr-1"></i> Meta Concluida
+             </button>`
+          : `<div class="flex-1 min-w-[160px] flex items-stretch rounded-2xl bg-black/40 border border-white/20 p-1 focus-within:border-cyan-400/50 transition-colors shadow-inner">
+               <div class="flex items-center pl-3">
+                 <span class="text-xs font-bold text-white/40 mr-1">R$</span>
+                 <input id="goal-invest-${goal.id}" type="text" inputmode="decimal"
+                   class="w-full bg-transparent text-sm font-black text-white outline-none placeholder-white/20"
+                   placeholder="${suggestedAporte > 0 ? suggestedAporte.toFixed(2).replace('.', ',') : '0,00'}"
+                   value="" />
+               </div>
+               <button data-goal-contribute="${goal.id}"
+                 class="rounded-xl shrink-0 bg-gradient-to-r from-cyan-300 to-emerald-300 px-4 py-2 text-xs font-black tracking-wide text-black shadow-[0_0_12px_rgba(0,245,255,0.2)] transition-transform hover:scale-[1.02] active:scale-95">
+                 NOVO APORTE
+               </button>
+             </div>`;
 
         return `
           <article class="goal-card group glass-panel card-hover relative isolate min-h-[24rem] flex flex-col overflow-hidden rounded-[30px] p-6 sm:p-7">
@@ -175,21 +195,7 @@ export function renderGoals(analytics) {
                 </div>
 
                 <div class="mt-2 flex flex-wrap gap-2 sm:gap-3 items-center">
-                  ${contribution > 0 ? `
-                    <div class="flex-1 min-w-[160px] flex items-stretch rounded-2xl bg-black/40 border border-white/20 p-1 focus-within:border-cyan-400/50 transition-colors shadow-inner">
-                      <div class="flex items-center pl-3">
-                         <span class="text-xs font-bold text-white/40 mr-1">R$</span>
-                         <input id="goal-invest-${goal.id}" type="text" inputmode="decimal" class="w-full bg-transparent text-sm font-black text-white outline-none placeholder-white/20" value="${contribution.toFixed(2).replace('.', ',')}" />
-                      </div>
-                      <button data-goal-contribute="${goal.id}" class="rounded-xl shrink-0 bg-gradient-to-r from-cyan-300 to-emerald-300 px-4 py-2 text-xs font-black tracking-wide text-black shadow-[0_0_12px_rgba(0,245,255,0.2)] transition-transform hover:scale-[1.02] active:scale-95">
-                        NOVO APORTE
-                      </button>
-                    </div>
-                  ` : `
-                    <button class="flex-1 min-w-[120px] rounded-2xl bg-white/5 border border-white/10 px-4 py-3 sm:py-3.5 text-sm font-black text-white/40 pointer-events-none">
-                      ✅ Meta Concluída
-                    </button>
-                  `}
+                  ${aporteBtnHtml}
                   <button data-goal-brief="${goal.id}" class="shrink-0 flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 w-12 h-11 sm:h-12 text-white transition-colors hover:bg-white/15" title="Ler com IA">
                     <i class="fa-solid fa-robot"></i>
                   </button>
@@ -236,10 +242,17 @@ export function applyGoalContribution(goalId, amount, options = {}) {
   const remaining = Math.max(0, goal.total - goal.atual);
   if (remaining <= 0) return { ok: false, message: 'Já concluída.' };
 
-  const liquidAvailable = state.balance > 1500 ? state.balance - 800 : state.balance;
-  const applied = Math.min(Number(amount) || getMonthlyNeed(goal), remaining, liquidAvailable);
-  
-  if (applied <= 0) return { ok: false, message: 'Saldo insuficiente.' };
+  // Usa exatamente o valor digitado, limitado ao restante da meta
+  const requested = Math.min(Number(amount) || 0, remaining);
+  if (requested <= 0) return { ok: false, message: 'Informe um valor válido.' };
+
+  // Valida saldo disponível
+  if (requested > state.balance) {
+    if (options.notify !== false) showToast(`Saldo insuficiente. Disponível: ${formatMoney(state.balance)}.`, 'danger');
+    return { ok: false, message: 'Saldo insuficiente.' };
+  }
+
+  const applied = requested;
 
   goal.atual = Number((goal.atual + applied).toFixed(2));
   state.balance = Number((state.balance - applied).toFixed(2));

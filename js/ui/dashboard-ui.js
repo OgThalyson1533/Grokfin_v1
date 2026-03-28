@@ -574,4 +574,192 @@ export function renderHomeWidgets(analytics) {
   renderHomeAIInsight(analytics);
   renderHomeUpcoming();
   renderHomeTopGastos(analytics);
+  renderHomeLineChart();
+  renderHomeFinancialCalendar();
+}
+
+// ── Instância do gráfico de linha do home (evita leak) ──
+let _homeLineChart = null;
+
+/** Gráfico de linha: Receita vs Despesa (últimos 6 meses) */
+export function renderHomeLineChart() {
+  const canvas = document.getElementById('home-line-chart');
+  const emptyEl = document.getElementById('home-line-chart-empty');
+  if (!canvas || !window.Chart) return;
+
+  // Destruir instância anterior
+  if (_homeLineChart) { try { _homeLineChart.destroy(); } catch {} _homeLineChart = null; }
+
+  const today = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const txMonth = (state.transactions || []).filter(t => {
+      const td = _parseDateBRLocal(t.date);
+      return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth();
+    });
+    const income  = txMonth.filter(t => t.value > 0).reduce((a, t) => a + t.value, 0);
+    const expense = txMonth.filter(t => t.value < 0).reduce((a, t) => a + Math.abs(t.value), 0);
+    months.push({
+      label: new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(d),
+      income,
+      expense
+    });
+  }
+
+  const hasData = months.some(m => m.income > 0 || m.expense > 0);
+  if (!hasData) {
+    canvas.style.display = 'none';
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    return;
+  }
+  canvas.style.display = '';
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  const ctx = canvas.getContext('2d');
+
+  const gradIncome = ctx.createLinearGradient(0, 0, 0, 180);
+  gradIncome.addColorStop(0, 'rgba(52,211,153,.30)');
+  gradIncome.addColorStop(1, 'rgba(52,211,153,0)');
+
+  const gradExpense = ctx.createLinearGradient(0, 0, 0, 180);
+  gradExpense.addColorStop(0, 'rgba(251,113,133,.25)');
+  gradExpense.addColorStop(1, 'rgba(251,113,133,0)');
+
+  _homeLineChart = new window.Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: months.map(m => m.label),
+      datasets: [
+        {
+          label: 'Receita',
+          data: months.map(m => m.income),
+          borderColor: '#34d399',
+          backgroundColor: gradIncome,
+          borderWidth: 2,
+          pointBackgroundColor: '#34d399',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Despesa',
+          data: months.map(m => m.expense),
+          borderColor: '#fb7185',
+          backgroundColor: gradExpense,
+          borderWidth: 2,
+          pointBackgroundColor: '#fb7185',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(6,9,17,.92)',
+          borderColor: 'rgba(255,255,255,.08)',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${formatMoney(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,.04)' },
+          ticks: { color: 'rgba(255,255,255,.40)', font: { size: 10 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,.04)' },
+          ticks: {
+            color: 'rgba(255,255,255,.40)',
+            font: { size: 10 },
+            callback: v => formatMoneyShort(v)
+          }
+        }
+      }
+    }
+  });
+}
+
+/** Auxiliar: parseia data BR (dd/mm/yyyy) sem importar módulo */
+function _parseDateBRLocal(str = '') {
+  if (!str) return new Date(NaN);
+  const parts = str.split('/');
+  if (parts.length === 3) return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+  return new Date(str);
+}
+
+/** Calendário financeiro: mostra entradas/saídas por dia do mês corrente */
+export function renderHomeFinancialCalendar() {
+  const container = document.getElementById('home-financial-calendar');
+  const label = document.getElementById('home-cal-month-label');
+  if (!container) return;
+
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  if (label) {
+    label.textContent = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(today);
+  }
+
+  // Agrupa transações do mês por dia
+  const byDay = {};
+  (state.transactions || []).forEach(t => {
+    const d = _parseDateBRLocal(t.date);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const day = d.getDate();
+      if (!byDay[day]) byDay[day] = { income: 0, expense: 0 };
+      if (t.value > 0) byDay[day].income  += t.value;
+      else             byDay[day].expense += Math.abs(t.value);
+    }
+  });
+
+  // Dias do mês
+  const firstDay  = new Date(year, month, 1).getDay(); // 0=Dom
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrev  = new Date(year, month, 0).getDate();
+  const todayNum    = today.getDate();
+
+  const weekdays = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  let headerHtml = `<div class="fin-cal-header">` +
+    weekdays.map(w => `<span>${w}</span>`).join('') + `</div>`;
+
+  let cells = '';
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+  for (let i = 0; i < totalCells; i++) {
+    let dayNum, isOther = false;
+    if (i < firstDay) {
+      dayNum  = daysInPrev - firstDay + i + 1;
+      isOther = true;
+    } else if (i >= firstDay + daysInMonth) {
+      dayNum  = i - firstDay - daysInMonth + 1;
+      isOther = true;
+    } else {
+      dayNum = i - firstDay + 1;
+    }
+
+    const isToday = !isOther && dayNum === todayNum;
+    const data = !isOther ? byDay[dayNum] : null;
+
+    cells += `<div class="fin-cal-day${isOther ? ' other-month' : ''}${isToday ? ' today' : ''}">
+      <span class="fin-cal-day-num">${dayNum}</span>
+      ${data && data.income  > 0 ? `<span class="fin-cal-pill-in">+${formatMoneyShort(data.income)}</span>`  : ''}
+      ${data && data.expense > 0 ? `<span class="fin-cal-pill-out">-${formatMoneyShort(data.expense)}</span>` : ''}
+    </div>`;
+  }
+
+  container.innerHTML = headerHtml + `<div class="fin-cal-grid">${cells}</div>`;
 }
