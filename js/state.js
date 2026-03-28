@@ -107,7 +107,7 @@ export function buildSeedState() {
     },
     transactions: [],
     customCategories: [], // categorias criadas pelo usuário — persistidas por conta
-    ui: { txSearch: '', txCategory: 'all', txSort: 'date-desc', txDateStart: null, txDateEnd: null, txPage: 0, activeTab: 0 },
+    ui: { txSearch: '', txCategory: 'all', txSort: 'date-desc', txDateStart: null, txDateEnd: null, txPage: 0, activeTab: 0, homeFilter: 'this_month' },
     chatHistory: [],
     lastUpdated: new Date().toISOString()
   };

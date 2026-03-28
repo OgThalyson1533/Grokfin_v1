@@ -902,121 +902,73 @@
 .goal-icon-btn-danger { border-color: rgba(239,68,68,.2); color: rgba(248,113,113,.8); }
 .goal-icon-btn-danger:hover { background: rgba(239,68,68,.12); color: #fca5a5; }
 
-/* ─── HOME: Filtro de Período ────────────────────────── */
-.home-period-btn {
-  padding: 5px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.04);
-  color: rgba(255,255,255,.45);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all .18s;
-  white-space: nowrap;
-}
-.home-period-btn:hover {
-  background: rgba(255,255,255,.09);
-  color: rgba(255,255,255,.75);
-  border-color: rgba(255,255,255,.18);
-}
-.home-period-btn.active {
-  background: rgba(0,245,255,.12);
-  color: #00f5ff;
-  border-color: rgba(0,245,255,.3);
-}
+/* ══════════════════════════════════════════════════════
+   HOME TAB — Period-aware widgets (v7)
+══════════════════════════════════════════════════════ */
 
-/* ─── HOME: Barras de categoria ─────────────────────── */
-.home-cat-bar-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.home-cat-bar-row-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.home-cat-bar-track {
-  height: 6px;
-  border-radius: 99px;
-  background: rgba(255,255,255,.06);
-  overflow: hidden;
-}
-.home-cat-bar-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width .7s cubic-bezier(.4,0,.2,1);
-}
-
-/* ─── HOME: Barras de método de pagamento ───────────── */
-.home-pay-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.home-pay-bar-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.home-pay-bar-info {
-  flex: 1;
-  min-width: 0;
-}
-.home-pay-bar-track {
-  height: 5px;
-  border-radius: 99px;
-  background: rgba(255,255,255,.06);
-  overflow: hidden;
-  margin-top: 4px;
-}
-.home-pay-bar-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width .7s cubic-bezier(.4,0,.2,1);
-}
-
-/* ─── HOME: Comparativo de Desempenho ───────────────── */
-.perf-card {
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.04);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.perf-card-up {
-  border-color: rgba(52,211,153,.15);
-  background: rgba(52,211,153,.04);
-}
-.perf-card-down {
-  border-color: rgba(251,113,133,.15);
-  background: rgba(251,113,133,.04);
-}
-.perf-chip {
+/* Period filter pills */
+.home-period-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 99px;
+  white-space: nowrap;
+  padding: .35rem .9rem;
+  border-radius: 9999px;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.45);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .18s, color .18s, border-color .18s, transform .1s;
 }
-.perf-chip-up {
-  background: rgba(52,211,153,.12);
-  color: #34d399;
-  border: 1px solid rgba(52,211,153,.2);
+.home-period-pill:hover {
+  background: rgba(255,255,255,.1);
+  color: rgba(255,255,255,.75);
+  border-color: rgba(255,255,255,.2);
 }
-.perf-chip-down {
-  background: rgba(251,113,133,.12);
-  color: #fb7185;
-  border: 1px solid rgba(251,113,133,.2);
+.home-period-pill.active {
+  background: linear-gradient(135deg,rgba(99,102,241,.45),rgba(168,85,247,.45));
+  border-color: rgba(168,85,247,.5);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(168,85,247,.25);
 }
+.home-period-pill:active { transform: scale(.95); }
+
+/* Category bars */
+.cat-bar-row {
+  padding: .75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.cat-bar-row:last-child { border-bottom: none; }
+.cat-bar-row.cat-bar-over {
+  background: rgba(248,113,113,.04);
+  border-radius: 12px;
+  padding: .75rem;
+  margin: 0 -.75rem;
+  border-bottom-color: transparent;
+}
+
+/* Shared progress bar */
+.progress-track {
+  width: 100%;
+  background: rgba(255,255,255,.07);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
+/* Payment method rows */
+.payment-method-row {
+  padding: .5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.payment-method-row:last-child { border-bottom: none; }
+
+/* Gauge breakdown rows */
+.gauge-breakdown-row { padding: .25rem 0; }
