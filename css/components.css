@@ -1150,3 +1150,33 @@
   justify-content: center;
   flex-shrink: 0;
 }
+
+/* ══════════════════════════════════════════════════════
+   AI SIDE PANEL
+══════════════════════════════════════════════════════ */
+#ai-side-panel {
+  will-change: transform;
+}
+#ai-side-panel.open {
+  transform: translateX(0) !important;
+}
+
+#ai-panel-backdrop {
+  will-change: opacity;
+}
+#ai-panel-backdrop.open {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+#ai-side-panel.has-messages #chat-empty-state {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+
+#ai-side-panel:not(.has-messages) #chat-empty-state {
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0s linear 0s;
+}

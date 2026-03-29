@@ -95,10 +95,6 @@
             <span class="nav-rail-icon"><i class="fa-solid fa-wallet"></i></span>
             <span class="nav-rail-tooltip">Conta</span>
           </button>
-          <button data-tab="3" class="nav-rail-button" aria-label="Chat">
-            <span class="nav-rail-icon"><i class="fa-solid fa-robot"></i></span>
-            <span class="nav-rail-tooltip">Chat</span>
-          </button>
           <button data-tab="4" class="nav-rail-button" aria-label="Metas">
             <span class="nav-rail-icon"><i class="fa-solid fa-bullseye"></i></span>
             <span class="nav-rail-tooltip">Metas</span>
@@ -158,6 +154,15 @@
             </div>
             <!-- Data de referência (desktop) -->
             <span class="hidden xl:inline-flex pill text-xs shrink-0"><i class="fa-regular fa-clock text-cyan-300"></i> <span id="header-ref-date">--</span></span>
+            <!-- Fingu AI Trigger -->
+            <button id="ai-panel-trigger" title="Assistente IA"
+                    class="relative shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-400/40 transition-colors">
+              <i class="fa-solid fa-robot text-emerald-400"></i>
+              <span class="absolute -top-[3px] -right-[3px] flex h-[10px] w-[10px]">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-[10px] w-[10px] border border-[#0d121c] bg-emerald-500 shadow-[0_0_6px_rgba(16,b9,129,1)]"></span>
+              </span>
+            </button>
             <!-- Avatar / perfil -->
             <button onclick="switchTab(5)" title="Perfil"
                     class="shrink-0 w-9 h-9 rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/30 transition-colors">
@@ -626,109 +631,6 @@
       </div>
     </div>
   </div>
-</div>
-        </div>
-
-        <div id="tab-3" class="tab-panel space-y-10">
-<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-<div>
-<p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Chatbot financeiro</p>
-<h3 class="mt-2 text-4xl font-black tracking-tight text-white">Área exclusiva do assistente GrokFin</h3>
-<p class="mt-3 max-w-2xl text-white/55">
-                Agora o chat ganhou uma seção própria para você conversar sobre saldo, gastos, metas, câmbio e comprovantes sem misturar com o relatório.
-              </p>
-</div>
-<div class="flex flex-wrap gap-3 items-center">
-<button class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8" data-chat-prompt="Como está meu saldo?">Saldo</button>
-<button class="pill hover:border-violet-300/30 hover:bg-violet-300/8" data-chat-prompt="Onde estou gastando mais?">Gastos</button>
-<button class="pill hover:border-emerald-300/30 hover:bg-emerald-300/8" data-chat-prompt="Qual meta eu devo acelerar?">Metas</button>
-<button id="open-ai-settings" class="pill hover:border-violet-400/30 hover:bg-violet-400/8">
-  <i class="fa-solid fa-key text-violet-400"></i> <span id="ai-mode-label">Modo inteligente</span>
-</button>
-</div>
-</div>
-
-<div class="grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
-<div class="glass-panel flex min-h-[72vh] flex-col overflow-hidden rounded-[28px]">
-<div class="border-b border-white/8 px-6 py-5">
-<div class="flex flex-wrap items-center justify-between gap-3">
-<div class="flex items-center gap-3">
-<span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-black shadow-brand">
-<i class="fa-solid fa-robot"></i>
-</span>
-<div>
-<div class="flex items-center gap-2 flex-wrap">
-                  <p class="text-lg font-semibold text-white">GrokFin Assistant</p>
-                  <span id="ai-active-indicator" class="hidden items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85);display:none"></span>
-                </div>
-                <p class="text-sm text-white/42" id="ai-chat-subtitle">Lê saldo, metas, categorias, câmbio e recomendação do mês</p>
-</div>
-</div>
-<div class="flex flex-wrap gap-2">
-<button class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8" data-chat-prompt="Como está meu saldo?">Saldo</button>
-<button class="pill hover:border-violet-300/30 hover:bg-violet-300/8" data-chat-prompt="Onde estou gastando mais?">Maiores gastos</button>
-<button class="pill hover:border-emerald-300/30 hover:bg-emerald-300/8" data-chat-prompt="Qual meta eu devo acelerar?">Melhor meta</button>
-</div>
-</div>
-</div>
-<div class="flex-1 space-y-5 overflow-y-auto px-6 py-6" id="chat-messages"></div>
-<div class="border-t border-white/8 bg-[#080c15]/88 px-6 py-5">
-<div class="flex flex-wrap items-center gap-3">
-<label class="flex h-14 w-14 cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lg text-white/70 transition-colors hover:bg-white/10">
-<i class="fa-solid fa-paperclip"></i>
-<input accept="image/*" class="hidden" id="file-upload" type="file"/>
-</label>
-<!-- [FIX #5] Botão de microfone para transcrição de áudio -->
-<button id="chat-mic-btn" title="Gravar áudio — clique para falar"
-  class="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lg text-white/70 transition-all hover:bg-white/10 hover:text-cyan-300"
-  style="flex-shrink:0">
-  <i class="fa-solid fa-microphone" id="chat-mic-icon"></i>
-</button>
-<div class="chat-input-wrap flex h-14 min-w-[240px] flex-1 items-center rounded-2xl border border-white/10 bg-white/5 px-5">
-<input class="w-full bg-transparent outline-none placeholder:text-white/28" id="chat-input" placeholder="Pergunte algo sobre fluxo, metas, câmbio ou fale com o microfone..." type="text"/>
-</div>
-<button class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r from-cyan-300 to-emerald-300 text-lg text-black shadow-brand transition-transform hover:scale-105" id="chat-send-btn">
-<i class="fa-solid fa-paper-plane"></i>
-</button>
-</div>
-</div>
-</div>
-<div class="space-y-6">
-<div class="glass-panel rounded-[28px] p-6">
-<p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">O que a IA consegue responder</p>
-<div class="mt-5 space-y-3 text-sm text-white/72">
-<div class="rounded-2xl border border-white/8 bg-white/4 p-4">“Quanto estou poupando este mês?”</div>
-<div class="rounded-2xl border border-white/8 bg-white/4 p-4">“Onde meu orçamento está vazando?”</div>
-<div class="rounded-2xl border border-white/8 bg-white/4 p-4">“Qual meta vale acelerar agora?”</div>
-<div class="rounded-2xl border border-white/8 bg-white/4 p-4">“Como está o dólar, o euro e o BTC?”</div>
-</div>
-</div>
-<div class="gradient-border rounded-[28px]">
-<div class="glass-panel rounded-[27px] p-6">
-<p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Última recomendação</p>
-<p class="mt-4 text-base leading-relaxed text-white/82" id="chat-side-insight">
-                    --
-                  </p>
-<button class="mt-5 rounded-2xl bg-white/10 px-4 py-3 font-semibold text-white transition-colors hover:bg-white/16" data-chat-prompt="Explique essa recomendação">
-                    Detalhar recomendação
-                  </button>
-</div>
-</div>
-<div class="glass-panel rounded-[28px] p-6">
-<p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Atalhos úteis</p>
-<div class="mt-5 grid gap-3">
-<button class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/10" data-quick-action="open-transactions">
-                    Abrir transações e revisar despesas
-                  </button>
-<button class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/10" data-quick-action="apply-insight">
-                    Aplicar a sugestão principal
-                  </button>
-<button class="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/10" data-quick-action="open-report">
-                    Abrir relatório executivo
-                  </button>
-</div>
-</div>
-</div>
 </div>
         </div>
 
@@ -2024,6 +1926,83 @@
 
   })();
   </script>
+
+  <!-- Fingu AI Side Panel Overlay -->
+  <div id="ai-panel-backdrop" class="fixed inset-0 z-[90] hidden bg-[#0b0f1b]/60 backdrop-blur-sm transition-opacity opacity-0"></div>
+
+  <aside id="ai-side-panel" class="fixed top-0 right-0 z-[100] h-full w-full sm:w-[420px] translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col bg-[#0f1115] border-l border-white/10 shadow-[-10px_0_40px_rgba(0,0,0,0.6)]">
+    
+    <!-- Header do Painel -->
+    <div class="flex items-center justify-between border-b border-white/5 px-6 py-5 shrink-0 bg-[#0f1115]">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 text-[#0f1115] shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+          <i class="fa-solid fa-robot text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-[15px] font-bold text-white tracking-tight leading-tight">GrokFin AI</h3>
+            <span id="ai-active-indicator" class="hidden items-center gap-1 rounded-full px-1.5 py-[2px] text-[9px] font-bold text-black bg-emerald-400 tracking-wider uppercase"></span>
+          </div>
+          <p class="text-[11px] text-white/50 tracking-wide mt-0.5">Assistente Financeiro</p>
+        </div>
+      </div>
+      <button id="ai-panel-close" class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Messages / Body -->
+    <div class="relative flex-1 overflow-hidden flex flex-col bg-[#0b0d14]">
+      <!-- Empty State -->
+      <div id="chat-empty-state" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-[#0b0d14] transition-opacity duration-300">
+        <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] bg-gradient-to-br from-emerald-400/10 to-transparent border border-emerald-400/20 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+          <i class="fa-solid fa-wand-magic-sparkles text-2xl text-emerald-400"></i>
+        </div>
+        <h4 class="mb-2 text-lg font-bold text-white tracking-tight">Como posso ajudar?</h4>
+        <p class="mb-8 text-sm text-white/40 leading-relaxed max-w-[280px]">Tire dúvidas sobre seus gastos, peça dicas de economia ou envie comprovantes.</p>
+        
+        <div class="w-full space-y-3">
+          <button class="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-[13px] font-medium text-white/80 transition-all hover:bg-emerald-400/10 hover:border-emerald-400/50 hover:text-emerald-300 group shadow-sm" data-chat-prompt="Qual é o meu runway atual?">
+            <span>Qual é o meu runway atual?</span>
+            <i class="fa-solid fa-arrow-right opacity-0 -translate-x-2 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 text-emerald-400"></i>
+          </button>
+          <button class="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-[13px] font-medium text-white/80 transition-all hover:bg-emerald-400/10 hover:border-emerald-400/50 hover:text-emerald-300 group shadow-sm" data-chat-prompt="Onde estou gastando mais?">
+            <span>Onde estou gastando mais?</span>
+            <i class="fa-solid fa-arrow-right opacity-0 -translate-x-2 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 text-emerald-400"></i>
+          </button>
+          <button class="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-[13px] font-medium text-white/80 transition-all hover:bg-emerald-400/10 hover:border-emerald-400/50 hover:text-emerald-300 group shadow-sm" data-chat-prompt="O que é EBITDA?">
+            <span>O que é EBITDA?</span>
+            <i class="fa-solid fa-arrow-right opacity-0 -translate-x-2 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 text-emerald-400"></i>
+          </button>
+        </div>
+      </div>
+      <!-- Chat scroll area -->
+      <div class="flex-1 overflow-y-auto px-5 py-6 space-y-5 relative z-20" id="chat-messages" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;"></div>
+    </div>
+
+    <!-- Footer / Input Area -->
+    <div class="shrink-0 border-t border-white/5 bg-[#0f1115] px-5 py-4">
+      <div class="flex items-center gap-2.5 relative">
+        <label class="flex h-[46px] w-[46px] shrink-0 cursor-pointer items-center justify-center rounded-xl bg-white/5 text-white/60 transition-colors hover:bg-white/10 hover:text-emerald-400 border border-transparent">
+          <i class="fa-solid fa-paperclip text-[15px]"></i>
+          <input accept="image/*" class="hidden" id="file-upload" type="file"/>
+        </label>
+        
+        <button id="chat-mic-btn" title="Gravar áudio" class="flex h-[46px] w-[46px] shrink-0 cursor-pointer items-center justify-center rounded-xl bg-white/5 text-white/60 transition-colors hover:bg-white/10 hover:text-emerald-400 border border-transparent">
+          <i class="fa-solid fa-microphone text-[15px]" id="chat-mic-icon"></i>
+        </button>
+
+        <div class="flex-1 flex items-center h-[46px] rounded-xl border border-white/10 bg-black/50 px-4 focus-within:border-emerald-400/60 focus-within:shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all">
+          <input class="w-full bg-transparent text-[13px] text-white outline-none placeholder:text-white/30" id="chat-input" placeholder="Pergunte algo..." type="text"/>
+        </div>
+        
+        <button id="chat-send-btn" class="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl bg-[#10b981] text-[#0f1115] shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_18px_rgba(16,185,129,0.4)] transition-all hover:-translate-y-[1px] active:translate-y-0">
+          <i class="fa-solid fa-paper-plane text-[15px] ml-[-2px]"></i>
+        </button>
+      </div>
+      <p class="mt-3 text-center text-[9px] text-white/30 font-medium tracking-wide">A Inteligência Artificial pode cometer erros. Considere verificar as respostas.</p>
+    </div>
+  </aside>
 
 </body>
 </html>

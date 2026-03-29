@@ -19,36 +19,72 @@ export function scrollChatToBottom() {
 }
 
 export function ensureChatSeed() {
-  if (!state.chatHistory?.length) {
-    if (!state.chatHistory) state.chatHistory = [];
-    state.chatHistory.push({
-      id: uid('msg'),
-      role: 'assistant',
-      text: 'Olá! Eu sou o **GrokFin**. Seu painel agora lê **saldo, metas, categorias e projeção** em tempo real. Pergunte algo como **"onde estou gastando mais?"** ou anexe um comprovante.',
-      createdAt: new Date().toISOString()
-    });
-    saveState();
+  if (!state.chatHistory) state.chatHistory = [];
+  // Removemos o seed inicial hardcoded, o empty-state agora reside nativamente no HTML do Sidebar.
+  saveState();
+}
+
+export function toggleAiSidePanel(forceState) {
+  const panel = document.getElementById('ai-side-panel');
+  const backdrop = document.getElementById('ai-panel-backdrop');
+  if (!panel || !backdrop) return;
+  
+  const isOpen = forceState !== undefined ? forceState : panel.classList.contains('translate-x-full');
+  
+  if (isOpen) {
+    panel.classList.remove('translate-x-full');
+    panel.classList.add('translate-x-0');
+    backdrop.classList.remove('hidden');
+    // Força o reflow para a transição funcionar
+    void backdrop.offsetWidth;
+    backdrop.classList.remove('opacity-0');
+    
+    setTimeout(() => {
+      document.getElementById('chat-input')?.focus();
+      scrollChatToBottom();
+    }, 300);
+  } else {
+    panel.classList.add('translate-x-full');
+    panel.classList.remove('translate-x-0');
+    backdrop.classList.add('opacity-0');
+    
+    setTimeout(() => {
+      backdrop.classList.add('hidden');
+    }, 500);
   }
 }
+
+// Expõe globalmente caso necessário por outros botões na interface
+window.toggleAiSidePanel = toggleAiSidePanel;
 
 export function renderChat() {
   const container = document.getElementById('chat-messages');
   if (!container) return;
 
+  const aiSidePanel = document.getElementById('ai-side-panel');
+  if (aiSidePanel) {
+    if (state.chatHistory && state.chatHistory.length > 0) {
+      aiSidePanel.classList.add('has-messages');
+    } else {
+      aiSidePanel.classList.remove('has-messages');
+    }
+  }
+
   container.innerHTML = state.chatHistory.map(message => {
     const isUser = message.role === 'user';
     return `
-      <div class="flex ${isUser ? 'justify-end' : 'gap-3'}">
-        ${isUser ? '' : `
-          <div class="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-black shadow-brand">
-            <i class="fa-solid fa-robot"></i>
+      <div class="flex flex-col ${isUser ? 'items-end' : 'items-start'}">
+        <div class="flex gap-2 max-w-[88%] ${isUser ? 'flex-row-reverse' : 'flex-row'}">
+          ${isUser ? '' : `
+            <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 text-[#0f1115] shadow-sm">
+              <i class="fa-solid fa-robot text-sm"></i>
+            </div>
+          `}
+          <div class="flex-1 min-w-0">
+            <div class="${isUser ? 'bg-[#10b981] text-[#0b0d14] rounded-[18px] rounded-tr-sm shadow-[0_2px_10px_rgba(16,185,129,0.1)]' : 'bg-white/5 border border-white/5 text-white/90 rounded-[18px] rounded-tl-sm'} px-4 py-3">
+              <div class="text-[13px] leading-relaxed break-words whitespace-pre-wrap ${isUser ? 'font-medium' : ''}">${richText(message.text)}</div>
+            </div>
           </div>
-        `}
-        <div class="max-w-[82%]">
-          <div class="${isUser ? 'message-bubble-user' : 'message-bubble-ai'} rounded-[24px] px-5 py-4 ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}">
-            <div class="text-[15px] leading-relaxed ${isUser ? 'text-black' : 'text-white/90'}">${richText(message.text)}</div>
-          </div>
-          <p class="mt-2 text-xs text-white/35 ${isUser ? 'text-right' : ''}">${formatShortTime(message.createdAt)}</p>
         </div>
       </div>
     `;
@@ -56,14 +92,16 @@ export function renderChat() {
 
   if (chatTyping) {
     const typingNode = document.createElement('div');
-    typingNode.className = 'flex gap-3';
+    typingNode.className = 'flex flex-col items-start';
     typingNode.innerHTML = `
-      <div class="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-black shadow-brand">
-        <i class="fa-solid fa-robot"></i>
-      </div>
-      <div class="message-bubble-ai rounded-[24px] rounded-tl-sm px-5 py-4">
-        <div class="flex items-center">
-          <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+      <div class="flex gap-2 max-w-[88%] flex-row">
+        <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 text-[#0f1115] shadow-sm">
+          <i class="fa-solid fa-robot text-sm"></i>
+        </div>
+        <div class="bg-white/5 border border-white/5 rounded-[18px] rounded-tl-sm px-4 py-3">
+          <div class="flex items-center h-[19px]">
+            <span class="typing-dot bg-emerald-400"></span><span class="typing-dot bg-emerald-400"></span><span class="typing-dot bg-emerald-400"></span>
+          </div>
         </div>
       </div>
     `;
@@ -601,6 +639,16 @@ export function bindChatEvents() {
     fileInput.addEventListener('change', handleChatImageInput);
   }
 
+  // Eventos de toggle do AI Side Panel
+  const triggerBtn = document.getElementById('ai-panel-trigger');
+  const closeBtn = document.getElementById('ai-panel-close');
+  const backdrop = document.getElementById('ai-panel-backdrop');
+
+  triggerBtn?.addEventListener('click', () => window.toggleAiSidePanel(true));
+  closeBtn?.addEventListener('click', () => window.toggleAiSidePanel(false));
+  backdrop?.addEventListener('click', () => window.toggleAiSidePanel(false));
+
+
   // [FIX #5] Transcrição de áudio via SpeechRecognition (Web Speech API)
   const micBtn = document.getElementById('chat-mic-btn');
   const micIcon = document.getElementById('chat-mic-icon');
@@ -692,6 +740,7 @@ export function sendChatPrompt(text) {
   const input = document.getElementById('chat-input');
   if (!input) return;
   input.value = String(text || '').trim();
+  window.toggleAiSidePanel(true);
   sendChatMessage();
 }
 
