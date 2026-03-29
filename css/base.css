@@ -99,3 +99,10 @@ select option {
   background: #0c111b;
   color: white;
 }
+
+/* Remove white borders from Home cards */
+#tab-0 .border-white\/8,
+#tab-0 .border-white\/12,
+#tab-0 .border-white\/10 {
+  border-color: transparent !important;
+}

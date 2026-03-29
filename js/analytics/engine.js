@@ -20,8 +20,8 @@ import { clamp, uid } from '../utils/math.js';
 /**
  * Returns { start, end } Date objects for a given homeFilter period.
  */
-export function getPeriodRange(filter = 'this_month') {
-  const today = new Date();
+export function getPeriodRange(filter = 'this_month', refDate = null) {
+  const today = refDate || new Date();
   const y = today.getFullYear();
   const m = today.getMonth();
 
@@ -58,8 +58,8 @@ export function getPeriodRange(filter = 'this_month') {
 /**
  * Returns the "previous" equivalent range to compare against.
  */
-export function getPreviousPeriodRange(filter = 'this_month') {
-  const today = new Date();
+export function getPreviousPeriodRange(filter = 'this_month', refDate = null) {
+  const today = refDate || new Date();
   const y = today.getFullYear();
   const m = today.getMonth();
 
@@ -581,8 +581,9 @@ export function getPaymentMethodStats(transactions) {
  * Used by the Home tab period filter.
  */
 export function calculateAnalyticsForPeriod(state, filter = 'this_month') {
-  const { start, end }   = getPeriodRange(filter);
-  const { start: ps, end: pe } = getPreviousPeriodRange(filter);
+  const ref = getReferenceDate(state);
+  const { start, end }   = getPeriodRange(filter, ref);
+  const { start: ps, end: pe } = getPreviousPeriodRange(filter, ref);
 
   function txInRange(t, s, e) {
     const d = parseDateBR(t.date);

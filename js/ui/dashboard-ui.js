@@ -580,7 +580,7 @@ export function renderHomeWidgets(analytics) {
   const filter = state.ui.homeFilter || 'this_month';
   const periodData = calculateAnalyticsForPeriod(state, filter);
   renderPeriodFilter(filter);
-  renderHealthGauge(periodData, filter);
+  renderHealthGauge(periodData, filter, analytics);
   renderCategoryBars(periodData);
   renderPerformanceComparison(periodData);
   renderPaymentMethods(periodData);
@@ -813,7 +813,7 @@ export function renderPeriodFilter(activeFilter) {
 }
 
 /** Gauge SVG semicircle — saúde financeira */
-export function renderHealthGauge(periodData, filter) {
+export function renderHealthGauge(periodData, filter, analytics) {
   const arc     = document.getElementById('home-gauge-arc');
   const needle  = document.getElementById('home-gauge-needle');
   const pctEl   = document.getElementById('home-gauge-pct');
@@ -821,7 +821,7 @@ export function renderHealthGauge(periodData, filter) {
   const periodLabelEl = document.getElementById('home-gauge-period-label');
   if (!arc) return; // Só precisa do arc para continuar
 
-  const ratio = clamp(periodData.expenseRatio, 0, 100);
+  const ratio = clamp(analytics ? analytics.healthScore || 0 : periodData.expenseRatio || 0, 0, 100);
   // Arc total length is ~251.3 (π × r = π × 80)
   const totalArc = 251.3;
   const filled   = (ratio / 100) * totalArc;
@@ -836,9 +836,9 @@ export function renderHealthGauge(periodData, filter) {
   if (pctEl) pctEl.textContent = `${Math.round(ratio)}%`;
 
   let zoneColor, zoneLabel, gradId;
-  if (ratio <= 70) {
+  if (ratio >= 70) {
     zoneColor = '#00ff85'; zoneLabel = 'Saudável'; gradId = 'url(#gaugeGreen)';
-  } else if (ratio <= 90) {
+  } else if (ratio >= 50) {
     zoneColor = '#facc15'; zoneLabel = 'Atenção'; gradId = 'url(#gaugeYellow)';
   } else {
     zoneColor = '#ff6685'; zoneLabel = 'Risco'; gradId = 'url(#gaugeRed)';
