@@ -186,325 +186,300 @@
   <button class="home-period-pill" data-period="this_year">Este ano</button>
 </div>
 
-<!-- MOBILE layout (< lg) + DESKTOP col-left (lg+) via grid -->
-<div class="home-grid">
-
-  <!-- ─── Col A: Saldo + Entradas/Saídas ─────── -->
-  <div class="home-col-a">
-    <!-- Saldo principal -->
-    <div class="rounded-3xl border border-white/8 bg-white/4 p-5 relative overflow-hidden home-balance-card">
-      <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-[60px] pointer-events-none" style="background:radial-gradient(circle,rgba(0,245,255,.15),transparent 70%)"></div>
+<!-- Bento Box Grid Layout -->
+<div class="flex flex-col gap-5">
+  <!-- Linha 1: Header / Resumo Executivo -->
+  <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex flex-col lg:flex-row gap-6 items-center lg:items-end justify-between relative overflow-hidden">
+    <!-- Glow effect behind balance -->
+    <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-[60px] pointer-events-none" style="background:radial-gradient(circle,rgba(0,245,255,.15),transparent 70%)"></div>
+    
+    <!-- Saldo -->
+    <div class="w-full lg:w-auto text-left relative z-10 flex-1">
       <p class="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-1">SALDO ATUAL</p>
-      <p class="text-4xl font-black text-white tracking-tight leading-none" id="saldo-total">R$ 0,00</p>
-      <p class="text-xs text-white/40 mt-2">Média: <span class="text-white/65 font-semibold" id="home-burn-daily">R$ 0,00</span>/dia</p>
-      <!-- Net chip -->
-      <div class="mt-3 flex items-center gap-2 flex-wrap">
+      <p class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none" id="saldo-total">R$ 0,00</p>
+      <div class="flex items-center gap-3 mt-3">
+        <p class="text-xs text-white/40">Média: <span class="text-white/65 font-semibold" id="home-burn-daily">R$ 0,00</span>/dia</p>
         <span id="home-net-chip" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border border-emerald-400/20 bg-emerald-400/8 text-emerald-300">
           <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> --
         </span>
         <span class="text-[10px] text-white/30" id="home-period-label-chip">no mês</span>
       </div>
     </div>
+    
+    <!-- Entradas / Saídas e Indicadores em Flexbox -->
+    <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto relative z-10 lg:items-end">
+       <!-- Score/Runway/Poupança lado a lado em flexbox (agrupados com saldo) -->
+       <div class="flex gap-3 h-full">
+         <div class="rounded-2xl border border-white/8 bg-white/4 p-4 text-center min-w-[95px] flex flex-col items-center justify-center">
+           <p class="text-[9px] uppercase tracking-widest text-white/30 mb-auto">Score IA</p>
+           <p class="text-xl font-black text-violet-200 mt-2 leading-none"><span id="home-health-score">--</span></p>
+           <p class="text-[9px] text-white/35 mt-1.5 max-w-[80px] truncate" id="home-health-caption">...</p>
+           <!-- Esconde a versão mobile do ID para não quebrar referências, evitando IDs duplicados se possível -->
+           <span id="home-health-score-m" class="hidden"></span>
+         </div>
+         <div class="rounded-2xl border border-white/8 bg-white/4 p-4 text-center min-w-[95px] flex flex-col items-center justify-center">
+           <p class="text-[9px] uppercase tracking-widest text-white/30 mb-auto">Runway</p>
+           <p class="text-xl font-black text-cyan-200 mt-2 leading-none"><span id="home-runway">-- m</span></p>
+           <p class="text-[9px] text-white/35 mt-1.5">de reserva</p>
+           <span id="home-runway-m" class="hidden"></span>
+         </div>
+         <div class="rounded-2xl border border-white/8 bg-white/4 p-4 text-center min-w-[95px] flex flex-col items-center justify-center">
+           <p class="text-[9px] uppercase tracking-widest text-white/30 mb-auto">Poupança</p>
+           <p class="text-xl font-black text-emerald-300 mt-2 leading-none"><span id="home-saving">0%</span></p>
+           <p class="text-[9px] text-white/35 mt-1.5">da renda</p>
+           <span id="home-saving-m" class="hidden"></span>
+         </div>
+       </div>
 
-    <!-- Entradas / Saídas -->
-    <div class="grid grid-cols-2 gap-3 mt-3">
-      <div class="flex items-center gap-2.5 rounded-2xl border border-emerald-400/15 bg-emerald-400/5 px-3.5 py-3">
-        <div class="w-8 h-8 rounded-xl border border-emerald-400/25 bg-emerald-400/12 flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-arrow-up text-emerald-400 text-xs"></i>
-        </div>
-        <div>
-          <p class="text-[10px] uppercase tracking-wider text-white/35 leading-none">Entrada</p>
-          <p class="text-sm font-bold text-emerald-300 mt-0.5 leading-none" id="dashboard-income">R$ 0,00</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2.5 rounded-2xl border border-rose-400/15 bg-rose-400/5 px-3.5 py-3">
-        <div class="w-8 h-8 rounded-xl border border-rose-400/25 bg-rose-400/12 flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-arrow-down text-rose-400 text-xs"></i>
-        </div>
-        <div>
-          <p class="text-[10px] uppercase tracking-wider text-white/35 leading-none">Saída</p>
-          <p class="text-sm font-bold text-rose-300 mt-0.5 leading-none" id="dashboard-expense">R$ 0,00</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Score + Métricas (desktop: visível; mobile: oculto, está no col-B) -->
-    <div class="hidden lg:grid grid-cols-3 gap-3 mt-3">
-      <div class="rounded-2xl border border-white/8 bg-white/4 p-3 text-center">
-        <p class="text-[9px] uppercase tracking-widest text-white/30">Score IA</p>
-        <p class="text-xl font-black text-violet-200 mt-1" id="home-health-score">--</p>
-        <p class="text-[9px] text-white/35 mt-0.5" id="home-health-caption">...</p>
-      </div>
-      <div class="rounded-2xl border border-white/8 bg-white/4 p-3 text-center">
-        <p class="text-[9px] uppercase tracking-widest text-white/30">Runway</p>
-        <p class="text-xl font-black text-cyan-200 mt-1" id="home-runway">-- m</p>
-        <p class="text-[9px] text-white/35 mt-0.5">de reserva</p>
-      </div>
-      <div class="rounded-2xl border border-white/8 bg-white/4 p-3 text-center">
-        <p class="text-[9px] uppercase tracking-widest text-white/30">Poupança</p>
-        <p class="text-xl font-black text-emerald-300 mt-1" id="home-saving">0%</p>
-        <p class="text-[9px] text-white/35 mt-0.5">da renda</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── Col B: Metas rings ─────────────────── -->
-  <div class="home-col-b">
-    <div class="flex items-center justify-between mb-3">
-      <p class="home-section-title">Metas</p>
-      <button class="text-xs text-cyan-300/60 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
-    </div>
-    <!-- Score mobile: abaixo do título de Metas -->
-    <div class="flex gap-2 mb-3 lg:hidden">
-      <div class="flex-1 rounded-2xl border border-white/8 bg-white/4 py-2 px-3 flex items-center gap-2">
-        <i class="fa-solid fa-brain text-violet-300 text-xs"></i>
-        <div>
-          <p class="text-[9px] text-white/30 uppercase tracking-widest leading-none">Score</p>
-          <p class="text-sm font-black text-violet-200 leading-none mt-0.5" id="home-health-score-m">--</p>
-        </div>
-      </div>
-      <div class="flex-1 rounded-2xl border border-white/8 bg-white/4 py-2 px-3 flex items-center gap-2">
-        <i class="fa-solid fa-gauge-high text-cyan-300 text-xs"></i>
-        <div>
-          <p class="text-[9px] text-white/30 uppercase tracking-widest leading-none">Runway</p>
-          <p class="text-sm font-black text-cyan-200 leading-none mt-0.5" id="home-runway-m">--</p>
-        </div>
-      </div>
-      <div class="flex-1 rounded-2xl border border-white/8 bg-white/4 py-2 px-3 flex items-center gap-2">
-        <i class="fa-solid fa-piggy-bank text-emerald-300 text-xs"></i>
-        <div>
-          <p class="text-[9px] text-white/30 uppercase tracking-widest leading-none">Poupança</p>
-          <p class="text-sm font-black text-emerald-300 leading-none mt-0.5" id="home-saving-m">0%</p>
-        </div>
-      </div>
-    </div>
-    <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
-      <div class="flex gap-3 pb-1 w-max" id="home-goals-rings">
-        <div class="flex flex-col items-center gap-1.5 w-[68px]">
-          <div class="w-[68px] h-[68px] rounded-full border-2 border-dashed border-white/12 flex items-center justify-center">
-            <i class="fa-solid fa-plus text-white/20 text-lg"></i>
-          </div>
-          <p class="text-[9px] text-white/30 text-center">Sem metas</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── Col C: Análise IA ──────────────────── -->
-  <div class="home-col-c">
-    <div class="flex items-center justify-between mb-3">
-      <p class="home-section-title">Análise IA</p>
-      <i class="fa-solid fa-microchip-ai text-cyan-400/50 text-xs"></i>
-    </div>
-    <div class="rounded-3xl border border-white/8 bg-white/4 p-4 relative overflow-hidden" style="backdrop-filter:blur(16px)">
-      <div class="absolute top-0 left-0 right-0 h-[2px] rounded-t-3xl" style="background:linear-gradient(90deg,#00f5ff,#a855f7,#00ff85)"></div>
-      <div class="absolute top-3.5 right-3.5 flex gap-1">
-        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-80"></span>
-        <span class="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></span>
-      </div>
-      <p class="text-sm leading-relaxed text-white/75 pr-6" id="home-ai-insight">Carregando análise...</p>
-    </div>
-  </div>
-
-  <!-- ─── Col D: Próximos 7 dias ────────────── -->
-  <div class="home-col-d">
-    <div class="flex items-center justify-between mb-3">
-      <p class="home-section-title">Próximos 7 Dias</p>
-      <span class="min-w-[22px] h-[22px] rounded-full bg-violet-500/25 border border-violet-400/25 text-[10px] font-bold text-violet-300 flex items-center justify-center px-1" id="home-upcoming-count">0</span>
-    </div>
-    <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
-      <div class="flex gap-2.5 pb-1 w-max" id="home-upcoming-cards">
-        <div class="w-36 rounded-2xl border border-white/8 bg-white/4 p-3">
-          <p class="text-xs text-white/25">Sem compromissos</p>
-        </div>
-      </div>
-    </div>
-    <!-- FAB nova transação -->
-    <div class="flex justify-end mt-3">
-      <button onclick="document.getElementById('tx-add-btn')?.click()"
-              title="Nova transação"
-              class="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-black transition-all hover:scale-105 active:scale-95 shadow-lg"
-              style="background:linear-gradient(135deg,#6366f1,#a855f7)">
-        <i class="fa-solid fa-plus text-white text-xs"></i>
-        <span class="text-white text-xs">Novo lançamento</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ─── NEW: Gauge de Saúde Financeira ─────── -->
-  <div class="home-col-e">
-    <div class="flex items-center justify-between mb-3">
-      <p class="home-section-title">Saúde Financeira</p>
-      <span class="text-[10px] text-white/35" id="home-gauge-period-label">Este mês</span>
-    </div>
-    <div class="rounded-3xl border border-white/8 bg-white/4 p-5 relative overflow-hidden" id="home-gauge-card">
-      <div class="flex flex-col lg:flex-row items-center gap-6">
-        <!-- Gauge SVG -->
-        <div class="relative flex-shrink-0" style="width:200px;height:110px">
-          <svg viewBox="0 0 200 110" width="200" height="110" style="overflow:visible">
-            <defs>
-              <linearGradient id="gaugeGreen" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stop-color="#00ff85"/>
-                <stop offset="100%" stop-color="#00f5ff"/>
-              </linearGradient>
-              <linearGradient id="gaugeYellow" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stop-color="#facc15"/>
-                <stop offset="100%" stop-color="#fb923c"/>
-              </linearGradient>
-              <linearGradient id="gaugeRed" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stop-color="#f97316"/>
-                <stop offset="100%" stop-color="#ff6685"/>
-              </linearGradient>
-            </defs>
-            <!-- Track -->
-            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="14" stroke-linecap="round"/>
-            <!-- Green zone 0–70% of arc -->
-            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGreen)" stroke-width="14" stroke-linecap="round"
-                  stroke-dasharray="251.3" stroke-dashoffset="75.4" opacity="0.35"/>
-            <!-- Fill arc (dynamic) -->
-            <path id="home-gauge-arc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGreen)" stroke-width="14" stroke-linecap="round"
-                  stroke-dasharray="251.3" stroke-dashoffset="251.3" style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .5s ease"/>
-
-          </svg>
-          <!-- Center value -->
-          <div class="absolute bottom-1 left-0 right-0 flex flex-col items-center">
-            <span class="text-2xl font-black text-white leading-none" id="home-gauge-pct">0%</span>
-            <span class="text-[9px] font-bold uppercase tracking-widest mt-0.5" id="home-gauge-label" style="color:#00ff85">Saudável</span>
-          </div>
-        </div>
-
-        <!-- Right side: breakdown + KPIs -->
-        <div class="flex-1 w-full space-y-3">
-          <!-- Breakdown bars -->
-          <div class="space-y-2" id="home-gauge-breakdown">
-            <div class="gauge-breakdown-row">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-white/55 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>Gastos Variáveis</span>
-                <span class="text-white/70 font-semibold" id="gauge-variable-val">R$ 0</span>
-              </div>
-              <div class="progress-track" style="height:6px"><div id="gauge-variable-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#fb7185,#f97316)"></div></div>
+       <!-- Container Entradas e Saidas com altura igual -->
+       <div class="flex flex-col gap-3 h-full justify-center">
+          <!-- Entrada -->
+          <div class="flex items-center gap-3 rounded-2xl border border-emerald-400/15 bg-emerald-400/5 px-4 py-3 h-[60px]">
+            <div class="w-8 h-8 rounded-xl border border-emerald-400/25 bg-emerald-400/12 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-arrow-up text-emerald-400 text-xs"></i>
             </div>
-            <div class="gauge-breakdown-row">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-white/55 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>Custos Fixos</span>
-                <span class="text-white/70 font-semibold" id="gauge-fixed-val">R$ 0</span>
-              </div>
-              <div class="progress-track" style="height:6px"><div id="gauge-fixed-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#facc15,#fb923c)"></div></div>
-            </div>
-            <div class="gauge-breakdown-row">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-white/55 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>Sobra / Poupança</span>
-                <span class="text-white/70 font-semibold" id="gauge-surplus-val">R$ 0</span>
-              </div>
-              <div class="progress-track" style="height:6px"><div id="gauge-surplus-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#34d399,#00ff85)"></div></div>
+            <div>
+              <p class="text-[9px] uppercase tracking-wider text-white/35 leading-none mb-1">Entrada</p>
+              <p class="text-sm font-bold text-emerald-300 leading-none" id="dashboard-income">R$ 0,00</p>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <div class="kpi-mini-card kpi-expenses">
-              <p class="kpi-label">Total Gastos</p>
-              <p class="kpi-value text-rose-300" id="gauge-kpi-expenses">R$ 0</p>
+          <!-- Saída -->
+          <div class="flex items-center gap-3 rounded-2xl border border-rose-400/15 bg-rose-400/5 px-4 py-3 h-[60px]">
+            <div class="w-8 h-8 rounded-xl border border-rose-400/25 bg-rose-400/12 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-arrow-down text-rose-400 text-xs"></i>
             </div>
-            <div class="kpi-mini-card kpi-incomes">
-              <p class="kpi-label">Total Entrada</p>
-              <p class="kpi-value text-emerald-300" id="gauge-kpi-incomes">R$ 0</p>
-            </div>
-            <div class="kpi-mini-card kpi-fixed">
-              <p class="kpi-label">Fixos/Mês</p>
-              <p class="kpi-value text-amber-300" id="gauge-kpi-fixed">R$ 0</p>
-            </div>
-            <div class="kpi-mini-card kpi-net">
-              <p class="kpi-label">Saldo Líquido</p>
-              <p class="kpi-value" id="gauge-kpi-net">R$ 0</p>
+            <div>
+              <p class="text-[9px] uppercase tracking-wider text-white/35 leading-none mb-1">Saída</p>
+              <p class="text-sm font-bold text-rose-300 leading-none" id="dashboard-expense">R$ 0,00</p>
             </div>
           </div>
-        </div>
-      </div>
+       </div>
     </div>
   </div>
 
-  <!-- ─── NEW: Comparativo de Desempenho ──────── -->
-  <div class="home-col-f" style="grid-column:1/-1">
-    <div class="flex items-center justify-between mb-3">
+  <!-- Linha 2: KPIs (Comparativo de Desempenho) -->
+  <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 w-full">
+    <div class="flex items-center justify-between mb-4">
       <p class="home-section-title">Comparativo de Desempenho</p>
       <span class="text-[10px] text-white/35">Período atual vs anterior</span>
     </div>
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" id="home-comparison-cards">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="home-comparison-cards">
       <!-- Renderizado via JS -->
     </div>
   </div>
 
-  <!-- ─── NEW: Gastos por Categoria (barras) ─── -->
-  <div class="home-col-g" style="grid-column:1/-1">
-    <div class="flex items-center justify-between mb-3">
-      <p class="home-section-title">Gastos por Categoria</p>
-      <button class="text-xs text-white/35 hover:text-white/60 transition-colors" onclick="switchTab(2)">Extrato →</button>
-    </div>
-    <div class="rounded-3xl border border-white/8 bg-white/4 p-5">
-      <div class="space-y-3" id="home-category-bars">
-        <div class="text-xs text-white/30 text-center py-4">Sem transações no período</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── Col H: Receita vs Despesa (Line Chart) -->
-  <div class="home-col-h" style="grid-column:1/-1">
-    <div class="flex items-center justify-between mb-3">
-      <p class="home-section-title">Receita vs Despesa</p>
-      <div class="flex items-center gap-3 text-[10px] text-white/40">
-        <span class="flex items-center gap-1"><span class="inline-block w-3 h-0.5 rounded-full bg-emerald-400"></span>Receita</span>
-        <span class="flex items-center gap-1"><span class="inline-block w-3 h-0.5 rounded-full bg-rose-400"></span>Despesa</span>
-      </div>
-    </div>
-    <div class="rounded-3xl border border-white/8 bg-white/4 p-4 relative" style="height:200px">
-      <canvas id="home-line-chart" style="width:100%;height:100%"></canvas>
-      <div id="home-line-chart-empty" class="hidden absolute inset-0 flex items-center justify-center text-sm text-white/30 italic">Adicione transações para ver o gráfico</div>
-    </div>
-  </div>
-
-  <!-- ─── NEW: Método de Pagamento ──────────── -->
-  <div class="home-col-i" style="grid-column:1/-1">
-    <div class="flex items-center justify-between mb-3">
-      <p class="home-section-title">Método de Pagamento</p>
-      <span class="text-[10px] text-white/35">Entradas e saídas</span>
-    </div>
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <!-- Entradas -->
-      <div class="rounded-3xl border border-emerald-400/12 bg-emerald-400/4 p-5">
-        <p class="text-xs font-bold text-emerald-300/70 uppercase tracking-widest mb-4">
-          <i class="fa-solid fa-arrow-up mr-1.5"></i>Entradas
-        </p>
-        <div class="space-y-2.5" id="home-payment-incomes">
-          <p class="text-xs text-white/25 text-center py-3">Sem entradas no período</p>
+  <!-- Linha 3: Análise e Tendências (Split 60/40) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full">
+    
+    <!-- Coluna Esquerda 60% (Gráficos: lg:col-span-7) -->
+    <div class="lg:col-span-7 flex flex-col gap-5">
+      <!-- Gráfico de Linha -->
+      <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-4 shrink-0">
+          <p class="home-section-title">Receita vs Despesa</p>
+          <div class="flex items-center gap-3 text-[10px] text-white/40">
+            <span class="flex items-center gap-1"><span class="inline-block w-3 h-0.5 rounded-full bg-emerald-400"></span>Receita</span>
+            <span class="flex items-center gap-1"><span class="inline-block w-3 h-0.5 rounded-full bg-rose-400"></span>Despesa</span>
+          </div>
+        </div>
+        <div class="relative flex-1 w-full min-h-[220px]">
+          <canvas id="home-line-chart" style="width:100%;height:100%;display:block;"></canvas>
+          <div id="home-line-chart-empty" class="hidden absolute inset-0 flex items-center justify-center text-sm text-white/30 italic">Adicione transações para ver o gráfico</div>
         </div>
       </div>
-      <!-- Saídas -->
-      <div class="rounded-3xl border border-rose-400/12 bg-rose-400/4 p-5">
-        <p class="text-xs font-bold text-rose-300/70 uppercase tracking-widest mb-4">
-          <i class="fa-solid fa-arrow-down mr-1.5"></i>Saídas
-        </p>
-        <div class="space-y-2.5" id="home-payment-expenses">
-          <p class="text-xs text-white/25 text-center py-3">Sem saídas no período</p>
+
+      <!-- Gráfico de Rosca (Gastos por Categoria) -->
+      <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-4 shrink-0">
+          <p class="home-section-title">Gastos por Categoria</p>
+          <button class="text-xs text-white/35 hover:text-white/60 transition-colors" onclick="switchTab(2)">Extrato →</button>
+        </div>
+        <div id="home-category-bars" class="space-y-3 flex-1 flex items-center justify-center min-h-[160px]">
+          <div class="text-xs text-white/30 text-center py-4">Sem transações no período</div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ─── Calendário Financeiro ─────────── -->
-  <div class="home-col-j" style="grid-column:1/-1">
-    <div class="flex items-center justify-between mb-3">
-      <p class="home-section-title">Calendário Financeiro</p>
-      <div class="flex items-center gap-2">
-        <button onclick="if(window.changeCalendarMonth) window.changeCalendarMonth(-1)" class="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"><i class="fa-solid fa-chevron-left text-[10px] text-white/50"></i></button>
-        <span class="text-[10px] text-white/50 font-semibold min-w-[70px] text-center" id="home-cal-month-label"></span>
-        <button onclick="if(window.changeCalendarMonth) window.changeCalendarMonth(1)" class="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"><i class="fa-solid fa-chevron-right text-[10px] text-white/50"></i></button>
+    <!-- Coluna Direita 40% (Operacional/Saúde: lg:col-span-5) -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
+      <!-- Análise IA -->
+      <div class="rounded-3xl bg-[#292929] border border-white/8 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <p class="home-section-title">Análise IA</p>
+          <i class="fa-solid fa-microchip-ai text-cyan-400/50 text-xs"></i>
+        </div>
+        <div class="rounded-2xl border border-white/8 bg-white/4 p-4 relative overflow-hidden" style="backdrop-filter:blur(8px)">
+          <div class="absolute top-0 left-0 right-0 h-[2px] rounded-t-3xl" style="background:linear-gradient(90deg,#00f5ff,#a855f7,#00ff85)"></div>
+          <div class="absolute top-3.5 right-3.5 flex gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-80"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></span>
+          </div>
+          <p class="text-sm leading-relaxed text-white/75 pr-6" id="home-ai-insight">Carregando análise...</p>
+        </div>
+      </div>
+
+      <!-- Saúde Financeira -->
+      <div class="rounded-3xl bg-[#292929] border border-white/8 p-5" id="home-gauge-card">
+        <div class="flex items-center justify-between mb-4">
+          <p class="home-section-title">Saúde Financeira</p>
+          <span class="text-[10px] text-white/35" id="home-gauge-period-label">Este mês</span>
+        </div>
+        <!-- Gauge e Breakdown compactos para alinhar lateralmente ou verticalmente -->
+        <div class="flex flex-col sm:flex-row lg:flex-col items-center justify-center gap-5">
+          <!-- Gauge SVG -->
+          <div class="relative flex-shrink-0" style="width:160px;height:90px">
+            <svg viewBox="0 0 200 110" width="100%" height="100%" style="overflow:visible">
+              <defs>
+                <linearGradient id="gaugeGreen" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#00ff85"/>
+                  <stop offset="100%" stop-color="#00f5ff"/>
+                </linearGradient>
+                <linearGradient id="gaugeYellow" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#facc15"/>
+                  <stop offset="100%" stop-color="#fb923c"/>
+                </linearGradient>
+                <linearGradient id="gaugeRed" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#f97316"/>
+                  <stop offset="100%" stop-color="#ff6685"/>
+                </linearGradient>
+              </defs>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="14" stroke-linecap="round"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGreen)" stroke-width="14" stroke-linecap="round"
+                    stroke-dasharray="251.3" stroke-dashoffset="75.4" opacity="0.35"/>
+              <path id="home-gauge-arc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGreen)" stroke-width="14" stroke-linecap="round"
+                    stroke-dasharray="251.3" stroke-dashoffset="251.3" style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .5s ease"/>
+            </svg>
+            <div class="absolute bottom-1 left-0 right-0 flex flex-col items-center">
+              <span class="text-xl font-black text-white leading-none" id="home-gauge-pct">0%</span>
+              <span class="text-[8px] font-bold uppercase tracking-widest mt-1" id="home-gauge-label" style="color:#00ff85">Saudável</span>
+            </div>
+          </div>
+          <!-- Breakdown bars -->
+          <div class="w-full flex-1 space-y-2" id="home-gauge-breakdown">
+            <div class="gauge-breakdown-row">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-white/55 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>Gastos Var.</span>
+                <span class="text-white/70 font-semibold" id="gauge-variable-val">R$ 0</span>
+              </div>
+              <div class="progress-track" style="height:5px"><div id="gauge-variable-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#fb7185,#f97316)"></div></div>
+            </div>
+            <div class="gauge-breakdown-row">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-white/55 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>Fixos</span>
+                <span class="text-white/70 font-semibold" id="gauge-fixed-val">R$ 0</span>
+              </div>
+              <div class="progress-track" style="height:5px"><div id="gauge-fixed-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#facc15,#fb923c)"></div></div>
+            </div>
+            <div class="gauge-breakdown-row">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-white/55 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>Poupança</span>
+                <span class="text-white/70 font-semibold" id="gauge-surplus-val">R$ 0</span>
+              </div>
+              <div class="progress-track" style="height:5px"><div id="gauge-surplus-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#34d399,#00ff85)"></div></div>
+            </div>
+          </div>
+          <!-- Legacy KPI fields we hide so the logic doesn't break -->
+          <div class="hidden">
+            <div id="gauge-kpi-expenses"></div>
+            <div id="gauge-kpi-incomes"></div>
+            <div id="gauge-kpi-fixed"></div>
+            <div id="gauge-kpi-net"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Próximos 7 Dias e Metas -->
+      <div class="grid grid-cols-1 gap-5">
+        <!-- Próximos -->
+        <div class="rounded-3xl bg-[#292929] border border-white/8 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <p class="home-section-title">Próximos 7 Dias</p>
+            <span class="min-w-[22px] h-[22px] rounded-full bg-violet-500/25 border border-violet-400/25 text-[10px] font-bold text-violet-300 flex items-center justify-center px-1" id="home-upcoming-count">0</span>
+          </div>
+          <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+            <div class="flex gap-2.5 pb-2 w-max" id="home-upcoming-cards">
+              <div class="w-36 rounded-2xl border border-white/8 bg-white/4 p-3">
+                <p class="text-xs text-white/25">Sem compromissos</p>
+              </div>
+            </div>
+          </div>
+          <button onclick="document.getElementById('tx-add-btn')?.click()"
+                  title="Nova transação"
+                  class="mt-3 flex items-center justify-center gap-2 rounded-2xl w-full py-2.5 text-sm font-bold text-black transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  style="background:linear-gradient(135deg,#6366f1,#a855f7)">
+            <i class="fa-solid fa-plus text-white text-xs"></i>
+            <span class="text-white text-xs">Novo lançamento</span>
+          </button>
+        </div>
+
+        <!-- Metas -->
+        <div class="rounded-3xl bg-[#292929] border border-white/8 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <p class="home-section-title">Metas</p>
+            <button class="text-xs text-cyan-300/60 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
+          </div>
+          <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+            <div class="flex gap-3 pb-2 w-max" id="home-goals-rings">
+              <div class="flex flex-col items-center gap-1.5 w-[68px]">
+                <div class="w-[68px] h-[68px] rounded-full border-2 border-dashed border-white/12 flex items-center justify-center">
+                  <i class="fa-solid fa-plus text-white/20 text-lg"></i>
+                </div>
+                <p class="text-[9px] text-white/30 text-center">Sem metas</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div id="home-financial-calendar" class="rounded-3xl border border-white/8 bg-white/4 p-4">
-      <!-- Renderizado via JS -->
+  </div>
+
+  <!-- Linha 4: Rodapé (Calendário e Métodos de Pagamento) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
+    <!-- Método de Pagamento -->
+    <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <p class="home-section-title">Método de Pagamento</p>
+        <span class="text-[10px] text-white/35">Entradas e saídas</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+        <!-- Entradas -->
+        <div class="rounded-3xl border border-emerald-400/12 bg-emerald-400/4 p-4 lg:p-5">
+          <p class="text-xs font-bold text-emerald-300/70 uppercase tracking-widest mb-4">
+            <i class="fa-solid fa-arrow-up mr-1.5"></i>Entradas
+          </p>
+          <div class="space-y-2.5" id="home-payment-incomes">
+            <p class="text-xs text-white/25 text-center py-3">Sem entradas no período</p>
+          </div>
+        </div>
+        <!-- Saídas -->
+        <div class="rounded-3xl border border-rose-400/12 bg-rose-400/4 p-4 lg:p-5">
+          <p class="text-xs font-bold text-rose-300/70 uppercase tracking-widest mb-4">
+            <i class="fa-solid fa-arrow-down mr-1.5"></i>Saídas
+          </p>
+          <div class="space-y-2.5" id="home-payment-expenses">
+            <p class="text-xs text-white/25 text-center py-3">Sem saídas no período</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendário Financeiro -->
+    <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <p class="home-section-title">Calendário Financeiro</p>
+        <div class="flex items-center gap-2">
+          <button onclick="if(window.changeCalendarMonth) window.changeCalendarMonth(-1)" class="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"><i class="fa-solid fa-chevron-left text-[10px] text-white/50"></i></button>
+          <span class="text-[10px] text-white/50 font-semibold min-w-[70px] text-center" id="home-cal-month-label"></span>
+          <button onclick="if(window.changeCalendarMonth) window.changeCalendarMonth(1)" class="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"><i class="fa-solid fa-chevron-right text-[10px] text-white/50"></i></button>
+        </div>
+      </div>
+      <div id="home-financial-calendar" class="flex-1">
+        <!-- Renderizado via JS -->
+      </div>
     </div>
   </div>
 
-</div><!-- end .home-grid -->
+</div><!-- end bento box grid layout -->
 
 <!-- Hidden legacy IDs (preservam funcionalidade de outros módulos) -->
 <div class="hidden" aria-hidden="true">

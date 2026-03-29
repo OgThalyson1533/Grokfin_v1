@@ -468,49 +468,6 @@
 #home-goals-rings::-webkit-scrollbar,
 #home-upcoming-cards::-webkit-scrollbar { display: none; }
 
-/* Grid mobile: empilhado em col única */
-.home-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-/* Desktop: grid de 2 colunas com áreas nomeadas */
-@media (min-width: 1024px) {
-  .home-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto;
-    gap: 1.25rem;
-    grid-template-areas:
-      "colA colB"
-      "colC colD"
-      "colE colE"
-      "colF colF"
-      "colG colG";
-  }
-  .home-col-a { grid-area: colA; }
-  .home-col-b { grid-area: colB; }
-  .home-col-c { grid-area: colC; }
-  .home-col-d { grid-area: colD; }
-  .home-col-e { grid-area: colE; }
-  .home-col-f { grid-area: colF; }
-  .home-col-g { grid-area: colG; }
-}
-
-/* Wide desktop: 3 colunas */
-@media (min-width: 1440px) {
-  .home-grid {
-    grid-template-columns: 1.1fr 1fr 1fr;
-    grid-template-areas:
-      "colA colB colB"
-      "colC colC colD"
-      "colE colE colE"
-      "colF colF colF"
-      "colG colG colG";
-  }
-}
-
 /* Calendário financeiro */
 .fin-cal-grid {
   display: grid;
@@ -587,13 +544,13 @@
 }
 
 /* Goal ring animations */
-.home-col-b #home-goals-rings > * {
+#home-goals-rings > * {
   animation: fadeUp 0.3s ease both;
 }
-.home-col-b #home-goals-rings > *:nth-child(2) { animation-delay: .05s; }
-.home-col-b #home-goals-rings > *:nth-child(3) { animation-delay: .1s; }
-.home-col-b #home-goals-rings > *:nth-child(4) { animation-delay: .15s; }
-.home-col-b #home-goals-rings > *:nth-child(5) { animation-delay: .2s; }
+#home-goals-rings > *:nth-child(2) { animation-delay: .05s; }
+#home-goals-rings > *:nth-child(3) { animation-delay: .1s; }
+#home-goals-rings > *:nth-child(4) { animation-delay: .15s; }
+#home-goals-rings > *:nth-child(5) { animation-delay: .2s; }
 
 /* Upcoming cards */
 #home-upcoming-cards > * {
