@@ -320,11 +320,13 @@ export function renderTransactionFilters() {
     state.ui.txCategory = 'all';
   }
 
-  txCategory.innerHTML = `
-    <option value="all">Todas as categorias</option>
-    ${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('')}
-  `;
-  txCategory.value = state.ui.txCategory;
+  if (txCategory) {
+    txCategory.innerHTML = `
+      <option value="all">Todas as categorias</option>
+      ${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('')}
+    `;
+    txCategory.value = state.ui.txCategory;
+  }
 }
 
 export function loadMoreTransactions() {
