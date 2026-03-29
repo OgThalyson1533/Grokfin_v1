@@ -254,7 +254,7 @@
   <!-- ─── Col B: Metas rings ─────────────────── -->
   <div class="home-col-b">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Metas</p>
+      <p class="home-section-title">Metas</p>
       <button class="text-xs text-cyan-300/60 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
     </div>
     <!-- Score mobile: abaixo do título de Metas -->
@@ -296,7 +296,7 @@
   <!-- ─── Col C: Análise IA ──────────────────── -->
   <div class="home-col-c">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Análise IA</p>
+      <p class="home-section-title">Análise IA</p>
       <i class="fa-solid fa-microchip-ai text-cyan-400/50 text-xs"></i>
     </div>
     <div class="rounded-3xl border border-white/8 bg-white/4 p-4 relative overflow-hidden" style="backdrop-filter:blur(16px)">
@@ -312,7 +312,7 @@
   <!-- ─── Col D: Próximos 7 dias ────────────── -->
   <div class="home-col-d">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Próximos 7 Dias</p>
+      <p class="home-section-title">Próximos 7 Dias</p>
       <span class="min-w-[22px] h-[22px] rounded-full bg-violet-500/25 border border-violet-400/25 text-[10px] font-bold text-violet-300 flex items-center justify-center px-1" id="home-upcoming-count">0</span>
     </div>
     <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
@@ -337,7 +337,7 @@
   <!-- ─── NEW: Gauge de Saúde Financeira ─────── -->
   <div class="home-col-e">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Saúde Financeira</p>
+      <p class="home-section-title">Saúde Financeira</p>
       <span class="text-[10px] text-white/35" id="home-gauge-period-label">Este mês</span>
     </div>
     <div class="rounded-3xl border border-white/8 bg-white/4 p-5 relative overflow-hidden" id="home-gauge-card">
@@ -407,23 +407,22 @@
               <div class="progress-track" style="height:6px"><div id="gauge-surplus-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#34d399,#00ff85)"></div></div>
             </div>
           </div>
-          <!-- 4 KPIs -->
           <div class="grid grid-cols-2 gap-2 pt-1">
-            <div class="rounded-xl border border-white/8 bg-black/20 px-3 py-2">
-              <p class="text-[9px] uppercase tracking-widest text-white/30">Total Gastos</p>
-              <p class="text-sm font-black text-rose-300 mt-0.5" id="gauge-kpi-expenses">R$ 0</p>
+            <div class="kpi-mini-card kpi-expenses">
+              <p class="kpi-label">Total Gastos</p>
+              <p class="kpi-value text-rose-300" id="gauge-kpi-expenses">R$ 0</p>
             </div>
-            <div class="rounded-xl border border-white/8 bg-black/20 px-3 py-2">
-              <p class="text-[9px] uppercase tracking-widest text-white/30">Total Entrada</p>
-              <p class="text-sm font-black text-emerald-300 mt-0.5" id="gauge-kpi-incomes">R$ 0</p>
+            <div class="kpi-mini-card kpi-incomes">
+              <p class="kpi-label">Total Entrada</p>
+              <p class="kpi-value text-emerald-300" id="gauge-kpi-incomes">R$ 0</p>
             </div>
-            <div class="rounded-xl border border-white/8 bg-black/20 px-3 py-2">
-              <p class="text-[9px] uppercase tracking-widest text-white/30">Fixos/Mês</p>
-              <p class="text-sm font-black text-amber-300 mt-0.5" id="gauge-kpi-fixed">R$ 0</p>
+            <div class="kpi-mini-card kpi-fixed">
+              <p class="kpi-label">Fixos/Mês</p>
+              <p class="kpi-value text-amber-300" id="gauge-kpi-fixed">R$ 0</p>
             </div>
-            <div class="rounded-xl border border-white/8 bg-black/20 px-3 py-2">
-              <p class="text-[9px] uppercase tracking-widest text-white/30">Saldo Líquido</p>
-              <p class="text-sm font-black text-white mt-0.5" id="gauge-kpi-net">R$ 0</p>
+            <div class="kpi-mini-card kpi-net">
+              <p class="kpi-label">Saldo Líquido</p>
+              <p class="kpi-value" id="gauge-kpi-net">R$ 0</p>
             </div>
           </div>
         </div>
@@ -434,7 +433,7 @@
   <!-- ─── NEW: Comparativo de Desempenho ──────── -->
   <div class="home-col-f" style="grid-column:1/-1">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Comparativo de Desempenho</p>
+      <p class="home-section-title">Comparativo de Desempenho</p>
       <span class="text-[10px] text-white/35">Período atual vs anterior</span>
     </div>
     <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" id="home-comparison-cards">
@@ -445,7 +444,7 @@
   <!-- ─── NEW: Gastos por Categoria (barras) ─── -->
   <div class="home-col-g" style="grid-column:1/-1">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Gastos por Categoria</p>
+      <p class="home-section-title">Gastos por Categoria</p>
       <button class="text-xs text-white/35 hover:text-white/60 transition-colors" onclick="switchTab(2)">Extrato →</button>
     </div>
     <div class="rounded-3xl border border-white/8 bg-white/4 p-5">
@@ -458,7 +457,7 @@
   <!-- ─── Col H: Receita vs Despesa (Line Chart) -->
   <div class="home-col-h" style="grid-column:1/-1">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Receita vs Despesa</p>
+      <p class="home-section-title">Receita vs Despesa</p>
       <div class="flex items-center gap-3 text-[10px] text-white/40">
         <span class="flex items-center gap-1"><span class="inline-block w-3 h-0.5 rounded-full bg-emerald-400"></span>Receita</span>
         <span class="flex items-center gap-1"><span class="inline-block w-3 h-0.5 rounded-full bg-rose-400"></span>Despesa</span>
@@ -473,7 +472,7 @@
   <!-- ─── NEW: Método de Pagamento ──────────── -->
   <div class="home-col-i" style="grid-column:1/-1">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Método de Pagamento</p>
+      <p class="home-section-title">Método de Pagamento</p>
       <span class="text-[10px] text-white/35">Entradas e saídas</span>
     </div>
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -501,7 +500,7 @@
   <!-- ─── Calendário Financeiro ─────────── -->
   <div class="home-col-j" style="grid-column:1/-1">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-sm font-bold text-white">Calendário Financeiro</p>
+      <p class="home-section-title">Calendário Financeiro</p>
       <span class="text-[10px] text-white/35" id="home-cal-month-label"></span>
     </div>
     <div id="home-financial-calendar" class="rounded-3xl border border-white/8 bg-white/4 p-4">

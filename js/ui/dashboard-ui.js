@@ -925,40 +925,10 @@ export function renderPerformanceComparison(periodData) {
   if (!container) return;
 
   const cards = [
-    {
-      label: 'Receitas',
-      icon: 'fa-arrow-trend-up',
-      iconColor: 'text-emerald-300',
-      data: periodData.comparison?.incomes,
-      format: formatMoneyShort,
-      // Higher incomes = positive
-      positive: v => v >= 0
-    },
-    {
-      label: 'Gastos',
-      icon: 'fa-arrow-trend-down',
-      iconColor: 'text-rose-300',
-      data: periodData.comparison?.expenses,
-      format: formatMoneyShort,
-      // Lower expenses = positive (negative pct is good)
-      positive: v => v <= 0
-    },
-    {
-      label: 'Saldo Líquido',
-      icon: 'fa-scale-balanced',
-      iconColor: 'text-cyan-300',
-      data: periodData.comparison?.net,
-      format: formatMoneyShort,
-      positive: v => v >= 0
-    },
-    {
-      label: 'Ticket Médio',
-      icon: 'fa-receipt',
-      iconColor: 'text-violet-300',
-      data: periodData.comparison?.avgTicket,
-      format: formatMoneyShort,
-      positive: v => v <= 0
-    }
+    { label: 'Receitas',      icon: 'fa-arrow-trend-up',   accentClass: 'cc-green',  iconBg: 'rgba(52,211,153,.15)',  iconColor: '#34d399', data: periodData.comparison?.incomes,   format: formatMoneyShort, positive: v => v >= 0 },
+    { label: 'Gastos',        icon: 'fa-arrow-trend-down', accentClass: 'cc-red',    iconBg: 'rgba(251,113,133,.15)', iconColor: '#fb7185', data: periodData.comparison?.expenses,  format: formatMoneyShort, positive: v => v <= 0 },
+    { label: 'Saldo Líquido', icon: 'fa-scale-balanced',   accentClass: 'cc-cyan',   iconBg: 'rgba(0,245,255,.12)',   iconColor: '#00f5ff', data: periodData.comparison?.net,       format: formatMoneyShort, positive: v => v >= 0 },
+    { label: 'Ticket Médio',  icon: 'fa-receipt',          accentClass: 'cc-violet', iconBg: 'rgba(168,85,247,.15)', iconColor: '#c084fc', data: periodData.comparison?.avgTicket, format: formatMoneyShort, positive: v => v <= 0 }
   ];
 
   container.innerHTML = cards.map(card => {
@@ -966,25 +936,25 @@ export function renderPerformanceComparison(periodData) {
     const current  = d?.current  ?? 0;
     const previous = d?.previous ?? 0;
     const pct      = d?.pct;
+    const hasPrev  = previous > 0;
     const isPositive = pct !== null && card.positive(pct);
-    const chipClass = pct === null ? 'bg-white/8 text-white/40 border-white/10'
-      : isPositive   ? 'bg-emerald-400/15 text-emerald-300 border-emerald-400/25'
-      :                 'bg-rose-400/15    text-rose-300    border-rose-400/25';
-    const chipIcon = pct === null ? '' : isPositive ? '↑' : '↓';
-    const chipText = pct === null ? '--'
-      : `${chipIcon} ${Math.abs(pct).toFixed(1)}%`;
-
+    const chipHtml = hasPrev && pct !== null
+      ? `<span class="text-[10px] font-bold rounded-full px-2 py-0.5 border ${isPositive ? 'bg-emerald-400/12 text-emerald-300 border-emerald-400/25' : 'bg-rose-400/12 text-rose-300 border-rose-400/25'}">${isPositive ? '↑' : '↓'} ${Math.abs(pct).toFixed(1)}%</span>`
+      : `<span class="text-[10px] font-semibold text-white/25 rounded-full px-2 py-0.5 border border-white/8">—</span>`;
+    const valueColor = current >= 0 ? 'text-white' : 'text-rose-300';
     return `
-      <div class="rounded-2xl border border-white/8 bg-white/4 p-4 flex flex-col gap-2">
+      <div class="compare-card ${card.accentClass}">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <i class="fa-solid ${card.icon} ${card.iconColor} text-xs"></i>
-            <span class="text-[10px] uppercase tracking-widest text-white/40">${card.label}</span>
+          <div class="flex items-center gap-2">
+            <span class="pay-icon-badge" style="background:${card.iconBg}">
+              <i class="fa-solid ${card.icon} text-xs" style="color:${card.iconColor}"></i>
+            </span>
+            <span class="text-[10px] uppercase tracking-widest text-white/45 font-bold">${card.label}</span>
           </div>
-          <span class="text-[10px] font-bold border rounded-full px-2 py-0.5 ${chipClass}">${chipText}</span>
+          ${chipHtml}
         </div>
-        <p class="text-lg font-black text-white leading-tight">${card.format(current)}</p>
-        ${previous > 0 ? `<p class="text-[10px] text-white/30">Antes: ${card.format(previous)}</p>` : '<p class="text-[10px] text-white/20">Sem dados anteriores</p>'}
+        <p class="text-xl font-black ${valueColor} leading-tight">${card.format(current)}</p>
+        <p class="text-[10px] ${hasPrev ? 'text-white/32' : 'text-white/18'}">${hasPrev ? `Anterior: ${card.format(previous)}` : 'Sem dados anteriores'}</p>
       </div>`;
   }).join('');
 }
