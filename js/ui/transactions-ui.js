@@ -43,8 +43,107 @@ function populateCategorySelect(selectEl, selected) {
 }
 let _txToDelete = null;
 
-export const TX_PAGE_SIZE = 20;
+export const selectedTxIds = new Set();
 
+export function updateBulkActionsBar() {
+  const bar = document.getElementById('tx-bulk-actions-bar');
+  const countSpan = document.getElementById('tx-bulk-count');
+  if (!bar || !countSpan) return;
+  if (selectedTxIds.size > 0) {
+    countSpan.textContent = selectedTxIds.size;
+    bar.classList.remove('hidden');
+    void bar.offsetWidth; // reflow
+    bar.classList.add('opacity-100');
+    bar.classList.remove('opacity-0');
+  } else {
+    bar.classList.remove('opacity-100');
+    bar.classList.add('opacity-0');
+    setTimeout(() => {
+      if (selectedTxIds.size === 0) bar.classList.add('hidden');
+    }, 300);
+  }
+}
+
+// Global window functions for app.html bindings
+window.toggleTxRow = function(checkbox, txId) {
+  if (checkbox.checked) selectedTxIds.add(txId);
+  else selectedTxIds.delete(txId);
+  updateBulkActionsBar();
+  
+  const list = getFilteredTransactions();
+  const page = state.ui.txPage || 0;
+  const pageSize = state.ui.txPageSize || 20;
+  const currentList = list.slice(page * pageSize, (page + 1) * pageSize);
+  const selectAllCb = document.getElementById('tx-select-all');
+  if(selectAllCb) selectAllCb.checked = (currentList.length > 0 && currentList.every(t => selectedTxIds.has(t.id)));
+};
+window.toggleSelectAllTx = function(checkbox) {
+  const list = getFilteredTransactions();
+  const page = state.ui.txPage || 0;
+  const pageSize = state.ui.txPageSize || 20;
+  const currentList = list.slice(page * pageSize, (page + 1) * pageSize);
+  if (checkbox.checked) {
+    currentList.forEach(t => selectedTxIds.add(t.id));
+  } else {
+    currentList.forEach(t => selectedTxIds.delete(t.id));
+  }
+  const checkboxes = document.querySelectorAll('.tx-row-checkbox');
+  checkboxes.forEach(cb => cb.checked = checkbox.checked);
+  updateBulkActionsBar();
+};
+window.clearTxSelection = function() {
+  selectedTxIds.clear();
+  const selectAllCb = document.getElementById('tx-select-all');
+  if(selectAllCb) selectAllCb.checked = false;
+  renderTransactions();
+  updateBulkActionsBar();
+};
+window.changeTxPageSize = function(size) {
+  state.ui.txPageSize = parseInt(size, 10);
+  state.ui.txPage = 0;
+  selectedTxIds.clear();
+  updateBulkActionsBar();
+  renderTransactions();
+};
+window.txPageNext = function() {
+  state.ui.txPage = (state.ui.txPage || 0) + 1;
+  selectedTxIds.clear();
+  updateBulkActionsBar();
+  renderTransactions();
+};
+window.txPagePrev = function() {
+  state.ui.txPage = Math.max(0, (state.ui.txPage || 0) - 1);
+  selectedTxIds.clear();
+  updateBulkActionsBar();
+  renderTransactions();
+};
+window.bulkDeleteTx = function() {
+  if (selectedTxIds.size === 0) return;
+  if (!confirm(`Tem certeza que deseja excluir ${selectedTxIds.size} transação(ões)?`)) return;
+  let deletedValue = 0;
+  const toDelete = Array.from(selectedTxIds);
+  toDelete.forEach(id => {
+    const tx = state.transactions.find(t => t.id === id);
+    if(tx) {
+      deletedValue += tx.value;
+      deleteRemoteTransaction(id).catch(console.error);
+    }
+  });
+  state.transactions = state.transactions.filter(t => !selectedTxIds.has(t.id));
+  state.balance -= deletedValue;
+  selectedTxIds.clear();
+  saveState();
+  if (window.appRenderAll) window.appRenderAll();
+  else renderTransactions();
+  updateBulkActionsBar();
+  showToast('Transações excluídas.', 'info');
+};
+window.bulkChangeCategory = function() {
+  showToast('Em breve: Edição em massa de categorias.', 'info');
+};
+window.bulkMarkPaid = function() {
+  showToast('Em breve: Marcar múltiplos como pagos.', 'info');
+};
 export function getFilteredTransactions() {
   let list = [...state.transactions];
   const search = normalizeText(state.ui.txSearch || '');
@@ -133,7 +232,8 @@ export function renderTransactions() {
 
   const fullList = getFilteredTransactions();
   const page = state.ui.txPage || 0;
-  const list = fullList.slice(0, (page + 1) * TX_PAGE_SIZE);
+  const pageSize = state.ui.txPageSize || 20;
+  const list = fullList.slice(page * pageSize, (page + 1) * pageSize);
   const incomeTotal = fullList.filter(item => item.value > 0).reduce((acc, item) => acc + item.value, 0);
   const expenseTotal = fullList.filter(item => item.value < 0).reduce((acc, item) => acc + Math.abs(item.value), 0);
   const avgVisible = fullList.length ? fullList.reduce((acc, item) => acc + Math.abs(item.value), 0) / fullList.length : 0;
@@ -142,6 +242,31 @@ export function renderTransactions() {
   if (document.getElementById('tx-expense-total')) document.getElementById('tx-expense-total').textContent = formatMoney(expenseTotal);
   if (document.getElementById('tx-income-total')) document.getElementById('tx-income-total').textContent = formatMoney(incomeTotal);
   if (document.getElementById('tx-average-total')) document.getElementById('tx-average-total').textContent = formatMoney(avgVisible);
+
+  // Update Footer Pagination UI
+  const totalEl = document.getElementById('tx-page-total');
+  const rangeEl = document.getElementById('tx-page-range');
+  const prevBtn = document.getElementById('tx-page-prev');
+  const nextBtn = document.getElementById('tx-page-next');
+  if (totalEl) totalEl.textContent = fullList.length;
+  if (rangeEl) {
+    const startIdx = fullList.length === 0 ? 0 : (page * pageSize) + 1;
+    const endIdx = Math.min((page + 1) * pageSize, fullList.length);
+    rangeEl.textContent = `${startIdx}-${endIdx}`;
+  }
+  if (prevBtn) prevBtn.disabled = page === 0;
+  if (nextBtn) nextBtn.disabled = (page + 1) * pageSize >= fullList.length;
+  
+  const selectAllCb = document.getElementById('tx-select-all');
+  if(selectAllCb) selectAllCb.checked = (list.length > 0 && list.every(t => selectedTxIds.has(t.id)));
+
+  if (state.isNewUser && selectedTxIds.size === 0 && list.some(t => t.desc === 'Pendência') && !window._demoChecked) {
+    const pendencia = list.find(t => t.desc === 'Pendência');
+    selectedTxIds.add(pendencia.id);
+    window._demoChecked = true;
+    // Agendar atualização da barra fora do fluxo de renderização
+    setTimeout(() => updateBulkActionsBar(), 50);
+  }
 
   if (!fullList.length) {
     body.innerHTML = `
@@ -165,8 +290,16 @@ export function renderTransactions() {
     const tone = toneForCategory(item.cat, positive);
     return `
       <tr class="hover:bg-white/[0.02] group">
-        <td class="px-6 py-5 text-white/55">${escapeHtml(item.date)}</td>
-        <td class="px-6 py-5">
+        <td class="px-6 py-5 text-center" style="vertical-align: middle;">
+          <label class="relative flex items-center justify-center cursor-pointer m-0">
+            <input type="checkbox" onchange="window.toggleTxRow(this, '${item.id}')" class="peer sr-only tx-row-checkbox" ${selectedTxIds.has(item.id) ? 'checked' : ''}>
+            <div class="w-5 h-5 rounded border-2 border-white/20 peer-checked:bg-cyan-500 peer-checked:border-cyan-500 peer-hover:border-white/40 transition-all flex items-center justify-center">
+              <i class="fa-solid fa-check text-[10px] text-black opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+            </div>
+          </label>
+        </td>
+        <td class="px-4 py-5 text-white/55">${escapeHtml(item.date)}</td>
+        <td class="px-4 py-5">
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-2xl ${tone}">
               <i class="fa-solid ${iconForCategory(item.cat)} text-sm"></i>
@@ -180,15 +313,14 @@ export function renderTransactions() {
                 ${item.payment === 'pix' ? '<span class="payment-badge-pix rounded-full px-2 py-0.5 text-[10px] font-bold">Pix</span>' : ''}
                 ${item.payment === 'dinheiro' ? '<span class="payment-badge-dinheiro rounded-full px-2 py-0.5 text-[10px] font-bold">Dinheiro</span>' : ''}
                 ${item.notes ? `<span title="${escapeHtml(item.notes)}" class="rounded-full px-2 py-0.5 text-[10px] font-bold border border-white/10 bg-white/5 cursor-help" style="max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle"><i class="fa-regular fa-note-sticky mr-0.5"></i>${escapeHtml(item.notes)}</span>` : ''}
-                ${item.attachmentUrl && SUPABASE_URL && item.attachmentUrl.startsWith(`${SUPABASE_URL}/storage/v1/object/`) ? `<a href="${escapeHtml(item.attachmentUrl)}" target="_blank" rel="noopener" title="Ver comprovante" class="rounded-full px-2 py-0.5 text-[10px] font-bold border border-cyan-400/20 bg-cyan-400/8 text-cyan-300 hover:bg-cyan-400/15 transition-colors"><i class="fa-solid fa-paperclip mr-0.5"></i>Comprovante</a>` : ''}
               </p>
             </div>
           </div>
         </td>
-        <td class="px-6 py-5">
+        <td class="px-4 py-5">
           <span class="inline-flex rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">${escapeHtml(item.cat)}</span>
         </td>
-        <td class="px-6 py-5 text-right font-bold ${positive ? 'text-emerald-300' : 'text-white'}">
+        <td class="px-4 py-5 text-right font-bold ${positive ? 'text-emerald-300' : 'text-white'}">
           ${positive ? '+' : '-'}${formatMoney(Math.abs(item.value))}
         </td>
         <td class="px-6 py-5">
@@ -197,29 +329,15 @@ export function renderTransactions() {
               class="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-cyan-400/70 hover:bg-cyan-400/10 hover:border-cyan-400/30 hover:text-cyan-300 transition-all">
               <i class="fa-solid fa-pen text-xs"></i>
             </button>
-            <button onclick="confirmDeleteTx('${item.id}')" title="Excluir"
-              class="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-rose-400/60 hover:bg-rose-400/10 hover:border-rose-400/30 hover:text-rose-300 transition-all">
-              <i class="fa-solid fa-trash-can text-xs"></i>
+            <button title="Anexos / Recibo"
+              class="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 bg-[#0d121c] text-white/50 hover:bg-white/10 hover:border-white/20 hover:text-white transition-all shadow-sm">
+              <i class="fa-solid fa-file-invoice text-[13px]"></i>
             </button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
-
-  const existing = document.getElementById('tx-load-more');
-  if (existing) existing.remove();
-  if (fullList.length > list.length) {
-    const remaining = fullList.length - list.length;
-    const btn = document.createElement('tr');
-    btn.id = 'tx-load-more';
-    btn.innerHTML = `<td colspan="6" class="px-6 py-5 text-center">
-      <button onclick="loadMoreTransactions()" class="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-cyan-300 hover:bg-white/10 transition-colors">
-        <i class="fa-solid fa-chevron-down mr-2"></i>Carregar mais ${remaining > TX_PAGE_SIZE ? TX_PAGE_SIZE : remaining} de ${remaining} restantes
-      </button>
-    </td>`;
-    body.appendChild(btn);
-  }
 }
 
 export function openTxModal() {
