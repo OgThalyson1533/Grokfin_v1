@@ -85,15 +85,12 @@
         </div>
         <p class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[.28em] text-cyan-200/55">Wealth OS</p>
 
-        <nav class="mt-6 flex-1 overflow-y-auto space-y-1.5 scrollbar-hide pb-4">
+        <nav class="mt-6 flex-1 space-y-1.5 pb-4">
           <button data-tab="0" class="nav-rail-button active" aria-label="Home">
             <span class="nav-rail-icon"><i class="fa-solid fa-house"></i></span>
             <span class="nav-rail-tooltip">Home</span>
           </button>
-          <button data-tab="1" class="nav-rail-button" aria-label="Análise">
-            <span class="nav-rail-icon"><i class="fa-solid fa-chart-pie"></i></span>
-            <span class="nav-rail-tooltip">Análise</span>
-          </button>
+
           <button data-tab="2" class="nav-rail-button" aria-label="Conta">
             <span class="nav-rail-icon"><i class="fa-solid fa-wallet"></i></span>
             <span class="nav-rail-tooltip">Conta</span>
@@ -367,12 +364,7 @@
             <!-- Fill arc (dynamic) -->
             <path id="home-gauge-arc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGreen)" stroke-width="14" stroke-linecap="round"
                   stroke-dasharray="251.3" stroke-dashoffset="251.3" style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .5s ease"/>
-            <!-- Needle base -->
-            <circle cx="100" cy="100" r="6" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>
-            <!-- Needle -->
-            <line id="home-gauge-needle" x1="100" y1="100" x2="100" y2="30"
-                  stroke="white" stroke-width="2.5" stroke-linecap="round"
-                  style="transform-origin:100px 100px;transform:rotate(-90deg);transition:transform .8s cubic-bezier(.4,0,.2,1)"/>
+
           </svg>
           <!-- Center value -->
           <div class="absolute bottom-1 left-0 right-0 flex flex-col items-center">
@@ -534,38 +526,7 @@
 
         </div>
 
-        <div id="tab-1" class="tab-panel space-y-10">
-<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-<div>
-<p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Relatório executivo</p>
-<h3 class="mt-2 text-4xl font-black tracking-tight text-white">Diagnóstico financeiro profundo</h3>
-<p class="mt-3 max-w-2xl text-white/55">
-                Em vez de um texto estático, o relatório agora nasce do estado atual: categorias, fluxo líquido, runway, metas e tendência mensal.
-              </p>
-</div>
-<div class="flex flex-wrap gap-3">
-<button class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8" data-quick-action="apply-insight">Aplicar recomendação</button>
-<button class="pill hover:border-violet-300/30 hover:bg-violet-300/8" data-quick-action="open-chat">Discutir com a IA</button>
-</div>
-</div>
-<div class="grid gap-4 md:grid-cols-3">
-<div class="glass-panel rounded-3xl p-5">
-<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Fluxo líquido</p>
-<p class="mt-3 text-3xl font-black text-white" id="report-net">R$ 0,00</p>
-</div>
-<div class="glass-panel rounded-3xl p-5">
-<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Taxa de poupança</p>
-<p class="mt-3 text-3xl font-black text-emerald-300" id="report-saving-rate">0%</p>
-</div>
-<div class="glass-panel rounded-3xl p-5">
-<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Runway estimado</p>
-<p class="mt-3 text-3xl font-black text-cyan-200" id="report-runway">0 meses</p>
-</div>
-</div>
-<div class="glass-panel rounded-[28px] p-7 sm:p-8">
-<div class="space-y-8" id="report-content"></div>
-</div>
-        </div>
+
 
         <div id="tab-2" class="tab-panel space-y-10">
 <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -760,8 +721,6 @@
 </div>
 </div>
 </div>
-        </div>
-
         <div id="tab-4" class="tab-panel space-y-10">
 <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
 <div>
@@ -783,151 +742,9 @@
 <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3" id="goals-container"></div>
         </div>
 
-        <div id="tab-5" class="tab-panel space-y-6">
-  <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-    <div>
-      <p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Perfil</p>
-      <h3 class="mt-2 text-4xl font-black tracking-tight text-white">Perfil com visualização primeiro, edição só quando você quiser</h3>
-      <p class="mt-3 max-w-2xl text-white/55">
-        O perfil agora abre em modo de visualização. Para editar banner, avatar, apelido, nome público e @handle, use a engrenagem e salve ao final.
-      </p>
-    </div>
-    <div class="flex flex-wrap gap-3">
-
-      <button id="profile-edit-toggle-btn" class="pill hover:border-cyan-300/30 hover:bg-cyan-300/8 transition-colors">
-        <i class="fa-solid fa-gear text-cyan-300"></i> <span id="profile-edit-toggle-label">Editar perfil</span>
-      </button>
-      <button id="profile-save-btn" class="hidden rounded-2xl bg-gradient-to-r from-cyan-300 to-emerald-300 px-6 py-3.5 font-bold text-black shadow-brand transition-transform hover:scale-[1.02]">
-        <i class="fa-solid fa-floppy-disk mr-2"></i>Salvar perfil
-      </button>
-      <button id="profile-logout-btn" class="pill hover:border-rose-400/30 hover:bg-rose-400/8 transition-colors text-white/70">
-        <i class="fa-solid fa-arrow-right-from-bracket text-rose-400"></i> Sair
-      </button>
-    </div>
-  </div>
-
-  <div class="glass-panel overflow-hidden rounded-[32px]">
-    <div data-profile-bg="banner" class="profile-banner relative h-56 sm:h-72">
-      <div class="absolute inset-0 bg-gradient-to-t from-[#060911]/95 via-[#060911]/35 to-transparent"></div>
-      <label class="profile-edit-only hidden absolute right-5 top-5 z-10 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-semibold text-white/85 backdrop-blur-md transition-colors hover:bg-black/45">
-        <i class="fa-solid fa-image mr-2"></i>Editar capa
-        <input id="profile-banner-input" type="file" accept="image/*" class="hidden">
-      </label>
-    </div>
-    <div class="px-5 pb-6 sm:px-6 sm:pb-7">
-      <div class="relative -mt-16 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div class="relative">
-            <img data-profile-image="avatar" alt="Avatar" class="h-28 w-28 rounded-[30px] border border-white/12 object-cover shadow-2xl ring-4 ring-[#070a13] sm:h-32 sm:w-32">
-            <label class="profile-edit-only hidden absolute -bottom-2 -right-2 flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-black/60 text-white shadow-2xl backdrop-blur-md transition-colors hover:bg-black/75">
-              <i class="fa-solid fa-camera"></i>
-              <input id="profile-avatar-input" type="file" accept="image/*" class="hidden">
-            </label>
-          </div>
-          <div class="pb-1">
-            <p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Identidade pública</p>
-            <h4 data-profile-text="displayName" class="mt-2 text-3xl font-black tracking-tight text-white">GrokFin User</h4>
-            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/60">
-              <span data-profile-text="nickname">Navigator</span>
-              <span class="text-white/20">•</span>
-              <span data-profile-text="handle">@grokfin.user</span>
-            </div>
-            <div class="mt-4 flex flex-wrap gap-2">
-              <span class="pill"><i class="fa-solid fa-wallet text-emerald-300"></i> <span id="profile-balance-pill">R$ 0,00</span></span>
-              <span class="pill"><i class="fa-solid fa-sparkles text-violet-300"></i> Score <span id="profile-health-pill">0/100</span></span>
-              <span class="pill"><i class="fa-solid fa-cloud-arrow-down text-cyan-300"></i> <span id="profile-install-state">Pronto para instalar</span></span>
-            </div>
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-3 xl:max-w-sm">
-          <div class="rounded-2xl border border-white/8 bg-black/20 p-4">
-            <p class="text-[11px] uppercase tracking-[.18em] text-white/34">Metas</p>
-            <p id="profile-metric-goals" class="mt-2 text-2xl font-black text-white">0</p>
-          </div>
-          <div class="rounded-2xl border border-white/8 bg-black/20 p-4">
-            <p class="text-[11px] uppercase tracking-[.18em] text-white/34">Movimentos</p>
-            <p id="profile-metric-transactions" class="mt-2 text-2xl font-black text-white">0</p>
-          </div>
-          <div class="rounded-2xl border border-white/8 bg-black/20 p-4">
-            <p class="text-[11px] uppercase tracking-[.18em] text-white/34">Concluídas</p>
-            <p id="profile-metric-completed" class="mt-2 text-2xl font-black text-white">0</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid gap-6 xl:grid-cols-[1fr_.95fr]">
-    <div class="gradient-border rounded-[28px]">
-      <div class="glass-panel rounded-[27px] p-6">
-        <p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Preview compacto</p>
-        <div class="mt-5 overflow-hidden rounded-[28px] border border-white/8 bg-white/4">
-          <div data-profile-bg="banner" class="h-32 bg-cover bg-center"></div>
-          <div class="px-4 pb-4">
-            <div class="relative -mt-10 flex items-end gap-3">
-              <img data-profile-image="avatar" alt="Avatar" class="h-20 w-20 rounded-[22px] border border-white/10 object-cover ring-4 ring-[#09101a]">
-              <div class="pb-1">
-                <p data-profile-text="displayName" class="text-lg font-bold text-white">GrokFin User</p>
-                <p data-profile-text="handle" class="mt-1 text-sm text-white/55">@grokfin.user</p>
-              </div>
-            </div>
-            <p class="mt-4 text-sm leading-relaxed text-white/72">
-              Enquanto você estiver editando, a prévia acompanha as mudanças. Nada é gravado em definitivo até tocar em salvar.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="space-y-6">
-      <div class="glass-panel rounded-[28px] p-6">
-        <p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Instalação como app</p>
-        <p id="profile-install-copy" class="mt-4 text-sm leading-relaxed text-white/72">
-          Manifesto PWA, service worker e ícones nativos já estão incluídos neste pacote.
-        </p>
-        <div class="mt-5 grid gap-3">
+        <!-- ═══════════════════════════ TAB 5: PERFIL ═══════════════════════════ -->
+        <div id="tab-5" class="tab-panel space-y-4 max-w-2xl mx-auto pb-10">
           
-          <div class="rounded-2xl border border-white/8 bg-black/20 p-4 text-sm leading-relaxed text-white/62">
-            Ao hospedar este diretório em HTTPS ou localhost, o navegador poderá oferecer “Instalar app” e criar atalho na área de trabalho ou grade de apps.
-          </div>
-        </div>
-      </div>
-
-      <div class="glass-panel rounded-[28px] p-6">
-        <p class="text-xs font-bold uppercase tracking-[.22em] text-cyan-200/60">Fluxo de edição</p>
-        <p id="profile-edit-copy" class="mt-4 text-sm leading-relaxed text-white/72">
-          Use a engrenagem para abrir a edição. Ajuste capa, avatar e textos. Quando tudo estiver certo, salve para fixar o novo perfil no dispositivo.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <div id="profile-edit-panel" class="hidden glass-panel rounded-[28px] p-6 sm:p-7">
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <p class="text-lg font-semibold text-white">Editar perfil</p>
-        <p class="text-sm text-white/42">Altere os campos abaixo, acompanhe a prévia e depois confirme em salvar.</p>
-      </div>
-      <span class="pill status-neutral"><i class="fa-solid fa-pen-to-square"></i> modo edição</span>
-    </div>
-    <div class="grid gap-5 md:grid-cols-2">
-      <label class="block space-y-2">
-        <span class="text-xs font-bold uppercase tracking-[.18em] text-white/38">Apelido</span>
-        <input id="profile-nickname-input" type="text" class="profile-input" placeholder="Ex: Navigator">
-      </label>
-      <label class="block space-y-2">
-        <span class="text-xs font-bold uppercase tracking-[.18em] text-white/38">Nome de exibição</span>
-        <input id="profile-displayname-input" type="text" class="profile-input" placeholder="Ex: Caio Silva">
-      </label>
-      <label class="block space-y-2 md:col-span-2">
-        <span class="text-xs font-bold uppercase tracking-[.18em] text-white/38">Nome de usuário (@handle)</span>
-        <input id="profile-handle-input" type="text" class="profile-input" placeholder="@grokfin.user">
-        <p id="profile-handle-feedback" class="hidden text-xs font-medium"></p>
-      </label>
-      <label class="block space-y-2 md:col-span-2">
-        <span class="text-xs font-bold uppercase tracking-[.18em] text-white/38">Ondas de Fundo (Tema)</span>
-        <select id="profile-theme-input" class="profile-input bg-[#08111c]">
-          <option value="cyber">Cyberpunk (Cyan / Esmeralda / Roxo)</option>
           <option value="royal">Ametista (Violeta Profundo / Fúcsia)</option>
           <option value="gold">Gold V.I.P (Âmbar / Dourado Clássico)</option>
           <option value="minimal">Minimalista (Escuro Absoluto / Chumbo)</option>

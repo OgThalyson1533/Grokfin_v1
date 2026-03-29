@@ -258,24 +258,42 @@ export async function saveProfileDraft() {
     showToast('Esse @handle já existe. Escolha outro para salvar.', 'danger');
     return;
   }
-  state.profile = resolveProfile(profileEditor.draft || state.profile || {});
-  state.lastUpdated = new Date().toISOString();
-  saveState();
+  
+  const updatedProfile = resolveProfile(profileEditor.draft || state.profile || {});
+
+  // Forçar salvamento primeiro na nuvem
+  if (isSupabaseConfigured) {
+    try {
+      const saveBtn = document.getElementById('profile-save-btn');
+      const originalText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Salvando...';
+      
+      const stateClone = { ...state, profile: updatedProfile, lastUpdated: new Date().toISOString() };
+      await syncToSupabase(stateClone);
+      
+      // Somente atualiza estado real e cache se deu certo na nuvem
+      state.profile = updatedProfile;
+      state.lastUpdated = stateClone.lastUpdated;
+      saveState();
+      if (saveBtn) saveBtn.innerHTML = originalText;
+    } catch (e) {
+      console.error('[Profile] Falha ao salvar no banco em nuvem:', e);
+      showToast('Não foi possível salvar na nuvem. Alteração cancelada.', 'danger');
+      return; // Interrompe para não salvar local
+    }
+  } else {
+    // Fallback se não configurado
+    state.profile = updatedProfile;
+    state.lastUpdated = new Date().toISOString();
+    saveState();
+  }
+
   profileEditor.draft = null;
   setProfileEditMode(false);
   
   if (window.renderHeaderMeta) window.renderHeaderMeta(calculateAnalytics(state));
   renderProfile(calculateAnalytics(state));
-  showToast('Perfil salvo no dispositivo.', 'success');
-
-  if (isSupabaseConfigured) {
-    try {
-      await syncToSupabase(state);
-    } catch (e) {
-      console.error('[Profile] Falha ao sincronizar alterações do perfil:', e);
-      showToast('Perfil salvo localmente, mas falhou ao sincronizar na nuvem.', 'danger');
-    }
-  }
+  showToast('Perfil atualizado com sucesso!', 'success');
 }
 
 export function renderProfile(analytics) {
@@ -349,6 +367,10 @@ export function bindProfileEvents() {
   document.getElementById('profile-edit-toggle-btn')?.addEventListener('click', () => {
     if (profileEditor.isEditing) cancelProfileEditing();
     else startProfileEditing();
+  });
+
+  document.getElementById('profile-cancel-btn')?.addEventListener('click', () => {
+    cancelProfileEditing();
   });
 
   document.getElementById('profile-logout-btn')?.addEventListener('click', async () => {
