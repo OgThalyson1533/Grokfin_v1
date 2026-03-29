@@ -287,52 +287,80 @@ export function renderTransactions() {
 
   body.innerHTML = list.map(item => {
     const positive = item.value > 0;
-    const tone = toneForCategory(item.cat, positive);
+    
+    // Mock status logic to match the Image 2 variants securely
+    let stat = 'concluido';
+    if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
+       stat = 'pendente';
+    } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
+       // If dummy 1 logic
+       stat = 'vencido';
+    }
+
+    let statClass = '';
+    let statLabel = '';
+    if (stat === 'pendente') {
+      statClass = 'border-[#dba740]/40 bg-[#dba740]/10 text-[#dba740]';
+      statLabel = 'Pendente';
+    } else if (stat === 'vencido') {
+      statClass = 'border-[#e84e58]/40 bg-[#e84e58]/10 text-[#e84e58]';
+      statLabel = 'Vencido';
+    } else {
+      statClass = 'border-[#37bf8b]/40 bg-[#37bf8b]/10 text-[#37bf8b]';
+      statLabel = 'Concluído';
+    }
+
+    const typeHtml = positive
+      ? '<div class="flex items-center justify-start md:justify-center gap-2"><i class="fa-regular fa-circle-up text-[#37bf8b]"></i> Entrada</div>'
+      : '<div class="flex items-center justify-start md:justify-center gap-2"><i class="fa-regular fa-circle-down text-[#e84e58]"></i> Saída</div>';
+
     return `
-      <tr class="hover:bg-white/[0.02] group">
-        <td class="px-6 py-5 text-center" style="vertical-align: middle;">
+      <tr class="flex flex-col md:table-row relative p-4 mb-3 mx-4 md:mx-0 md:p-0 rounded-xl bg-[#121825] md:bg-transparent border border-white/5 md:border-0 md:border-b md:border-white/5 last:border-0 hover:bg-white/[0.02] group">
+        <td class="md:px-5 md:py-4 text-center align-middle absolute left-4 top-4 md:static">
           <label class="relative flex items-center justify-center cursor-pointer m-0">
             <input type="checkbox" onchange="window.toggleTxRow(this, '${item.id}')" class="peer sr-only tx-row-checkbox" ${selectedTxIds.has(item.id) ? 'checked' : ''}>
-            <div class="w-5 h-5 rounded border-2 border-white/20 peer-checked:bg-cyan-500 peer-checked:border-cyan-500 peer-hover:border-white/40 transition-all flex items-center justify-center">
-              <i class="fa-solid fa-check text-[10px] text-black opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+            <div class="w-4 h-4 rounded-[4px] border border-white/20 peer-checked:bg-[#37bf8b] peer-checked:border-[#37bf8b] transition-all flex items-center justify-center">
+              <i class="fa-solid fa-check text-[10px] text-[#0d121c] opacity-0 peer-checked:opacity-100 transition-opacity"></i>
             </div>
           </label>
         </td>
-        <td class="px-4 py-5 text-white/55">${escapeHtml(item.date)}</td>
-        <td class="px-4 py-5">
-          <div class="flex items-center gap-3">
-            <span class="flex h-10 w-10 items-center justify-center rounded-2xl ${tone}">
-              <i class="fa-solid ${iconForCategory(item.cat)} text-sm"></i>
+        
+        <td class="block md:table-cell py-1 mt-6 md:mt-0 md:px-4 md:py-4 text-white hover:text-white/80 transition-colors">
+          <span class="md:hidden text-white/40 text-[11px] uppercase mr-2">Data:</span>${escapeHtml(item.date)}
+        </td>
+        
+        <td class="block md:table-cell py-1 md:px-4 md:py-4 md:text-center text-white font-semibold">
+           <span class="md:hidden text-white/40 text-[11px] uppercase mr-2">Descrição:</span>${escapeHtml(item.desc)}
+        </td>
+        
+        <td class="block md:table-cell py-1 md:px-4 md:py-4 text-white md:text-center">
+           <div class="flex items-center">
+             <span class="md:hidden text-white/40 text-[11px] uppercase mr-2 flex-shrink-0 w-16">Tipo:</span>
+             ${typeHtml}
+           </div>
+        </td>
+
+        <td class="block md:table-cell py-1 md:px-4 md:py-4 absolute right-4 top-4 md:static md:text-right font-bold text-sm ${positive ? 'text-[#37bf8b]' : 'text-[#e84e58]'}">
+           ${positive ? '+' : '-'}R$ ${formatMoney(Math.abs(item.value)).replace('R$ ', '')}
+        </td>
+
+        <td class="block md:table-cell py-2 md:px-4 md:py-4 md:text-center mt-2 md:mt-0">
+          <div class="flex items-center justify-start md:justify-center">
+            <span class="md:hidden text-white/40 text-[11px] uppercase mr-2 w-16">Status:</span>
+            <span class="inline-flex items-center justify-center rounded px-3 py-1 border text-[11px] font-bold ${statClass}">
+                ${statLabel}
             </span>
-            <div>
-              <p class="font-semibold text-white">${escapeHtml(item.desc)}</p>
-              <p class="text-xs text-white/40 flex flex-wrap items-center gap-1">
-                ${positive ? 'Entrada identificada' : 'Saída categorizada'}
-                ${item.recurringTemplate ? '<span class="recurring-badge rounded-full px-2 py-0.5 text-[10px] font-bold">↺ Recorrente</span>' : ''}
-                ${(item.payment === 'cartao_credito' || item.payment === 'cartao_debito') && item.cardId ? (() => { const c = (state.cards||[]).find(x=>x.id===item.cardId); return c ? `<span class="payment-badge-card rounded-full px-2 py-0.5 text-[10px] font-bold"><i class="fa-solid ${item.payment === 'cartao_debito' ? 'fa-credit-card' : 'fa-credit-card'} mr-0.5"></i>${escapeHtml(c.name)} (${item.payment === 'cartao_credito' ? 'Cred.' : 'Déb.'})</span>` : ''; })() : ''}
-                ${item.payment === 'pix' ? '<span class="payment-badge-pix rounded-full px-2 py-0.5 text-[10px] font-bold">Pix</span>' : ''}
-                ${item.payment === 'dinheiro' ? '<span class="payment-badge-dinheiro rounded-full px-2 py-0.5 text-[10px] font-bold">Dinheiro</span>' : ''}
-                ${item.notes ? `<span title="${escapeHtml(item.notes)}" class="rounded-full px-2 py-0.5 text-[10px] font-bold border border-white/10 bg-white/5 cursor-help" style="max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle"><i class="fa-regular fa-note-sticky mr-0.5"></i>${escapeHtml(item.notes)}</span>` : ''}
-              </p>
-            </div>
           </div>
         </td>
-        <td class="px-4 py-5">
-          <span class="inline-flex rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">${escapeHtml(item.cat)}</span>
-        </td>
-        <td class="px-4 py-5 text-right font-bold ${positive ? 'text-emerald-300' : 'text-white'}">
-          ${positive ? '+' : '-'}${formatMoney(Math.abs(item.value))}
-        </td>
-        <td class="px-6 py-5">
-          <div class="flex items-center justify-center gap-2">
-            <button onclick="openEditTx('${item.id}')" title="Editar"
-              class="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-cyan-400/70 hover:bg-cyan-400/10 hover:border-cyan-400/30 hover:text-cyan-300 transition-all">
-              <i class="fa-solid fa-pen text-xs"></i>
-            </button>
-            <button title="Anexos / Recibo"
-              class="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 bg-[#0d121c] text-white/50 hover:bg-white/10 hover:border-white/20 hover:text-white transition-all shadow-sm">
-              <i class="fa-solid fa-file-invoice text-[13px]"></i>
-            </button>
+
+        <td class="block md:table-cell py-2 md:px-5 md:py-4 absolute bottom-4 right-4 md:static mt-2 md:mt-0">
+          <div class="flex items-center justify-end md:justify-center gap-3">
+             <button onclick="openEditTx('${item.id}')" title="Editar" class="text-white/40 hover:text-white transition-colors">
+               <i class="fa-regular fa-clock text-xs"></i>
+             </button>
+             <button onclick="openEditTx('${item.id}')" title="Opções" class="text-white/40 hover:text-white transition-colors">
+               <i class="fa-solid fa-ellipsis text-sm"></i>
+             </button>
           </div>
         </td>
       </tr>

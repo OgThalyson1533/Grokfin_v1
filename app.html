@@ -507,145 +507,138 @@
 
 
 
-        <div id="tab-2" class="tab-panel space-y-10">
-<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-<div>
-<p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Extrato inteligente</p>
-<h3 class="mt-2 text-4xl font-black tracking-tight text-white">Transações com leitura real</h3>
-<p class="mt-3 max-w-2xl text-white/55">
-                Busca instantânea, filtro por categoria, filtro de período, ordenação por data ou valor e resumo operacional do mês em tempo real.
-              </p>
-</div>
-<div class="flex flex-col gap-3 w-full xl:max-w-5xl">
-  <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-    <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
-      <i class="fa-solid fa-magnifying-glass text-white/35"></i>
-      <input class="w-full bg-transparent outline-none placeholder:text-white/28" id="tx-search" placeholder="Buscar descrição..." type="text"/>
-    </label>
-    <select class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" id="tx-category">
-      <option value="all">Todas as categorias</option>
-    </select>
-    <select class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" id="tx-sort">
-      <option value="date-desc">Mais recentes</option>
-      <option value="date-asc">Mais antigas</option>
-      <option value="value-desc">Maior valor</option>
-      <option value="value-asc">Menor valor</option>
-    </select>
-    <button class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 flex items-center gap-2" id="tx-reset">
-      <i class="fa-solid fa-rotate-left"></i>Limpar filtros
-      <span id="tx-filter-badge" class="hidden items-center justify-center h-5 w-5 rounded-full text-[10px] font-black text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)"></span>
+        <div id="tab-2" class="tab-panel space-y-6">
+<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <h3 class="font-serif text-[32px] font-bold tracking-tight text-[#E8ECEC]">Movimentações</h3>
+    <p class="mt-1 text-sm text-white/50">
+      Gerencie suas entradas, saídas e transferências
+    </p>
+  </div>
+  <div class="flex items-center gap-3 mt-4 sm:mt-0">
+    <button class="flex items-center gap-2 rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/5 transition-colors">
+      <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i> Importar
+    </button>
+    <button id="tx-add-btn" class="flex items-center gap-2 rounded-lg bg-[#37bf8b] px-4 py-2.5 text-sm font-semibold text-black hover:bg-[#32ad7e] transition-colors">
+      <i class="fa-solid fa-plus text-xs"></i> Adicionar Movimentação
     </button>
   </div>
-  <div class="flex flex-wrap gap-3 items-center">
-    <!-- Period filter button -->
-    <div class="relative" id="tx-period-wrapper" style="isolation:isolate;">
-      <button id="tx-period-btn" class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:border-cyan-400/30">
-        <i class="fa-solid fa-calendar-days text-cyan-400/70"></i>
-        <span id="tx-period-label">Filtrar por período</span>
-        <i class="fa-solid fa-chevron-down text-white/30 text-xs ml-1" id="tx-period-chevron"></i>
-      </button>
-      <!-- Calendar Dropdown: renderizado via JS direto no <body> para escapar de backdrop-filter stacking contexts -->
+</div>
+
+<!-- Toggles Banco / Cartão -->
+<div class="flex items-center gap-2">
+  <button class="flex items-center gap-2 rounded-lg border border-[#37bf8b]/30 bg-[#37bf8b]/10 px-3 py-1.5 text-xs font-semibold text-[#37bf8b]">
+    <i class="fa-solid fa-building-columns"></i> Banco
+  </button>
+  <button class="flex items-center gap-2 rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-xs font-semibold text-white/50 hover:bg-white/5 transition-colors">
+    <i class="fa-regular fa-credit-card"></i> Cartão
+  </button>
+</div>
+
+<!-- Month / Period Selector -->
+<div class="flex items-center gap-4 mt-2" id="tx-period-wrapper" style="isolation:isolate;">
+  <button id="tx-period-prev" class="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 bg-[#0d121c] text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+  </button>
+  <span id="tx-period-label" class="text-sm font-bold text-white tracking-wide">Março 2026</span>
+  <button id="tx-period-next" class="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 bg-[#0d121c] text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+  </button>
+</div>
+
+<!-- Search & Table Filters -->
+<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-6">
+  <label class="flex items-center gap-3 flex-1 max-w-[400px] rounded-lg border border-white/10 bg-[#0d121c] px-3 py-2 text-sm">
+    <i class="fa-solid fa-magnifying-glass text-white/30 text-xs"></i>
+    <input class="w-full bg-transparent outline-none placeholder:text-white/40 text-white/80" id="tx-search" placeholder="Buscar movimentações..." type="text"/>
+  </label>
+  
+  <div class="flex items-center gap-3">
+    <!-- Keep the native tx-sort hidden to bind to custom type if necessary or adapt it -->
+    <select class="hidden" id="tx-sort"><option value="date-desc"></option></select>
+    
+    <!-- Custom Image 2 Layout Dropdowns -->
+    <div class="relative">
+      <select class="appearance-none rounded-lg border border-white/10 bg-[#0d121c] pl-3 pr-8 py-2 text-xs text-white/60 outline-none hover:bg-white/5 cursor-pointer" id="tx-type-filter">
+        <option value="all">Tipo</option>
+        <option value="saida">Saída</option>
+        <option value="entrada">Entrada</option>
+      </select>
+      <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-white/30 text-[10px] pointer-events-none"></i>
     </div>
-    <!-- Nova Transação button -->
-    <button id="tx-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90"
-            style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
-      <i class="fa-solid fa-plus"></i> Nova Transação
-    </button>
-    <!-- Export buttons -->
-    <div class="flex gap-2">
-      <button id="tx-export-csv" class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors">
-        <i class="fa-solid fa-file-csv text-emerald-400/80"></i> CSV
-      </button>
-      <button id="tx-export-pdf" class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors">
-        <i class="fa-solid fa-file-pdf text-rose-400/80"></i> PDF
-      </button>
+    
+    <div class="relative">
+      <select class="appearance-none rounded-lg border border-white/10 bg-[#0d121c] pl-3 pr-8 py-2 text-xs text-white/60 outline-none hover:bg-white/5 cursor-pointer" id="tx-status-filter">
+        <option value="all">Status</option>
+        <option value="pendente">Pendente</option>
+        <option value="concluido">Concluído</option>
+      </select>
+      <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-white/30 text-[10px] pointer-events-none"></i>
     </div>
+    
+    <!-- Legacy Category filter, kept for logic but hidden visually if they want exact Image 2. Or we can show it as a 3rd filter -->
+    <select class="hidden" id="tx-category"><option value="all"></option></select>
   </div>
 </div>
-</div>
-<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-<div class="glass-panel rounded-3xl p-5">
-<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Itens visíveis</p>
-<p class="mt-3 text-3xl font-black text-white" id="tx-count">0</p>
-</div>
-<div class="glass-panel rounded-3xl p-5">
-<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Saídas filtradas</p>
-<p class="mt-3 text-3xl font-black text-rose-300" id="tx-expense-total">R$ 0,00</p>
-</div>
-<div class="glass-panel rounded-3xl p-5">
-<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Entradas filtradas</p>
-<p class="mt-3 text-3xl font-black text-emerald-300" id="tx-income-total">R$ 0,00</p>
-</div>
-<div class="glass-panel rounded-3xl p-5">
-<p class="text-xs font-bold uppercase tracking-[.18em] text-white/32">Média por item</p>
-<p class="mt-3 text-3xl font-black text-white" id="tx-average-total">R$ 0,00</p>
-</div>
-</div>
-<div class="glass-panel rounded-[28px] relative overflow-hidden flex flex-col pt-0 shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-white/5" style="box-shadow: inset 0 1px 1px rgba(255,255,255,0.08);">
-  <div class="overflow-x-auto w-full mt-0">
+
+<div class="rounded-[16px] relative overflow-hidden flex flex-col pt-0 shadow-[0_4px_24px_rgba(0,0,0,0.6)] border border-white/10 bg-[#0d121c] mt-4">
+  <div class="overflow-x-hidden w-full mt-0">
     <table class="w-full text-left" id="tx-main-table">
-      <thead class="border-b border-white/8 bg-white/5 text-xs uppercase tracking-[.18em] text-white/38">
+      <thead class="hidden md:table-header-group border-b border-white/10 bg-[#121825] text-xs font-semibold text-white/40">
         <tr>
-          <th class="px-6 py-5 w-12 text-center" style="vertical-align: middle;">
+          <th class="px-5 py-4 w-12 text-center align-middle">
             <label class="relative flex items-center justify-center cursor-pointer m-0">
               <input type="checkbox" id="tx-select-all" class="peer sr-only" onchange="if(window.toggleSelectAllTx) window.toggleSelectAllTx(this)">
-              <div class="w-5 h-5 rounded border-2 border-white/20 peer-checked:bg-cyan-500 peer-checked:border-cyan-500 peer-hover:border-white/40 transition-all flex items-center justify-center shadow-inner">
-                <i class="fa-solid fa-check text-[10px] text-black opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+              <div class="w-4 h-4 rounded-[4px] border border-white/20 peer-checked:bg-[#37bf8b] peer-checked:border-[#37bf8b] transition-all flex items-center justify-center">
+                <i class="fa-solid fa-check text-[10px] text-[#0d121c] opacity-0 peer-checked:opacity-100 transition-opacity"></i>
               </div>
             </label>
           </th>
-          <th class="px-4 py-5 font-semibold text-left">Data</th>
-          <th class="px-4 py-5 font-semibold text-left">Descrição</th>
-          <th class="px-4 py-5 font-semibold text-left">Categoria</th>
-          <th class="px-4 py-5 font-semibold text-right">Valor</th>
-          <th class="px-6 py-5 font-semibold text-center">Ações</th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group">Data <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-center">Descrição <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-center">Tipo <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-right">Valor <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-center">Status <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
+          <th class="px-5 py-4 text-center"></th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-white/5 text-sm" id="transactions-body"></tbody>
+      <tbody class="text-sm" id="transactions-body"></tbody>
     </table>
   </div>
 
   <!-- Barra de Ações em Massa (Oculta por padrão) -->
-  <div id="tx-bulk-actions-bar" class="hidden z-10 p-3 sm:px-6 bg-[#0f141f] border-t border-white/5 flex items-center justify-between opacity-0 transition-opacity duration-300 shadow-[inset_0_1px_rgba(255,255,255,0.05)]">
+  <div id="tx-bulk-actions-bar" class="hidden z-10 p-3 sm:px-5 bg-[#171c26] border-t border-white/10 flex items-center justify-between transition-opacity duration-300">
     <div class="flex items-center gap-3">
-      <span class="flex items-center justify-center w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 text-xs font-bold" id="tx-bulk-count">0</span>
-      <span class="text-sm font-semibold text-white/80 hidden sm:inline">linhas selecionadas</span>
+      <span class="flex items-center justify-center w-6 h-6 rounded bg-[#37bf8b]/20 text-[#37bf8b] text-[11px] font-bold" id="tx-bulk-count">0</span>
     </div>
     <div class="flex items-center gap-2">
-      <button onclick="if(window.bulkChangeCategory) window.bulkChangeCategory()" class="hidden sm:flex items-center gap-2 rounded-xl border border-white/5 bg-[#171c26] px-3 py-2 text-xs font-semibold text-white/70 hover:bg-white/5 transition-colors shadow-sm">
-        <i class="fa-solid fa-tags"></i> Mudar Categoria
+      <button onclick="if(window.bulkChangeCategory) window.bulkChangeCategory()" class="hidden sm:flex items-center gap-2 rounded border border-white/10 bg-transparent px-3 py-1.5 text-xs font-semibold text-white/50 hover:bg-white/5 hover:text-white border-dashed">
+        <i class="fa-solid fa-tags"></i> Categoria
       </button>
-      <button onclick="if(window.bulkMarkPaid) window.bulkMarkPaid()" class="hidden sm:flex items-center gap-2 rounded-xl border border-white/5 bg-[#171c26] px-3 py-2 text-xs font-semibold text-white/70 hover:bg-white/5 transition-colors shadow-sm">
-        <i class="fa-solid fa-credit-card"></i> Marcar como Pago
+      <button onclick="if(window.bulkMarkPaid) window.bulkMarkPaid()" class="hidden sm:flex items-center gap-2 rounded border border-[#37bf8b]/30 bg-[#37bf8b]/10 px-3 py-1.5 text-xs font-semibold text-[#37bf8b] hover:bg-[#37bf8b]/20">
+        <i class="fa-regular fa-circle-check"></i> Pago
       </button>
-      <button onclick="if(window.bulkDeleteTx) window.bulkDeleteTx()" class="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-colors shadow-sm ml-auto">
-        <i class="fa-solid fa-trash"></i> <span class="hidden sm:inline">Excluir Selecionados</span>
+      <button onclick="if(window.bulkDeleteTx) window.bulkDeleteTx()" class="flex items-center gap-2 rounded bg-[#e84e58] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#d4414b] border border-transparent shadow-[0_2px_4px_rgba(232,78,88,0.2)] ml-auto">
+        <i class="fa-solid fa-trash text-[10px]"></i> <span class="hidden sm:inline">Excluir</span>
       </button>
-      <button onclick="if(window.clearTxSelection) window.clearTxSelection()" class="ml-2 w-8 h-8 flex items-center justify-center rounded-xl text-white/30 hover:bg-white/5 hover:text-white/60 transition-colors" title="Cancelar seleção">
-        <i class="fa-solid fa-times text-sm"></i>
+      <button onclick="if(window.clearTxSelection) window.clearTxSelection()" class="ml-2 flex items-center justify-center rounded w-7 h-7 text-white/30 hover:bg-white/5 hover:text-white/60" title="Cancelar seleção">
+        <i class="fa-solid fa-times text-[10px]"></i>
       </button>
     </div>
   </div>
 
   <!-- Table Footer Pagination -->
-  <div class="border-t border-white/8 bg-white/5 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <span class="text-xs text-white/40 font-medium">Items por página:</span>
-      <select id="tx-page-size-select" onchange="if(window.changeTxPageSize) window.changeTxPageSize(this.value)" class="rounded-xl border border-white/10 bg-[#121622] px-3 py-1.5 text-xs text-white/80 outline-none hover:bg-white/5 cursor-pointer appearance-none text-center min-w-[60px]">
-        <option value="10" selected>10</option>
-        <option value="20">20</option>
-        <option value="50">50</option>
-      </select>
-    </div>
-    <div class="flex items-center gap-4 text-xs">
-      <span class="text-white/40 whitespace-nowrap"><span id="tx-page-range">1-10</span> de <span id="tx-page-total">0</span></span>
-      <div class="flex gap-1.5 relative z-0">
-        <button id="tx-page-prev" onclick="if(window.txPagePrev) window.txPagePrev()" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none">
-          <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        <button id="tx-page-next" onclick="if(window.txPageNext) window.txPageNext()" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none">
-          <i class="fa-solid fa-chevron-right"></i>
-        </button>
+  <div class="border-t border-white/5 bg-[#0d121c] px-5 py-3 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
+    <span class="text-white/40"><span id="tx-page-range">Mostrando 1 a 10</span> (<span id="tx-page-total">0</span> movimentações totais)</span>
+    <div class="flex items-center gap-2">
+      <span class="text-white/40">Resultados por página:</span>
+      <div class="relative">
+        <select id="tx-page-size-select" onchange="if(window.changeTxPageSize) window.changeTxPageSize(this.value)" class="appearance-none rounded border border-white/10 bg-[#171c26] pl-2 pr-6 py-1 text-white/70 outline-none hover:bg-white/5 cursor-pointer">
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-white/30 text-[9px] pointer-events-none"></i>
       </div>
     </div>
   </div>
