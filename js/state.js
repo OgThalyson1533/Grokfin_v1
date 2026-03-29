@@ -119,13 +119,13 @@ export function buildSeedState() {
 // Antes limitava erroneamente ao índice 5, bloqueando as tabs 6, 7 e 8
 // de serem restauradas após recarregar a página.
 function mapCurrentActiveTab(index) {
-  const mapping = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 };
-  return mapping[index] ?? Math.min(Math.max(index, 0), 8);
+  const mapping = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9 };
+  return mapping[index] ?? Math.min(Math.max(index, 0), 9);
 }
 
 function mapLegacyActiveTab(index) {
   const mapping = { 0: 0, 1: 2, 2: 4, 3: 3, 4: 1 };
-  return mapping[index] ?? Math.min(Math.max(index, 0), 8);
+  return mapping[index] ?? Math.min(Math.max(index, 0), 9);
 }
 
 // ── loadState ─────────────────────────────────────────────────────────────────
