@@ -189,7 +189,7 @@
 <!-- Bento Box Grid Layout -->
 <div class="flex flex-col gap-5">
   <!-- Linha 1: Header / Resumo Executivo -->
-  <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex flex-col lg:flex-row gap-6 items-center lg:items-end justify-between relative overflow-hidden">
+  <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex flex-col lg:flex-row gap-6 items-center lg:items-end justify-between relative overflow-hidden">
     <!-- Glow effect behind balance -->
     <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-[60px] pointer-events-none" style="background:radial-gradient(circle,rgba(0,245,255,.15),transparent 70%)"></div>
     
@@ -258,7 +258,7 @@
   </div>
 
   <!-- Linha 2: KPIs (Comparativo de Desempenho) -->
-  <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 w-full">
+  <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 w-full">
     <div class="flex items-center justify-between mb-4">
       <p class="home-section-title">Comparativo de Desempenho</p>
       <span class="text-[10px] text-white/35">Período atual vs anterior</span>
@@ -274,7 +274,7 @@
     <!-- Coluna Esquerda 60% (Gráficos: lg:col-span-7) -->
     <div class="lg:col-span-7 flex flex-col gap-5">
       <!-- Gráfico de Linha -->
-      <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex-1 flex flex-col">
+      <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex-1 flex flex-col">
         <div class="flex items-center justify-between mb-4 shrink-0">
           <p class="home-section-title">Receita vs Despesa</p>
           <div class="flex items-center gap-3 text-[10px] text-white/40">
@@ -289,7 +289,7 @@
       </div>
 
       <!-- Gráfico de Rosca (Gastos por Categoria) -->
-      <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex-1 flex flex-col">
+      <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex-1 flex flex-col">
         <div class="flex items-center justify-between mb-4 shrink-0">
           <p class="home-section-title">Gastos por Categoria</p>
           <button class="text-xs text-white/35 hover:text-white/60 transition-colors" onclick="switchTab(2)">Extrato →</button>
@@ -303,7 +303,7 @@
     <!-- Coluna Direita 40% (Operacional/Saúde: lg:col-span-5) -->
     <div class="lg:col-span-5 flex flex-col gap-5">
       <!-- Análise IA -->
-      <div class="rounded-3xl bg-[#292929] border border-white/8 p-5">
+      <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5">
         <div class="flex items-center justify-between mb-4">
           <p class="home-section-title">Análise IA</p>
           <i class="fa-solid fa-microchip-ai text-cyan-400/50 text-xs"></i>
@@ -319,7 +319,7 @@
       </div>
 
       <!-- Saúde Financeira -->
-      <div class="rounded-3xl bg-[#292929] border border-white/8 p-5" id="home-gauge-card">
+      <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5" id="home-gauge-card">
         <div class="flex items-center justify-between mb-4">
           <p class="home-section-title">Saúde Financeira</p>
           <span class="text-[10px] text-white/35" id="home-gauge-period-label">Este mês</span>
@@ -391,7 +391,7 @@
       <!-- Próximos 7 Dias e Metas -->
       <div class="grid grid-cols-1 gap-5">
         <!-- Próximos -->
-        <div class="rounded-3xl bg-[#292929] border border-white/8 p-5">
+        <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5">
           <div class="flex items-center justify-between mb-4">
             <p class="home-section-title">Próximos 7 Dias</p>
             <span class="min-w-[22px] h-[22px] rounded-full bg-violet-500/25 border border-violet-400/25 text-[10px] font-bold text-violet-300 flex items-center justify-center px-1" id="home-upcoming-count">0</span>
@@ -413,7 +413,7 @@
         </div>
 
         <!-- Metas -->
-        <div class="rounded-3xl bg-[#292929] border border-white/8 p-5">
+        <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5">
           <div class="flex items-center justify-between mb-4">
             <p class="home-section-title">Metas</p>
             <button class="text-xs text-cyan-300/60 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
@@ -436,7 +436,7 @@
   <!-- Linha 4: Rodapé (Calendário e Métodos de Pagamento) -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
     <!-- Método de Pagamento -->
-    <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex flex-col">
+    <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex flex-col">
       <div class="flex items-center justify-between mb-4">
         <p class="home-section-title">Método de Pagamento</p>
         <span class="text-[10px] text-white/35">Entradas e saídas</span>
@@ -464,7 +464,7 @@
     </div>
 
     <!-- Calendário Financeiro -->
-    <div class="rounded-3xl bg-[#292929] border border-white/8 p-5 lg:p-6 flex flex-col">
+    <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex flex-col">
       <div class="flex items-center justify-between mb-4">
         <p class="home-section-title">Calendário Financeiro</p>
         <div class="flex items-center gap-2">
