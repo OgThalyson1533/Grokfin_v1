@@ -745,18 +745,127 @@
         <!-- ═══════════════════════════ TAB 5: PERFIL ═══════════════════════════ -->
         <div id="tab-5" class="tab-panel space-y-4 max-w-2xl mx-auto pb-10">
           
-          <option value="royal">Ametista (Violeta Profundo / Fúcsia)</option>
-          <option value="gold">Gold V.I.P (Âmbar / Dourado Clássico)</option>
-          <option value="minimal">Minimalista (Escuro Absoluto / Chumbo)</option>
-        </select>
-      </label>
-    </div>
-    <div class="mt-6 rounded-2xl border border-cyan-300/15 bg-cyan-300/6 p-4 text-sm leading-relaxed text-white/75">
-      O modo de edição respeita a estética atual do app: mesmas cores, mesmo vidro fosco, mesmas bordas suaves e o mesmo brilho dos cards já existentes.
-    </div>
-  </div>
-</div>
+          <!-- Modo Visualização -->
+          <div id="profile-view-mode" class="glass-panel rounded-[36px] overflow-hidden relative">
+            
+            <!-- Banner -->
+            <div data-profile-bg="banner" class="profile-banner relative h-40 sm:h-52 w-full bg-cover bg-center">
+              <button id="profile-logout-btn" class="absolute top-4 right-4 h-10 w-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white/90 flex items-center justify-center transition-colors shadow-lg">
+                <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+              </button>
+            </div>
+            
+            <!-- Content Profile -->
+            <div class="px-5 pt-0 pb-8 flex flex-col items-center text-center relative">
+              
+              <!-- Avatar -->
+              <img data-profile-image="avatar" alt="Avatar" class="h-28 w-28 rounded-full border-4 border-[#070a13] object-cover bg-black relative -mt-14 shadow-xl z-10 transition-transform hover:scale-105">
+              
+              <!-- Identidade -->
+              <h3 data-profile-text="displayName" class="mt-4 text-2xl font-black text-white tracking-tight leading-none">GrokFin User</h3>
+              <div class="flex items-center gap-1.5 mt-1.5 justify-center">
+                <span data-profile-text="handle" class="text-sm font-semibold text-cyan-200">@grokfin.user</span>
+                <span class="w-1 h-1 rounded-full bg-white/20"></span>
+                <span data-profile-text="nickname" class="text-xs text-white/50">Navigator</span>
+              </div>
+              
+              <!-- Bio -->
+              <p data-profile-text="bio" class="mt-3 text-sm text-white/75 leading-relaxed max-w-sm px-4">
+                Organizando minha vida financeira com eficiência brutal. Cortando excessos, focando no que importa.
+              </p>
 
+              <!-- Botão Editar Profile -->
+              <div class="w-full max-w-xs mt-6">
+                <button id="profile-edit-toggle-btn" class="w-full py-2.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white font-bold text-sm transition-colors shadow-sm">
+                  Editar Perfil
+                </button>
+              </div>
+
+              <!-- Stats Sociais -->
+              <div class="flex justify-between w-full mt-8 border-t border-white/10 pt-6 px-2 sm:px-6">
+                <div class="flex flex-col items-center">
+                  <p id="profile-metric-transactions" class="text-xl font-black text-white">0</p>
+                  <p class="text-[10px] uppercase tracking-widest text-white/40 mt-0.5">Lançamentos</p>
+                </div>
+                <div class="flex flex-col items-center">
+                  <p id="profile-metric-goals" class="text-xl font-black text-white">0</p>
+                  <p class="text-[10px] uppercase tracking-widest text-white/40 mt-0.5">Metas</p>
+                </div>
+                <div class="flex flex-col items-center relative">
+                  <p id="profile-health-pill" class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-400 drop-shadow-[0_0_8px_rgba(52,211,153,.3)]">0/100</p>
+                  <p class="text-[10px] uppercase tracking-widest text-white/40 mt-0.5">Score IA</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modo Edição (Oculto) -->
+          <div id="profile-edit-panel" class="hidden glass-panel rounded-[36px] overflow-hidden">
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white tracking-tight">Editar Perfil</h3>
+                <button id="profile-cancel-btn" class="text-sm text-white/50 hover:text-white transition-colors py-1 px-3">
+                  Cancelar
+                </button>
+              </div>
+
+              <div class="space-y-6">
+                <!-- Capa Editável -->
+                <div class="relative w-full h-32 rounded-2xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center">
+                   <div data-profile-bg="banner" class="absolute inset-0 bg-cover bg-center opacity-60"></div>
+                   <label class="relative z-10 bg-black/60 hover:bg-black/80 text-white text-xs px-4 py-2 rounded-xl border border-white/20 cursor-pointer backdrop-blur-md transition-colors font-bold shadow-lg flex items-center gap-2">
+                     <i class="fa-solid fa-image"></i> Trocar Capa
+                     <input id="profile-banner-input" type="file" accept="image/*" class="hidden">
+                   </label>
+                </div>
+                
+                <!-- Avatar Editável -->
+                <div class="flex justify-center -mt-12 relative z-20">
+                   <div class="relative">
+                     <img data-profile-image="avatar" class="h-24 w-24 rounded-full border-4 border-[#121622] object-cover bg-black relative shadow-xl">
+                     <label class="absolute bottom-0 right-0 h-8 w-8 bg-black/80 hover:bg-black border border-white/20 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors shadow-lg">
+                       <i class="fa-solid fa-camera text-xs"></i>
+                       <input id="profile-avatar-input" type="file" accept="image/*" class="hidden">
+                     </label>
+                   </div>
+                </div>
+
+                <div class="space-y-4 mt-8">
+                  <label class="block">
+                    <span class="text-[10px] font-bold uppercase tracking-wide text-white/40 block mb-1.5 pl-1">Nome de exibição</span>
+                    <input id="profile-displayname-input" type="text" class="profile-input bg-black/30" placeholder="Como quer ser chamado?">
+                  </label>
+                  <label class="block relative">
+                    <span class="text-[10px] font-bold uppercase tracking-wide text-white/40 block mb-1.5 pl-1">Nome de usuário (@)</span>
+                    <input id="profile-handle-input" type="text" class="profile-input bg-black/30" placeholder="@seu.handle">
+                    <span id="profile-handle-feedback" class="absolute right-3 top-1/2 mt-3 text-[10px] hidden"></span>
+                  </label>
+                  <label class="block">
+                    <span class="text-[10px] font-bold uppercase tracking-wide text-white/40 block mb-1.5 pl-1">Sobre Você</span>
+                    <textarea id="profile-bio-input" class="profile-input bg-black/30 resize-none h-24" placeholder="Foque no que importa..."></textarea>
+                  </label>
+                  <label class="block">
+                    <span class="text-[10px] font-bold uppercase tracking-wide text-white/40 block mb-1.5 pl-1">Apelido Privado</span>
+                    <input id="profile-nickname-input" type="text" class="profile-input bg-black/30" placeholder="Apelido curto">
+                  </label>
+                  <label class="block">
+                    <span class="text-[10px] font-bold uppercase tracking-wide text-white/40 block mb-1.5 pl-1">Tema Secundário</span>
+                    <select id="profile-theme-input" class="profile-input bg-black/30 appearance-none">
+                      <option value="cyber">Cyberpunk (Cyan)</option>
+                      <option value="royal">Ametista (Violeta)</option>
+                      <option value="gold">Gold V.I.P (Âmbar)</option>
+                      <option value="minimal">Minimalista (Chumbo)</option>
+                    </select>
+                  </label>
+                </div>
+
+                <button id="profile-save-btn" class="w-full mt-4 rounded-xl relative overflow-hidden text-black py-4 font-bold shadow-[0_0_20px_rgba(0,255,133,.25)] hover:shadow-[0_0_30px_rgba(0,255,133,.45)] transition-all active:scale-[0.98]" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+                   <i class="fa-solid fa-cloud-arrow-up mr-2 text-black/60"></i>Salvar e Sincronizar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- ═══════════════════════════ TAB 6: CARTÕES ═══════════════════════════ -->
         <div id="tab-6" class="tab-panel space-y-8">

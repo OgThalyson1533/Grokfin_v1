@@ -819,7 +819,7 @@ export function renderHealthGauge(periodData, filter) {
   const pctEl   = document.getElementById('home-gauge-pct');
   const labelEl = document.getElementById('home-gauge-label');
   const periodLabelEl = document.getElementById('home-gauge-period-label');
-  if (!arc || !needle) return;
+  if (!arc) return; // Só precisa do arc para continuar
 
   const ratio = clamp(periodData.expenseRatio, 0, 100);
   // Arc total length is ~251.3 (π × r = π × 80)
@@ -827,9 +827,11 @@ export function renderHealthGauge(periodData, filter) {
   const filled   = (ratio / 100) * totalArc;
   arc.style.strokeDashoffset = String(totalArc - filled);
 
-  // Needle: -90deg = 0%, 0deg = 50%, 90deg = 100%
-  const needleDeg = -90 + (ratio / 100) * 180;
-  needle.style.transform = `rotate(${needleDeg}deg)`;
+  // Se o needle ainda existir, rotaciona; caso contrário ignora (ponteiro removido)
+  if (needle) {
+    const needleDeg = -90 + (ratio / 100) * 180;
+    needle.style.transform = `rotate(${needleDeg}deg)`;
+  }
 
   if (pctEl) pctEl.textContent = `${Math.round(ratio)}%`;
 
