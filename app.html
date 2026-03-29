@@ -507,59 +507,59 @@
 
 
 
-        <div id="tab-2" class="tab-panel space-y-6">
-<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div id="tab-2" class="tab-panel space-y-5">
+<!-- Title & Desktop Buttons -->
+<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
   <div>
     <h3 class="font-serif text-[32px] font-bold tracking-tight text-[#E8ECEC]">Movimentações</h3>
-    <p class="mt-1 text-sm text-white/50">
-      Gerencie suas entradas, saídas e transferências
-    </p>
+    <p class="mt-1 text-sm text-white/50">Gerencie suas entradas, saídas e transferências</p>
   </div>
-  <div class="flex items-center gap-3 mt-4 sm:mt-0">
+  
+  <!-- Add New Tx - Mobile Fixed FAB or Desktop Top Right. Wait, let's keep it here for desktop, mobile has the green '+' in nabvar -->
+  <div class="hidden sm:flex items-center gap-3">
     <button class="flex items-center gap-2 rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/5 transition-colors">
-      <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i> Importar
-    </button>
-    <button id="tx-add-btn" class="flex items-center gap-2 rounded-lg bg-[#37bf8b] px-4 py-2.5 text-sm font-semibold text-black hover:bg-[#32ad7e] transition-colors">
-      <i class="fa-solid fa-plus text-xs"></i> Adicionar Movimentação
+      <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i> Importar
     </button>
   </div>
 </div>
 
 <!-- Toggles Banco / Cartão -->
-<div class="flex items-center gap-2">
-  <button class="flex items-center gap-2 rounded-lg border border-[#37bf8b]/30 bg-[#37bf8b]/10 px-3 py-1.5 text-xs font-semibold text-[#37bf8b]">
+<div class="flex items-center gap-2 mt-2">
+  <button class="flex items-center gap-2 rounded bg-[#2E5C41] border border-transparent px-4 py-2.5 text-sm font-semibold text-white">
     <i class="fa-solid fa-building-columns"></i> Banco
   </button>
-  <button class="flex items-center gap-2 rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-xs font-semibold text-white/50 hover:bg-white/5 transition-colors">
+  <button class="flex items-center gap-2 rounded border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/50 hover:bg-white/5 transition-colors">
     <i class="fa-regular fa-credit-card"></i> Cartão
   </button>
 </div>
 
+<!-- Mobile Import Button (Full Width) -->
+<button class="w-full sm:hidden flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-transparent px-4 py-3.5 text-sm font-semibold text-white/80 hover:bg-white/5 transition-colors mt-1">
+  <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i> Importar
+</button>
+
 <!-- Month / Period Selector -->
-<div class="flex items-center gap-4 mt-2" id="tx-period-wrapper" style="isolation:isolate;">
-  <button id="tx-period-prev" class="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 bg-[#0d121c] text-white/60 hover:text-white hover:bg-white/5 transition-colors">
-    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+<div class="flex items-center justify-between sm:justify-start gap-4 mt-2" id="tx-period-wrapper" style="isolation:isolate;">
+  <button id="tx-period-prev" onclick="if(window.txPagePeriodPrev) window.txPagePeriodPrev()" class="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-lg border border-white/10 bg-transparent text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+    <i class="fa-solid fa-chevron-left text-xs sm:text-[10px]"></i>
   </button>
-  <span id="tx-period-label" class="text-sm font-bold text-white tracking-wide">Março 2026</span>
-  <button id="tx-period-next" class="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 bg-[#0d121c] text-white/60 hover:text-white hover:bg-white/5 transition-colors">
-    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+  <span id="tx-period-label" class="text-base font-bold text-white tracking-wide">Março 2026</span>
+  <button id="tx-period-next" onclick="if(window.txPagePeriodNext) window.txPagePeriodNext()" class="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-[10px] sm:rounded-lg border border-white/10 bg-transparent text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+    <i class="fa-solid fa-chevron-right text-xs sm:text-[10px]"></i>
   </button>
 </div>
 
 <!-- Search & Table Filters -->
-<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-6">
-  <label class="flex items-center gap-3 flex-1 max-w-[400px] rounded-lg border border-white/10 bg-[#0d121c] px-3 py-2 text-sm">
-    <i class="fa-solid fa-magnifying-glass text-white/30 text-xs"></i>
-    <input class="w-full bg-transparent outline-none placeholder:text-white/40 text-white/80" id="tx-search" placeholder="Buscar movimentações..." type="text"/>
+<div class="flex flex-col gap-3 mt-2">
+  <label class="w-full flex items-center gap-3 rounded-lg border border-white/10 bg-transparent px-4 py-3 text-sm">
+    <i class="fa-solid fa-magnifying-glass text-white/30 text-xs text-center w-4"></i>
+    <input class="w-full bg-transparent outline-none placeholder:text-white/40 text-white/80" id="tx-search" placeholder="Buscar movimentações..." type="text" oninput="if(window.debounceTxFilter) window.debounceTxFilter()"/>
   </label>
   
-  <div class="flex items-center gap-3">
-    <!-- Keep the native tx-sort hidden to bind to custom type if necessary or adapt it -->
-    <select class="hidden" id="tx-sort"><option value="date-desc"></option></select>
+  <div class="flex items-center gap-2 flex-nowrap overflow-x-auto no-scrollbar w-full pb-1">
     
-    <!-- Custom Image 2 Layout Dropdowns -->
-    <div class="relative">
-      <select class="appearance-none rounded-lg border border-white/10 bg-[#0d121c] pl-3 pr-8 py-2 text-xs text-white/60 outline-none hover:bg-white/5 cursor-pointer" id="tx-type-filter">
+    <div class="relative flex-none">
+      <select class="appearance-none rounded-md border border-white/10 bg-transparent pl-3 pr-8 py-2.5 text-sm text-white/60 outline-none hover:bg-white/5 cursor-pointer min-w-[100px]" id="tx-type-filter" onchange="if(window.triggerTxFilter) window.triggerTxFilter()">
         <option value="all">Tipo</option>
         <option value="saida">Saída</option>
         <option value="entrada">Entrada</option>
@@ -567,73 +567,55 @@
       <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-white/30 text-[10px] pointer-events-none"></i>
     </div>
     
-    <div class="relative">
-      <select class="appearance-none rounded-lg border border-white/10 bg-[#0d121c] pl-3 pr-8 py-2 text-xs text-white/60 outline-none hover:bg-white/5 cursor-pointer" id="tx-status-filter">
+    <div class="relative flex-none">
+      <select class="appearance-none rounded-md border border-white/10 bg-transparent pl-3 pr-8 py-2.5 text-sm text-white/60 outline-none hover:bg-white/5 cursor-pointer min-w-[100px]" id="tx-status-filter" onchange="if(window.triggerTxFilter) window.triggerTxFilter()">
         <option value="all">Status</option>
         <option value="pendente">Pendente</option>
         <option value="concluido">Concluído</option>
+        <option value="vencido">Vencido</option>
       </select>
       <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-white/30 text-[10px] pointer-events-none"></i>
     </div>
     
-    <!-- Legacy Category filter, kept for logic but hidden visually if they want exact Image 2. Or we can show it as a 3rd filter -->
-    <select class="hidden" id="tx-category"><option value="all"></option></select>
+    <!-- Red Excluir Button (Inline) -->
+    <button id="tx-inline-excluir" onclick="if(window.bulkDeleteTx) window.bulkDeleteTx()" class="hidden flex-none items-center justify-center gap-2 rounded-md bg-[#e84e58] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#d4414b] shadow-sm transition-all whitespace-nowrap">
+      <i class="fa-regular fa-trash-can text-sm"></i> Excluir (<span id="tx-inline-excluir-count">0</span>)
+    </button>
   </div>
 </div>
 
-<div class="rounded-[16px] relative overflow-hidden flex flex-col pt-0 shadow-[0_4px_24px_rgba(0,0,0,0.6)] border border-white/10 bg-[#0d121c] mt-4">
-  <div class="overflow-x-hidden w-full mt-0">
-    <table class="w-full text-left" id="tx-main-table">
-      <thead class="hidden md:table-header-group border-b border-white/10 bg-[#121825] text-xs font-semibold text-white/40">
+<div class="rounded-xl relative flex flex-col pt-0 border border-white/10 bg-[#0d121c] mt-2">
+  <div class="overflow-x-auto w-full mt-0">
+    <table class="w-full text-left whitespace-nowrap" id="tx-main-table">
+      <thead class="border-b border-white/5 bg-transparent text-xs font-semibold text-white/40">
         <tr>
           <th class="px-5 py-4 w-12 text-center align-middle">
             <label class="relative flex items-center justify-center cursor-pointer m-0">
               <input type="checkbox" id="tx-select-all" class="peer sr-only" onchange="if(window.toggleSelectAllTx) window.toggleSelectAllTx(this)">
-              <div class="w-4 h-4 rounded-[4px] border border-white/20 peer-checked:bg-[#37bf8b] peer-checked:border-[#37bf8b] transition-all flex items-center justify-center">
+              <div class="w-4 h-4 rounded-[4px] border border-white/30 peer-checked:bg-[#37bf8b] peer-checked:border-[#37bf8b] transition-all flex items-center justify-center">
                 <i class="fa-solid fa-check text-[10px] text-[#0d121c] opacity-0 peer-checked:opacity-100 transition-opacity"></i>
               </div>
             </label>
           </th>
-          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group">Data <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
-          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-center">Descrição <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
-          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-center">Tipo <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
-          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-right">Valor <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
-          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-center">Status <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group" onclick="if(window.sortTxTable) window.sortTxTable('date')">Data <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100 tx-sort-ico" data-col="date"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-left" onclick="if(window.sortTxTable) window.sortTxTable('desc')">Descrição <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100 tx-sort-ico" data-col="desc"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-left" onclick="if(window.sortTxTable) window.sortTxTable('type')">Tipo <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100 tx-sort-ico" data-col="type"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-right" onclick="if(window.sortTxTable) window.sortTxTable('value')">Valor <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100 tx-sort-ico" data-col="value"></i></th>
+          <th class="px-4 py-4 cursor-pointer hover:text-white/70 transition-colors group text-center" onclick="if(window.sortTxTable) window.sortTxTable('status')">Status <i class="fa-solid fa-arrow-up-arrow-down ml-2 text-[10px] opacity-40 group-hover:opacity-100 tx-sort-ico" data-col="status"></i></th>
           <th class="px-5 py-4 text-center"></th>
         </tr>
       </thead>
-      <tbody class="text-sm" id="transactions-body"></tbody>
+      <tbody class="text-sm divide-y divide-white/[0.03]" id="transactions-body"></tbody>
     </table>
   </div>
 
-  <!-- Barra de Ações em Massa (Oculta por padrão) -->
-  <div id="tx-bulk-actions-bar" class="hidden z-10 p-3 sm:px-5 bg-[#171c26] border-t border-white/10 flex items-center justify-between transition-opacity duration-300">
-    <div class="flex items-center gap-3">
-      <span class="flex items-center justify-center w-6 h-6 rounded bg-[#37bf8b]/20 text-[#37bf8b] text-[11px] font-bold" id="tx-bulk-count">0</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <button onclick="if(window.bulkChangeCategory) window.bulkChangeCategory()" class="hidden sm:flex items-center gap-2 rounded border border-white/10 bg-transparent px-3 py-1.5 text-xs font-semibold text-white/50 hover:bg-white/5 hover:text-white border-dashed">
-        <i class="fa-solid fa-tags"></i> Categoria
-      </button>
-      <button onclick="if(window.bulkMarkPaid) window.bulkMarkPaid()" class="hidden sm:flex items-center gap-2 rounded border border-[#37bf8b]/30 bg-[#37bf8b]/10 px-3 py-1.5 text-xs font-semibold text-[#37bf8b] hover:bg-[#37bf8b]/20">
-        <i class="fa-regular fa-circle-check"></i> Pago
-      </button>
-      <button onclick="if(window.bulkDeleteTx) window.bulkDeleteTx()" class="flex items-center gap-2 rounded bg-[#e84e58] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#d4414b] border border-transparent shadow-[0_2px_4px_rgba(232,78,88,0.2)] ml-auto">
-        <i class="fa-solid fa-trash text-[10px]"></i> <span class="hidden sm:inline">Excluir</span>
-      </button>
-      <button onclick="if(window.clearTxSelection) window.clearTxSelection()" class="ml-2 flex items-center justify-center rounded w-7 h-7 text-white/30 hover:bg-white/5 hover:text-white/60" title="Cancelar seleção">
-        <i class="fa-solid fa-times text-[10px]"></i>
-      </button>
-    </div>
-  </div>
-
   <!-- Table Footer Pagination -->
-  <div class="border-t border-white/5 bg-[#0d121c] px-5 py-3 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
-    <span class="text-white/40"><span id="tx-page-range">Mostrando 1 a 10</span> (<span id="tx-page-total">0</span> movimentações totais)</span>
+  <div class="border-t border-white/5 bg-transparent px-5 py-3 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 text-xs">
+    <span class="text-white/40"><span id="tx-page-range">Mostrando 1 a 10</span> (<span id="tx-page-total">0</span> movimentações)</span>
     <div class="flex items-center gap-2">
       <span class="text-white/40">Resultados por página:</span>
       <div class="relative">
-        <select id="tx-page-size-select" onchange="if(window.changeTxPageSize) window.changeTxPageSize(this.value)" class="appearance-none rounded border border-white/10 bg-[#171c26] pl-2 pr-6 py-1 text-white/70 outline-none hover:bg-white/5 cursor-pointer">
+        <select id="tx-page-size-select" onchange="if(window.changeTxPageSize) window.changeTxPageSize(this.value)" class="appearance-none rounded border border-white/10 bg-[#0d121c] pl-2 pr-6 py-1 text-white/70 outline-none hover:bg-white/5 cursor-pointer">
           <option value="10" selected>10</option>
           <option value="20">20</option>
           <option value="50">50</option>

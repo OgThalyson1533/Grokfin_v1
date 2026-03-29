@@ -46,21 +46,16 @@ let _txToDelete = null;
 export const selectedTxIds = new Set();
 
 export function updateBulkActionsBar() {
-  const bar = document.getElementById('tx-bulk-actions-bar');
-  const countSpan = document.getElementById('tx-bulk-count');
-  if (!bar || !countSpan) return;
+  const inlineBtn = document.getElementById('tx-inline-excluir');
+  const countSpan = document.getElementById('tx-inline-excluir-count');
+  if (!inlineBtn || !countSpan) return;
   if (selectedTxIds.size > 0) {
     countSpan.textContent = selectedTxIds.size;
-    bar.classList.remove('hidden');
-    void bar.offsetWidth; // reflow
-    bar.classList.add('opacity-100');
-    bar.classList.remove('opacity-0');
+    inlineBtn.classList.remove('hidden');
+    inlineBtn.classList.add('flex');
   } else {
-    bar.classList.remove('opacity-100');
-    bar.classList.add('opacity-0');
-    setTimeout(() => {
-      if (selectedTxIds.size === 0) bar.classList.add('hidden');
-    }, 300);
+    inlineBtn.classList.add('hidden');
+    inlineBtn.classList.remove('flex');
   }
 }
 
@@ -144,6 +139,71 @@ window.bulkChangeCategory = function() {
 window.bulkMarkPaid = function() {
   showToast('Em breve: Marcar múltiplos como pagos.', 'info');
 };
+let _txFilterTimeout;
+window.debounceTxFilter = function() {
+  clearTimeout(_txFilterTimeout);
+  _txFilterTimeout = setTimeout(() => {
+    state.ui.txSearch = document.getElementById('tx-search')?.value || '';
+    state.ui.txPage = 0;
+    renderTransactions();
+  }, 300);
+};
+
+window.triggerTxFilter = function() {
+  state.ui.txType = document.getElementById('tx-type-filter')?.value || 'all';
+  state.ui.txStatus = document.getElementById('tx-status-filter')?.value || 'all';
+  state.ui.txPage = 0;
+  renderTransactions();
+};
+
+window.sortTxTable = function(col) {
+  const currentSort = state.ui.txSort || 'date-desc';
+  const [currCol, currDir] = currentSort.split('-');
+  
+  // Toggle dir if same col, else default to 'asc' for non-date, 'desc' for date
+  let newDir = 'asc';
+  if (currCol === col) {
+    newDir = currDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    newDir = (col === 'date' || col === 'value') ? 'desc' : 'asc';
+  }
+  
+  state.ui.txSort = `${col}-${newDir}`;
+  renderTransactions();
+};
+
+window.txPagePeriodNext = function() {
+  changeTransactionMonth(1);
+};
+
+window.txPagePeriodPrev = function() {
+  changeTransactionMonth(-1);
+};
+
+function changeTransactionMonth(diff) {
+  let d = state.ui.txDateStart ? new Date(state.ui.txDateStart + 'T12:00:00') : new Date();
+  d.setMonth(d.getMonth() + diff);
+  
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  
+  // Format to YYYY-MM-DD local
+  const fmt = (dt) => {
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${dt.getFullYear()}-${mm}-${dd}`;
+  };
+  
+  state.ui.txDateStart = fmt(start);
+  state.ui.txDateEnd = fmt(end);
+  
+  const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const label = document.getElementById('tx-period-label');
+  if (label) label.textContent = `${monthNames[start.getMonth()]} ${start.getFullYear()}`;
+  
+  renderTransactions();
+}
+
 export function getFilteredTransactions() {
   let list = [...state.transactions];
   const search = normalizeText(state.ui.txSearch || '');
@@ -152,8 +212,25 @@ export function getFilteredTransactions() {
     list = list.filter(item => normalizeText(`${item.desc} ${item.cat} ${item.date}`).includes(search));
   }
 
-  if (state.ui.txCategory !== 'all') {
+  if (state.ui.txCategory && state.ui.txCategory !== 'all') {
     list = list.filter(item => item.cat === state.ui.txCategory);
+  }
+
+  if (state.ui.txType && state.ui.txType !== 'all') {
+    if (state.ui.txType === 'entrada') list = list.filter(item => item.value > 0);
+    else if (state.ui.txType === 'saida') list = list.filter(item => item.value < 0);
+  }
+
+  if (state.ui.txStatus && state.ui.txStatus !== 'all') {
+    list = list.filter(item => {
+      let stat = 'concluido';
+      if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
+         stat = 'pendente';
+      } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
+         stat = 'vencido';
+      }
+      return stat === state.ui.txStatus;
+    });
   }
 
   if (state.ui.txDateStart) {
@@ -167,35 +244,65 @@ export function getFilteredTransactions() {
     list = list.filter(item => parseDateBR(item.date) <= end);
   }
 
-  switch (state.ui.txSort) {
-    case 'date-asc':
-      list.sort((a, b) => parseDateBR(a.date) - parseDateBR(b.date));
-      break;
-    case 'value-desc':
-      list.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
-      break;
-    case 'value-asc':
-      list.sort((a, b) => Math.abs(a.value) - Math.abs(b.value));
-      break;
-    default:
-      list.sort((a, b) => parseDateBR(b.date) - parseDateBR(a.date));
-  }
+  const [col, dir] = (state.ui.txSort || 'date-desc').split('-');
+  const asc = dir === 'asc' ? 1 : -1;
+
+  list.sort((a, b) => {
+    if (col === 'value') {
+      return (Math.abs(a.value) - Math.abs(b.value)) * asc;
+    } else if (col === 'desc') {
+      return a.desc.localeCompare(b.desc) * asc;
+    } else if (col === 'type') {
+      const typeA = a.value > 0 ? 1 : -1;
+      const typeB = b.value > 0 ? 1 : -1;
+      return (typeA - typeB) * asc;
+    } else if (col === 'status') {
+      // Fake status compare
+      const sA = (a.desc === 'Pendência') ? 0 : 1;
+      const sB = (b.desc === 'Pendência') ? 0 : 1;
+      return (sA - sB) * asc;
+    } else {
+      // Default col = 'date'
+      return (parseDateBR(a.date) - parseDateBR(b.date)) * asc;
+    }
+  });
+
   return list;
 }
 
 export function renderTransactionFilters() {
   const txSearch = document.getElementById('tx-search');
   const txCategory = document.getElementById('tx-category');
+  const txType = document.getElementById('tx-type-filter');
+  const txStatus = document.getElementById('tx-status-filter');
   const txSort = document.getElementById('tx-sort');
-  if (!txSearch || !txCategory || !txSort) return;
+  
+  if (txSearch) txSearch.value = state.ui.txSearch || '';
+  if (txType) txType.value = state.ui.txType || 'all';
+  if (txStatus) txStatus.value = state.ui.txStatus || 'all';
+  if (txSort) txSort.value = state.ui.txSort || 'date-desc';
 
-  txSearch.value = state.ui.txSearch;
-  txSort.value = state.ui.txSort;
+  // Update table headers sorting arrows
+  const sortState = state.ui.txSort || 'date-desc';
+  const [sortCol, sortDir] = sortState.split('-');
+  document.querySelectorAll('.tx-sort-ico').forEach(ico => {
+    const col = ico.getAttribute('data-col');
+    ico.className = 'fa-solid ml-2 text-[10px] tx-sort-ico';
+    if (col === sortCol) {
+      ico.classList.add(sortDir === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down');
+      ico.classList.add('text-white', 'opacity-100');
+    } else {
+      ico.classList.add('fa-arrow-up-arrow-down', 'opacity-40', 'group-hover:opacity-100');
+    }
+  });
 
   let activeFilters = 0;
   if (state.ui.txSearch) activeFilters++;
-  if (state.ui.txCategory !== 'all') activeFilters++;
-  if (state.ui.txDateStart) activeFilters++;
+  if (state.ui.txCategory && state.ui.txCategory !== 'all') activeFilters++;
+  if (state.ui.txType && state.ui.txType !== 'all') activeFilters++;
+  if (state.ui.txStatus && state.ui.txStatus !== 'all') activeFilters++;
+  if (state.ui.txDateStart || state.ui.txDateEnd) activeFilters++;
+  
   const badge = document.getElementById('tx-filter-badge');
   if (badge) {
     if (activeFilters > 0) {
