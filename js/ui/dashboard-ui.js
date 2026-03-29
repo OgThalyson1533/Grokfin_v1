@@ -707,18 +707,26 @@ function _parseDateBRLocal(str = '') {
   return new Date(str);
 }
 
-/** Calendário financeiro: mostra entradas/saídas por dia do mês corrente */
+window._homeCalendarMonthOffset = 0;
+window.changeCalendarMonth = (offset) => {
+  window._homeCalendarMonthOffset += offset;
+  import('./dashboard-ui.js').then(m => m.renderHomeFinancialCalendar());
+};
+
+/** Calendário financeiro: mostra entradas/saídas por dia do mês selecionado */
 export function renderHomeFinancialCalendar() {
   const container = document.getElementById('home-financial-calendar');
   const label = document.getElementById('home-cal-month-label');
   if (!container) return;
 
+  const todayStr = new Date();
+  const baseDate = new Date(todayStr.getFullYear(), todayStr.getMonth() + (window._homeCalendarMonthOffset || 0), 1);
+  const year = baseDate.getFullYear();
+  const month = baseDate.getMonth();
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
 
   if (label) {
-    label.textContent = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(today);
+    label.textContent = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(baseDate);
   }
 
   // Agrupa transações do mês por dia
@@ -737,7 +745,9 @@ export function renderHomeFinancialCalendar() {
   const firstDay  = new Date(year, month, 1).getDay(); // 0=Dom
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrev  = new Date(year, month, 0).getDate();
-  const todayNum    = today.getDate();
+  
+  const todayNum = today.getDate();
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
 
   const weekdays = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
@@ -759,7 +769,7 @@ export function renderHomeFinancialCalendar() {
       dayNum = i - firstDay + 1;
     }
 
-    const isToday = !isOther && dayNum === todayNum;
+    const isToday = isCurrentMonth && !isOther && dayNum === todayNum;
     const data = !isOther ? byDay[dayNum] : null;
 
     cells += `<div class="fin-cal-day${isOther ? ' other-month' : ''}${isToday ? ' today' : ''}">
@@ -812,36 +822,42 @@ export function renderPeriodFilter(activeFilter) {
   if (chipLabel) chipLabel.textContent = PERIOD_LABELS[activeFilter] || 'no período';
 }
 
-/** Gauge SVG semicircle — saúde financeira */
+/** Gauge SVG semicircle — Medidor de Risco */
 export function renderHealthGauge(periodData, filter, analytics) {
   const arc     = document.getElementById('home-gauge-arc');
   const needle  = document.getElementById('home-gauge-needle');
   const pctEl   = document.getElementById('home-gauge-pct');
   const labelEl = document.getElementById('home-gauge-label');
   const periodLabelEl = document.getElementById('home-gauge-period-label');
-  if (!arc) return; // Só precisa do arc para continuar
+  if (!arc) return;
 
-  const ratio = clamp(analytics ? analytics.healthScore || 0 : periodData.expenseRatio || 0, 0, 100);
+  const exp = periodData.expenses || 0;
+  const inc = Math.max(periodData.incomes || 0, 0.01); // fallback safely to calculate risk
+  const riskRatio = clamp((exp / inc) * 100, 0, 100);
+  const ratio = isNaN(riskRatio) ? 0 : riskRatio;
+
   // Arc total length is ~251.3 (π × r = π × 80)
   const totalArc = 251.3;
   const filled   = (ratio / 100) * totalArc;
   arc.style.strokeDashoffset = String(totalArc - filled);
 
-  // Se o needle ainda existir, rotaciona; caso contrário ignora (ponteiro removido)
   if (needle) {
     const needleDeg = -90 + (ratio / 100) * 180;
     needle.style.transform = `rotate(${needleDeg}deg)`;
   }
 
-  if (pctEl) pctEl.textContent = `${Math.round(ratio)}%`;
+  if (pctEl) {
+    pctEl.innerHTML = `${Math.round(ratio)}%<span style="display:block;font-size:10px;font-weight:900;margin-top:2px;">RISCO</span>`;
+  }
 
+  // Reversed color logic: 100% Risk = Bad (Red)
   let zoneColor, zoneLabel, gradId;
-  if (ratio >= 70) {
-    zoneColor = '#00ff85'; zoneLabel = 'Saudável'; gradId = 'url(#gaugeGreen)';
+  if (ratio >= 80) {
+    zoneColor = '#ff6685'; zoneLabel = 'Risco'; gradId = 'url(#gaugeRed)';
   } else if (ratio >= 50) {
     zoneColor = '#facc15'; zoneLabel = 'Atenção'; gradId = 'url(#gaugeYellow)';
   } else {
-    zoneColor = '#ff6685'; zoneLabel = 'Risco'; gradId = 'url(#gaugeRed)';
+    zoneColor = '#00ff85'; zoneLabel = 'Saudável'; gradId = 'url(#gaugeGreen)';
   }
 
   arc.setAttribute('stroke', gradId);
@@ -872,52 +888,102 @@ export function renderHealthGauge(periodData, filter, analytics) {
   }
 }
 
-/** Gastos por categoria — barras horizontais com alerta de orçamento */
+let _categoryDonutChart = null;
+
+/** Gastos por categoria — gráfico de rosca avançado */
 export function renderCategoryBars(periodData) {
   const container = document.getElementById('home-category-bars');
   if (!container) return;
 
   const cats = (periodData.categories || []).slice(0, 8);
   if (!cats.length) {
+    if (_categoryDonutChart) { _categoryDonutChart.destroy(); _categoryDonutChart = null; }
     container.innerHTML = '<div class="text-xs text-white/30 text-center py-4">Sem transações no período</div>';
     return;
   }
 
-  const barColors = [
-    'linear-gradient(90deg,#00f5ff,#a855f7)',
-    'linear-gradient(90deg,#f97316,#facc15)',
-    'linear-gradient(90deg,#34d399,#00ff85)',
-    'linear-gradient(90deg,#fb7185,#f97316)',
-    'linear-gradient(90deg,#c084fc,#818cf8)',
-    'linear-gradient(90deg,#38bdf8,#6366f1)',
-    'linear-gradient(90deg,#4ade80,#2dd4bf)',
-    'linear-gradient(90deg,#fde047,#fb923c)',
-  ];
+  // Injeta canvas e legenda
+  if (!document.getElementById('home-category-donut')) {
+    container.innerHTML = `
+      <div class="flex flex-col md:flex-row items-center gap-8">
+        <div class="relative w-48 h-48 shrink-0">
+          <canvas id="home-category-donut"></canvas>
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span class="text-[10px] text-white/40 uppercase tracking-widest leading-none mb-1.5">Total</span>
+            <span class="text-xl font-black text-white leading-none" id="home-category-total">${formatMoneyShort(periodData.expenses)}</span>
+          </div>
+        </div>
+        <div class="flex-1 w-full flex flex-col gap-3" id="home-category-legend"></div>
+      </div>
+    `;
+  } else {
+    const totalEl = document.getElementById('home-category-total');
+    if (totalEl) totalEl.textContent = formatMoneyShort(periodData.expenses);
+  }
 
-  container.innerHTML = cats.map(([name, value], i) => {
-    const total = periodData.expenses || 1;
-    const pct   = clamp((value / total) * 100, 0, 100);
-    const budget = state.budgets[name] || 0;
-    const overBudget = budget > 0 && value > budget;
-    const color = barColors[i % barColors.length];
+  const canvas = document.getElementById('home-category-donut');
+  const legend = document.getElementById('home-category-legend');
+  if (!canvas || !window.Chart) return;
 
+  const bgColors = ['#a855f7', '#00f5ff', '#34d399', '#facc15', '#f97316', '#fb7185', '#38bdf8', '#818cf8'];
+
+  const labels = cats.map(c => c[0]);
+  const data = cats.map(c => c[1]);
+  const bg = cats.map((_, i) => bgColors[i % bgColors.length]);
+
+  if (_categoryDonutChart) {
+    _categoryDonutChart.destroy();
+  }
+
+  _categoryDonutChart = new window.Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: bg,
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '76%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(6,9,17,.92)',
+          borderColor: 'rgba(255,255,255,.08)',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${formatMoney(ctx.raw)}`
+          }
+        }
+      }
+    }
+  });
+
+  legend.innerHTML = cats.map((cat, i) => {
+    const val = cat[1];
+    const pct = periodData.expenses > 0 ? (val / periodData.expenses) * 100 : 0;
+    const color = bgColors[i % bgColors.length];
+    const budget = window.state?.budgets?.[cat[0]] || 0;
+    const overBudget = budget > 0 && val > budget;
     return `
-      <div class="cat-bar-row ${overBudget ? 'cat-bar-over' : ''}">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-white/85">${escapeHtml(name)}</span>
-            ${overBudget ? '<span class="text-[9px] font-bold text-rose-300 border border-rose-400/30 bg-rose-400/10 rounded-full px-1.5 py-0.5">⚠ Orçamento</span>' : ''}
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-white/70">${formatMoney(value)}</span>
-            <span class="text-[10px] text-white/35 min-w-[36px] text-right">${formatPercent(pct, 0)}</span>
-          </div>
+      <div class="flex items-center justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
+        <div class="flex items-center gap-3">
+          <span class="w-3.5 h-3.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.3)]" style="background:${color}"></span>
+          <span class="text-white/85 font-medium truncate w-24" title="${escapeHtml(cat[0] || '')}">${escapeHtml(cat[0] || '')}</span>
+          ${overBudget ? '<span class="text-[9px] font-bold text-rose-300 border border-rose-400/30 bg-rose-400/10 rounded-full px-1.5 py-0.5">⚠ Limite</span>' : ''}
         </div>
-        <div class="progress-track" style="height:8px">
-          <div class="progress-fill" style="width:${pct}%;background:${color};transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
+        <div class="flex items-center gap-3">
+          <span class="text-white font-bold">${formatMoneyShort(val)}</span>
+          <span class="text-[10px] text-white/40 w-8 text-right font-medium">${Math.round(pct)}%</span>
         </div>
-        ${budget > 0 ? `<div class="flex justify-between text-[9px] text-white/28 mt-1"><span>Limite: ${formatMoney(budget)}</span><span>${formatPercent((value/budget)*100, 0)} do limite</span></div>` : ''}
-      </div>`;
+      </div>
+    `;
   }).join('');
 }
 

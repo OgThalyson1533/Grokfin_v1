@@ -493,7 +493,11 @@
   <div class="home-col-j" style="grid-column:1/-1">
     <div class="flex items-center justify-between mb-3">
       <p class="home-section-title">Calendário Financeiro</p>
-      <span class="text-[10px] text-white/35" id="home-cal-month-label"></span>
+      <div class="flex items-center gap-2">
+        <button onclick="if(window.changeCalendarMonth) window.changeCalendarMonth(-1)" class="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"><i class="fa-solid fa-chevron-left text-[10px] text-white/50"></i></button>
+        <span class="text-[10px] text-white/50 font-semibold min-w-[70px] text-center" id="home-cal-month-label"></span>
+        <button onclick="if(window.changeCalendarMonth) window.changeCalendarMonth(1)" class="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"><i class="fa-solid fa-chevron-right text-[10px] text-white/50"></i></button>
+      </div>
     </div>
     <div id="home-financial-calendar" class="rounded-3xl border border-white/8 bg-white/4 p-4">
       <!-- Renderizado via JS -->
