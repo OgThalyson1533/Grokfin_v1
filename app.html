@@ -1961,19 +1961,11 @@
         <h4 class="mb-2 text-lg font-bold text-white tracking-tight">Como posso ajudar?</h4>
         <p class="mb-8 text-sm text-white/40 leading-relaxed max-w-[280px]">Tire dúvidas sobre seus gastos, peça dicas de economia ou envie comprovantes.</p>
         
-        <div class="w-full space-y-3">
-          <button class="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-[13px] font-medium text-white/80 transition-all hover:bg-emerald-400/10 hover:border-emerald-400/50 hover:text-emerald-300 group shadow-sm" data-chat-prompt="Qual é o meu runway atual?">
-            <span>Qual é o meu runway atual?</span>
-            <i class="fa-solid fa-arrow-right opacity-0 -translate-x-2 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 text-emerald-400"></i>
-          </button>
-          <button class="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-[13px] font-medium text-white/80 transition-all hover:bg-emerald-400/10 hover:border-emerald-400/50 hover:text-emerald-300 group shadow-sm" data-chat-prompt="Onde estou gastando mais?">
-            <span>Onde estou gastando mais?</span>
-            <i class="fa-solid fa-arrow-right opacity-0 -translate-x-2 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 text-emerald-400"></i>
-          </button>
-          <button class="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-[13px] font-medium text-white/80 transition-all hover:bg-emerald-400/10 hover:border-emerald-400/50 hover:text-emerald-300 group shadow-sm" data-chat-prompt="O que é EBITDA?">
-            <span>O que é EBITDA?</span>
-            <i class="fa-solid fa-arrow-right opacity-0 -translate-x-2 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 text-emerald-400"></i>
-          </button>
+        <div id="ai-suggestions-container" class="w-full space-y-3">
+          <!-- Preenchido dinamicamente por buildContextualSuggestions() -->
+          <div class="w-full h-[52px] rounded-xl border border-white/5 bg-white/3 animate-pulse"></div>
+          <div class="w-full h-[52px] rounded-xl border border-white/5 bg-white/3 animate-pulse"></div>
+          <div class="w-full h-[52px] rounded-xl border border-white/5 bg-white/3 animate-pulse"></div>
         </div>
       </div>
       <!-- Chat scroll area -->
