@@ -114,12 +114,22 @@ window.txPagePrev = function() {
 };
 window.bulkDeleteTx = function() {
   if (selectedTxIds.size === 0) return;
-  if (!confirm(`Tem certeza que deseja excluir ${selectedTxIds.size} transação(ões)?`)) return;
+  // Abre o modal customizado em vez do confirm() nativo
+  const count = selectedTxIds.size;
+  const descEl = document.getElementById('bulk-delete-desc');
+  const labelEl = document.getElementById('tx-bulk-delete-label');
+  if (descEl) descEl.textContent = `Tem certeza que deseja excluir permanentemente ${count} movimentação${count !== 1 ? 'ões' : ''}?`;
+  if (labelEl) labelEl.textContent = `Excluir ${count} Movimentação${count !== 1 ? 'ões' : ''}`;
+  document.getElementById('tx-bulk-delete-overlay')?.classList.remove('hidden');
+};
+
+function _executeBulkDelete() {
+  document.getElementById('tx-bulk-delete-overlay')?.classList.add('hidden');
   let deletedValue = 0;
   const toDelete = Array.from(selectedTxIds);
   toDelete.forEach(id => {
     const tx = state.transactions.find(t => t.id === id);
-    if(tx) {
+    if (tx) {
       deletedValue += tx.value;
       deleteRemoteTransaction(id).catch(console.error);
     }
@@ -131,8 +141,8 @@ window.bulkDeleteTx = function() {
   if (window.appRenderAll) window.appRenderAll();
   else renderTransactions();
   updateBulkActionsBar();
-  showToast('Transações excluídas.', 'info');
-};
+  showToast(`${toDelete.length} transação${toDelete.length !== 1 ? 'ões' : ''} excluída${toDelete.length !== 1 ? 's' : ''}.`, 'info');
+}
 window.bulkChangeCategory = function() {
   showToast('Em breve: Edição em massa de categorias.', 'info');
 };
@@ -1080,6 +1090,18 @@ export function bindTxEvents() {
 
   el('tx-delete-cancel')?.addEventListener('click', () => { el('tx-delete-overlay')?.classList.add('hidden'); });
   el('tx-delete-confirm')?.addEventListener('click', deleteTx);
+
+  // Modal de exclusão em massa
+  el('tx-bulk-delete-cancel')?.addEventListener('click', () => { el('tx-bulk-delete-overlay')?.classList.add('hidden'); });
+  el('tx-bulk-delete-confirm')?.addEventListener('click', _executeBulkDelete);
+
+  // Fechar modais clicando no backdrop
+  el('tx-bulk-delete-overlay')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) el('tx-bulk-delete-overlay')?.classList.add('hidden');
+  });
+  el('tx-delete-overlay')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) el('tx-delete-overlay')?.classList.add('hidden');
+  });
 
   el('tx-modal-payment')?.addEventListener('change', e => {
     const isCard = e.target.value.includes('cartao');
