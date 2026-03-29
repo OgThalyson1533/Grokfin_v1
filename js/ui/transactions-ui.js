@@ -422,8 +422,8 @@ export function renderTransactions() {
       : '<div class="flex items-center justify-start md:justify-center gap-2"><i class="fa-regular fa-circle-down text-[#e84e58]"></i> Saída</div>';
 
     return `
-      <tr class="flex flex-col md:table-row relative p-4 mb-3 mx-4 md:mx-0 md:p-0 rounded-xl bg-[#121825] md:bg-transparent border border-white/5 md:border-0 md:border-b md:border-white/5 last:border-0 hover:bg-white/[0.02] group">
-        <td class="md:px-5 md:py-4 text-center align-middle absolute left-4 top-4 md:static">
+      <tr class="border-b border-white/5 last:border-0 hover:bg-white/[0.02] group">
+        <td class="px-5 py-4 w-12 text-center align-middle">
           <label class="relative flex items-center justify-center cursor-pointer m-0">
             <input type="checkbox" onchange="window.toggleTxRow(this, '${item.id}')" class="peer sr-only tx-row-checkbox" ${selectedTxIds.has(item.id) ? 'checked' : ''}>
             <div class="w-4 h-4 rounded-[4px] border border-white/20 peer-checked:bg-[#37bf8b] peer-checked:border-[#37bf8b] transition-all flex items-center justify-center">
@@ -432,36 +432,34 @@ export function renderTransactions() {
           </label>
         </td>
         
-        <td class="block md:table-cell py-1 mt-6 md:mt-0 md:px-4 md:py-4 text-white hover:text-white/80 transition-colors">
-          <span class="md:hidden text-white/40 text-[11px] uppercase mr-2">Data:</span>${escapeHtml(item.date)}
+        <td class="px-4 py-4 text-white hover:text-white/80 transition-colors">
+          ${escapeHtml(item.date)}
         </td>
         
-        <td class="block md:table-cell py-1 md:px-4 md:py-4 md:text-center text-white font-semibold">
-           <span class="md:hidden text-white/40 text-[11px] uppercase mr-2">Descrição:</span>${escapeHtml(item.desc)}
+        <td class="px-4 py-4 text-white font-semibold">
+           ${escapeHtml(item.desc)}
         </td>
         
-        <td class="block md:table-cell py-1 md:px-4 md:py-4 text-white md:text-center">
+        <td class="px-4 py-4 text-white">
            <div class="flex items-center">
-             <span class="md:hidden text-white/40 text-[11px] uppercase mr-2 flex-shrink-0 w-16">Tipo:</span>
              ${typeHtml}
            </div>
         </td>
 
-        <td class="block md:table-cell py-1 md:px-4 md:py-4 absolute right-4 top-4 md:static md:text-right font-bold text-sm ${positive ? 'text-[#37bf8b]' : 'text-[#e84e58]'}">
+        <td class="px-4 py-4 text-right font-bold text-sm ${positive ? 'text-[#37bf8b]' : 'text-[#e84e58]'}">
            ${positive ? '+' : '-'}R$ ${formatMoney(Math.abs(item.value)).replace('R$ ', '')}
         </td>
 
-        <td class="block md:table-cell py-2 md:px-4 md:py-4 md:text-center mt-2 md:mt-0">
-          <div class="flex items-center justify-start md:justify-center">
-            <span class="md:hidden text-white/40 text-[11px] uppercase mr-2 w-16">Status:</span>
+        <td class="px-4 py-4 text-center">
+          <div class="flex items-center justify-center">
             <span class="inline-flex items-center justify-center rounded px-3 py-1 border text-[11px] font-bold ${statClass}">
                 ${statLabel}
             </span>
           </div>
         </td>
 
-        <td class="block md:table-cell py-2 md:px-5 md:py-4 absolute bottom-4 right-4 md:static mt-2 md:mt-0">
-          <div class="flex items-center justify-end md:justify-center gap-3">
+        <td class="px-5 py-4">
+          <div class="flex items-center justify-center gap-3">
              <button onclick="openEditTx('${item.id}')" title="Editar" class="text-white/40 hover:text-white transition-colors">
                <i class="fa-regular fa-clock text-xs"></i>
              </button>

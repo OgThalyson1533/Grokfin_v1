@@ -515,10 +515,12 @@
     <p class="mt-1 text-sm text-white/50">Gerencie suas entradas, saídas e transferências</p>
   </div>
   
-  <!-- Add New Tx - Mobile Fixed FAB or Desktop Top Right. Wait, let's keep it here for desktop, mobile has the green '+' in nabvar -->
-  <div class="hidden sm:flex items-center gap-3">
-    <button class="flex items-center gap-2 rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/5 transition-colors">
+  <div class="hidden sm:flex flex-wrap items-center gap-3">
+    <button onclick="window.showToast?.('Em breve: Importação', 'info')" class="flex items-center gap-2 rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/5 transition-colors">
       <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i> Importar
+    </button>
+    <button id="tx-add-btn" class="flex items-center gap-2 rounded-lg bg-[#37bf8b] px-4 py-2.5 text-sm font-semibold text-[#0d121c] hover:bg-[#2fa678] shadow-sm transition-all shadow-[#37bf8b]/20">
+      <i class="fa-solid fa-plus text-[10px]"></i> Nova Transação
     </button>
   </div>
 </div>
@@ -534,7 +536,7 @@
 </div>
 
 <!-- Mobile Import Button (Full Width) -->
-<button class="w-full sm:hidden flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-transparent px-4 py-3.5 text-sm font-semibold text-white/80 hover:bg-white/5 transition-colors mt-1">
+<button onclick="window.showToast?.('Em breve: Importação', 'info')" class="w-full sm:hidden flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-transparent px-4 py-3.5 text-sm font-semibold text-white/80 hover:bg-white/5 transition-colors mt-1">
   <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i> Importar
 </button>
 
