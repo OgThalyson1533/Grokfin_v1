@@ -72,37 +72,3 @@ export function parseCurrencyInput(raw) {
   const n = parseFloat(clean);
   return isNaN(n) ? 0 : n;
 }
-
-/**
- * Utilitário de animação numérica (Number Scroller).
- * Anima um valor de 'start' até 'end' ao longo de 'duration' ms.
- */
-export function animateValue(element, start, end, duration, formatFn = formatMoney) {
-  if (!element) return;
-  start = parseFloat(start) || 0;
-  end = parseFloat(end) || 0;
-  if (start === end) {
-    element.textContent = formatFn(end);
-    return;
-  }
-  
-  let startTimestamp = null;
-  const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
-
-  const step = (timestamp) => {
-    if (!startTimestamp) startTimestamp = timestamp;
-    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-    const easeProgress = easeOutQuart(progress);
-    const current = start + easeProgress * (end - start);
-    
-    element.textContent = formatFn(current);
-    
-    if (progress < 1) {
-      window.requestAnimationFrame(step);
-    } else {
-      element.textContent = formatFn(end); // Garante valor final exato
-    }
-  };
-  
-  window.requestAnimationFrame(step);
-}

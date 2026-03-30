@@ -43,176 +43,7 @@ function populateCategorySelect(selectEl, selected) {
 }
 let _txToDelete = null;
 
-export const selectedTxIds = new Set();
-
-export function updateBulkActionsBar() {
-  const inlineBtn = document.getElementById('tx-inline-excluir');
-  const countSpan = document.getElementById('tx-inline-excluir-count');
-  if (!inlineBtn || !countSpan) return;
-  if (selectedTxIds.size > 0) {
-    countSpan.textContent = selectedTxIds.size;
-    inlineBtn.classList.remove('hidden');
-    inlineBtn.classList.add('flex');
-  } else {
-    inlineBtn.classList.add('hidden');
-    inlineBtn.classList.remove('flex');
-  }
-}
-
-// Global window functions for app.html bindings
-window.toggleTxRow = function(checkbox, txId) {
-  if (checkbox.checked) selectedTxIds.add(txId);
-  else selectedTxIds.delete(txId);
-  updateBulkActionsBar();
-  
-  const list = getFilteredTransactions();
-  const page = state.ui.txPage || 0;
-  const pageSize = state.ui.txPageSize || 20;
-  const currentList = list.slice(page * pageSize, (page + 1) * pageSize);
-  const selectAllCb = document.getElementById('tx-select-all');
-  if(selectAllCb) selectAllCb.checked = (currentList.length > 0 && currentList.every(t => selectedTxIds.has(t.id)));
-};
-window.toggleSelectAllTx = function(checkbox) {
-  const list = getFilteredTransactions();
-  const page = state.ui.txPage || 0;
-  const pageSize = state.ui.txPageSize || 20;
-  const currentList = list.slice(page * pageSize, (page + 1) * pageSize);
-  if (checkbox.checked) {
-    currentList.forEach(t => selectedTxIds.add(t.id));
-  } else {
-    currentList.forEach(t => selectedTxIds.delete(t.id));
-  }
-  const checkboxes = document.querySelectorAll('.tx-row-checkbox');
-  checkboxes.forEach(cb => cb.checked = checkbox.checked);
-  updateBulkActionsBar();
-};
-window.clearTxSelection = function() {
-  selectedTxIds.clear();
-  const selectAllCb = document.getElementById('tx-select-all');
-  if(selectAllCb) selectAllCb.checked = false;
-  renderTransactions();
-  updateBulkActionsBar();
-};
-window.changeTxPageSize = function(size) {
-  state.ui.txPageSize = parseInt(size, 10);
-  state.ui.txPage = 0;
-  selectedTxIds.clear();
-  updateBulkActionsBar();
-  renderTransactions();
-};
-window.txPageNext = function() {
-  state.ui.txPage = (state.ui.txPage || 0) + 1;
-  selectedTxIds.clear();
-  updateBulkActionsBar();
-  renderTransactions();
-};
-window.txPagePrev = function() {
-  state.ui.txPage = Math.max(0, (state.ui.txPage || 0) - 1);
-  selectedTxIds.clear();
-  updateBulkActionsBar();
-  renderTransactions();
-};
-window.bulkDeleteTx = function() {
-  if (selectedTxIds.size === 0) return;
-  // Abre o modal customizado em vez do confirm() nativo
-  const count = selectedTxIds.size;
-  const descEl = document.getElementById('bulk-delete-desc');
-  const labelEl = document.getElementById('tx-bulk-delete-label');
-  if (descEl) descEl.textContent = `Tem certeza que deseja excluir permanentemente ${count} movimentação${count !== 1 ? 'ões' : ''}?`;
-  if (labelEl) labelEl.textContent = `Excluir ${count} Movimentação${count !== 1 ? 'ões' : ''}`;
-  document.getElementById('tx-bulk-delete-overlay')?.classList.remove('hidden');
-};
-
-function _executeBulkDelete() {
-  document.getElementById('tx-bulk-delete-overlay')?.classList.add('hidden');
-  let deletedValue = 0;
-  const toDelete = Array.from(selectedTxIds);
-  toDelete.forEach(id => {
-    const tx = state.transactions.find(t => t.id === id);
-    if (tx) {
-      deletedValue += tx.value;
-      deleteRemoteTransaction(id).catch(console.error);
-    }
-  });
-  state.transactions = state.transactions.filter(t => !selectedTxIds.has(t.id));
-  state.balance -= deletedValue;
-  selectedTxIds.clear();
-  saveState();
-  if (window.appRenderAll) window.appRenderAll();
-  else renderTransactions();
-  updateBulkActionsBar();
-  showToast(`${toDelete.length} transação${toDelete.length !== 1 ? 'ões' : ''} excluída${toDelete.length !== 1 ? 's' : ''}.`, 'info');
-}
-window.bulkChangeCategory = function() {
-  showToast('Em breve: Edição em massa de categorias.', 'info');
-};
-window.bulkMarkPaid = function() {
-  showToast('Em breve: Marcar múltiplos como pagos.', 'info');
-};
-let _txFilterTimeout;
-window.debounceTxFilter = function() {
-  clearTimeout(_txFilterTimeout);
-  _txFilterTimeout = setTimeout(() => {
-    state.ui.txSearch = document.getElementById('tx-search')?.value || '';
-    state.ui.txPage = 0;
-    renderTransactions();
-  }, 300);
-};
-
-window.triggerTxFilter = function() {
-  state.ui.txType = document.getElementById('tx-type-filter')?.value || 'all';
-  state.ui.txStatus = document.getElementById('tx-status-filter')?.value || 'all';
-  state.ui.txPage = 0;
-  renderTransactions();
-};
-
-window.sortTxTable = function(col) {
-  const currentSort = state.ui.txSort || 'date-desc';
-  const [currCol, currDir] = currentSort.split('-');
-  
-  // Toggle dir if same col, else default to 'asc' for non-date, 'desc' for date
-  let newDir = 'asc';
-  if (currCol === col) {
-    newDir = currDir === 'asc' ? 'desc' : 'asc';
-  } else {
-    newDir = (col === 'date' || col === 'value') ? 'desc' : 'asc';
-  }
-  
-  state.ui.txSort = `${col}-${newDir}`;
-  renderTransactions();
-};
-
-window.txPagePeriodNext = function() {
-  changeTransactionMonth(1);
-};
-
-window.txPagePeriodPrev = function() {
-  changeTransactionMonth(-1);
-};
-
-function changeTransactionMonth(diff) {
-  let d = state.ui.txDateStart ? new Date(state.ui.txDateStart + 'T12:00:00') : new Date();
-  d.setMonth(d.getMonth() + diff);
-  
-  const start = new Date(d.getFullYear(), d.getMonth(), 1);
-  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-  
-  // Format to YYYY-MM-DD local
-  const fmt = (dt) => {
-    const mm = String(dt.getMonth() + 1).padStart(2, '0');
-    const dd = String(dt.getDate()).padStart(2, '0');
-    return `${dt.getFullYear()}-${mm}-${dd}`;
-  };
-  
-  state.ui.txDateStart = fmt(start);
-  state.ui.txDateEnd = fmt(end);
-  
-  const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-  const label = document.getElementById('tx-period-label');
-  if (label) label.textContent = `${monthNames[start.getMonth()]} ${start.getFullYear()}`;
-  
-  renderTransactions();
-}
+export const TX_PAGE_SIZE = 20;
 
 export function getFilteredTransactions() {
   let list = [...state.transactions];
@@ -222,25 +53,8 @@ export function getFilteredTransactions() {
     list = list.filter(item => normalizeText(`${item.desc} ${item.cat} ${item.date}`).includes(search));
   }
 
-  if (state.ui.txCategory && state.ui.txCategory !== 'all') {
+  if (state.ui.txCategory !== 'all') {
     list = list.filter(item => item.cat === state.ui.txCategory);
-  }
-
-  if (state.ui.txType && state.ui.txType !== 'all') {
-    if (state.ui.txType === 'entrada') list = list.filter(item => item.value > 0);
-    else if (state.ui.txType === 'saida') list = list.filter(item => item.value < 0);
-  }
-
-  if (state.ui.txStatus && state.ui.txStatus !== 'all') {
-    list = list.filter(item => {
-      let stat = 'concluido';
-      if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
-         stat = 'pendente';
-      } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
-         stat = 'vencido';
-      }
-      return stat === state.ui.txStatus;
-    });
   }
 
   if (state.ui.txDateStart) {
@@ -254,65 +68,35 @@ export function getFilteredTransactions() {
     list = list.filter(item => parseDateBR(item.date) <= end);
   }
 
-  const [col, dir] = (state.ui.txSort || 'date-desc').split('-');
-  const asc = dir === 'asc' ? 1 : -1;
-
-  list.sort((a, b) => {
-    if (col === 'value') {
-      return (Math.abs(a.value) - Math.abs(b.value)) * asc;
-    } else if (col === 'desc') {
-      return a.desc.localeCompare(b.desc) * asc;
-    } else if (col === 'type') {
-      const typeA = a.value > 0 ? 1 : -1;
-      const typeB = b.value > 0 ? 1 : -1;
-      return (typeA - typeB) * asc;
-    } else if (col === 'status') {
-      // Fake status compare
-      const sA = (a.desc === 'Pendência') ? 0 : 1;
-      const sB = (b.desc === 'Pendência') ? 0 : 1;
-      return (sA - sB) * asc;
-    } else {
-      // Default col = 'date'
-      return (parseDateBR(a.date) - parseDateBR(b.date)) * asc;
-    }
-  });
-
+  switch (state.ui.txSort) {
+    case 'date-asc':
+      list.sort((a, b) => parseDateBR(a.date) - parseDateBR(b.date));
+      break;
+    case 'value-desc':
+      list.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+      break;
+    case 'value-asc':
+      list.sort((a, b) => Math.abs(a.value) - Math.abs(b.value));
+      break;
+    default:
+      list.sort((a, b) => parseDateBR(b.date) - parseDateBR(a.date));
+  }
   return list;
 }
 
 export function renderTransactionFilters() {
   const txSearch = document.getElementById('tx-search');
   const txCategory = document.getElementById('tx-category');
-  const txType = document.getElementById('tx-type-filter');
-  const txStatus = document.getElementById('tx-status-filter');
   const txSort = document.getElementById('tx-sort');
-  
-  if (txSearch) txSearch.value = state.ui.txSearch || '';
-  if (txType) txType.value = state.ui.txType || 'all';
-  if (txStatus) txStatus.value = state.ui.txStatus || 'all';
-  if (txSort) txSort.value = state.ui.txSort || 'date-desc';
+  if (!txSearch || !txCategory || !txSort) return;
 
-  // Update table headers sorting arrows
-  const sortState = state.ui.txSort || 'date-desc';
-  const [sortCol, sortDir] = sortState.split('-');
-  document.querySelectorAll('.tx-sort-ico').forEach(ico => {
-    const col = ico.getAttribute('data-col');
-    ico.className = 'fa-solid ml-2 text-[10px] tx-sort-ico';
-    if (col === sortCol) {
-      ico.classList.add(sortDir === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down');
-      ico.classList.add('text-white', 'opacity-100');
-    } else {
-      ico.classList.add('fa-arrow-up-arrow-down', 'opacity-40', 'group-hover:opacity-100');
-    }
-  });
+  txSearch.value = state.ui.txSearch;
+  txSort.value = state.ui.txSort;
 
   let activeFilters = 0;
   if (state.ui.txSearch) activeFilters++;
-  if (state.ui.txCategory && state.ui.txCategory !== 'all') activeFilters++;
-  if (state.ui.txType && state.ui.txType !== 'all') activeFilters++;
-  if (state.ui.txStatus && state.ui.txStatus !== 'all') activeFilters++;
-  if (state.ui.txDateStart || state.ui.txDateEnd) activeFilters++;
-  
+  if (state.ui.txCategory !== 'all') activeFilters++;
+  if (state.ui.txDateStart) activeFilters++;
   const badge = document.getElementById('tx-filter-badge');
   if (badge) {
     if (activeFilters > 0) {
@@ -330,13 +114,11 @@ export function renderTransactionFilters() {
     state.ui.txCategory = 'all';
   }
 
-  if (txCategory) {
-    txCategory.innerHTML = `
-      <option value="all">Todas as categorias</option>
-      ${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('')}
-    `;
-    txCategory.value = state.ui.txCategory;
-  }
+  txCategory.innerHTML = `
+    <option value="all">Todas as categorias</option>
+    ${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('')}
+  `;
+  txCategory.value = state.ui.txCategory;
 }
 
 export function loadMoreTransactions() {
@@ -351,8 +133,7 @@ export function renderTransactions() {
 
   const fullList = getFilteredTransactions();
   const page = state.ui.txPage || 0;
-  const pageSize = state.ui.txPageSize || 20;
-  const list = fullList.slice(page * pageSize, (page + 1) * pageSize);
+  const list = fullList.slice(0, (page + 1) * TX_PAGE_SIZE);
   const incomeTotal = fullList.filter(item => item.value > 0).reduce((acc, item) => acc + item.value, 0);
   const expenseTotal = fullList.filter(item => item.value < 0).reduce((acc, item) => acc + Math.abs(item.value), 0);
   const avgVisible = fullList.length ? fullList.reduce((acc, item) => acc + Math.abs(item.value), 0) / fullList.length : 0;
@@ -361,31 +142,6 @@ export function renderTransactions() {
   if (document.getElementById('tx-expense-total')) document.getElementById('tx-expense-total').textContent = formatMoney(expenseTotal);
   if (document.getElementById('tx-income-total')) document.getElementById('tx-income-total').textContent = formatMoney(incomeTotal);
   if (document.getElementById('tx-average-total')) document.getElementById('tx-average-total').textContent = formatMoney(avgVisible);
-
-  // Update Footer Pagination UI
-  const totalEl = document.getElementById('tx-page-total');
-  const rangeEl = document.getElementById('tx-page-range');
-  const prevBtn = document.getElementById('tx-page-prev');
-  const nextBtn = document.getElementById('tx-page-next');
-  if (totalEl) totalEl.textContent = fullList.length;
-  if (rangeEl) {
-    const startIdx = fullList.length === 0 ? 0 : (page * pageSize) + 1;
-    const endIdx = Math.min((page + 1) * pageSize, fullList.length);
-    rangeEl.textContent = `${startIdx}-${endIdx}`;
-  }
-  if (prevBtn) prevBtn.disabled = page === 0;
-  if (nextBtn) nextBtn.disabled = (page + 1) * pageSize >= fullList.length;
-  
-  const selectAllCb = document.getElementById('tx-select-all');
-  if(selectAllCb) selectAllCb.checked = (list.length > 0 && list.every(t => selectedTxIds.has(t.id)));
-
-  if (state.isNewUser && selectedTxIds.size === 0 && list.some(t => t.desc === 'Pendência') && !window._demoChecked) {
-    const pendencia = list.find(t => t.desc === 'Pendência');
-    selectedTxIds.add(pendencia.id);
-    window._demoChecked = true;
-    // Agendar atualização da barra fora do fluxo de renderização
-    setTimeout(() => updateBulkActionsBar(), 50);
-  }
 
   if (!fullList.length) {
     body.innerHTML = `
@@ -406,83 +162,64 @@ export function renderTransactions() {
 
   body.innerHTML = list.map(item => {
     const positive = item.value > 0;
-    
-    // Mock status logic to match the Image 2 variants securely
-    let stat = 'concluido';
-    if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
-       stat = 'pendente';
-    } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
-       // If dummy 1 logic
-       stat = 'vencido';
-    }
-
-    let statClass = '';
-    let statLabel = '';
-    if (stat === 'pendente') {
-      statClass = 'border-[#dba740]/40 bg-[#dba740]/10 text-[#dba740]';
-      statLabel = 'Pendente';
-    } else if (stat === 'vencido') {
-      statClass = 'border-[#e84e58]/40 bg-[#e84e58]/10 text-[#e84e58]';
-      statLabel = 'Vencido';
-    } else {
-      statClass = 'border-[#37bf8b]/40 bg-[#37bf8b]/10 text-[#37bf8b]';
-      statLabel = 'Concluído';
-    }
-
-    const typeHtml = positive
-      ? '<div class="flex items-center justify-start md:justify-center gap-2"><i class="fa-regular fa-circle-up text-[#37bf8b]"></i> Entrada</div>'
-      : '<div class="flex items-center justify-start md:justify-center gap-2"><i class="fa-regular fa-circle-down text-[#e84e58]"></i> Saída</div>';
-
+    const tone = toneForCategory(item.cat, positive);
     return `
-      <tr class="border-b border-white/5 last:border-0 hover:bg-white/[0.02] group">
-        <td class="px-5 py-4 w-12 text-center align-middle">
-          <label class="relative flex items-center justify-center cursor-pointer m-0">
-            <input type="checkbox" onchange="window.toggleTxRow(this, '${item.id}')" class="peer sr-only tx-row-checkbox" ${selectedTxIds.has(item.id) ? 'checked' : ''}>
-            <div class="w-4 h-4 rounded-[4px] border border-white/20 peer-checked:bg-[#37bf8b] peer-checked:border-[#37bf8b] transition-all flex items-center justify-center">
-              <i class="fa-solid fa-check text-[10px] text-[#0d121c] opacity-0 peer-checked:opacity-100 transition-opacity"></i>
-            </div>
-          </label>
-        </td>
-        
-        <td class="px-4 py-4 text-white hover:text-white/80 transition-colors">
-          ${escapeHtml(item.date)}
-        </td>
-        
-        <td class="px-4 py-4 text-white font-semibold">
-           ${escapeHtml(item.desc)}
-        </td>
-        
-        <td class="px-4 py-4 text-white">
-           <div class="flex items-center">
-             ${typeHtml}
-           </div>
-        </td>
-
-        <td class="px-4 py-4 text-right font-bold text-sm ${positive ? 'text-[#37bf8b]' : 'text-[#e84e58]'}">
-           ${positive ? '+' : '-'}R$ ${formatMoney(Math.abs(item.value)).replace('R$ ', '')}
-        </td>
-
-        <td class="px-4 py-4 text-center">
-          <div class="flex items-center justify-center">
-            <span class="inline-flex items-center justify-center rounded px-3 py-1 border text-[11px] font-bold ${statClass}">
-                ${statLabel}
+      <tr class="hover:bg-white/[0.02] group">
+        <td class="px-6 py-5 text-white/55">${escapeHtml(item.date)}</td>
+        <td class="px-6 py-5">
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-2xl ${tone}">
+              <i class="fa-solid ${iconForCategory(item.cat)} text-sm"></i>
             </span>
+            <div>
+              <p class="font-semibold text-white">${escapeHtml(item.desc)}</p>
+              <p class="text-xs text-white/40 flex flex-wrap items-center gap-1">
+                ${positive ? 'Entrada identificada' : 'Saída categorizada'}
+                ${item.recurringTemplate ? '<span class="recurring-badge rounded-full px-2 py-0.5 text-[10px] font-bold">↺ Recorrente</span>' : ''}
+                ${(item.payment === 'cartao_credito' || item.payment === 'cartao_debito') && item.cardId ? (() => { const c = (state.cards||[]).find(x=>x.id===item.cardId); return c ? `<span class="payment-badge-card rounded-full px-2 py-0.5 text-[10px] font-bold"><i class="fa-solid ${item.payment === 'cartao_debito' ? 'fa-credit-card' : 'fa-credit-card'} mr-0.5"></i>${escapeHtml(c.name)} (${item.payment === 'cartao_credito' ? 'Cred.' : 'Déb.'})</span>` : ''; })() : ''}
+                ${item.payment === 'pix' ? '<span class="payment-badge-pix rounded-full px-2 py-0.5 text-[10px] font-bold">Pix</span>' : ''}
+                ${item.payment === 'dinheiro' ? '<span class="payment-badge-dinheiro rounded-full px-2 py-0.5 text-[10px] font-bold">Dinheiro</span>' : ''}
+                ${item.notes ? `<span title="${escapeHtml(item.notes)}" class="rounded-full px-2 py-0.5 text-[10px] font-bold border border-white/10 bg-white/5 cursor-help" style="max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle"><i class="fa-regular fa-note-sticky mr-0.5"></i>${escapeHtml(item.notes)}</span>` : ''}
+                ${item.attachmentUrl && SUPABASE_URL && item.attachmentUrl.startsWith(`${SUPABASE_URL}/storage/v1/object/`) ? `<a href="${escapeHtml(item.attachmentUrl)}" target="_blank" rel="noopener" title="Ver comprovante" class="rounded-full px-2 py-0.5 text-[10px] font-bold border border-cyan-400/20 bg-cyan-400/8 text-cyan-300 hover:bg-cyan-400/15 transition-colors"><i class="fa-solid fa-paperclip mr-0.5"></i>Comprovante</a>` : ''}
+              </p>
+            </div>
           </div>
         </td>
-
-        <td class="px-5 py-4">
-          <div class="flex items-center justify-center gap-3">
-             <button onclick="openEditTx('${item.id}')" title="Editar" class="text-white/40 hover:text-white transition-colors">
-               <i class="fa-regular fa-clock text-xs"></i>
-             </button>
-             <button onclick="openEditTx('${item.id}')" title="Opções" class="text-white/40 hover:text-white transition-colors">
-               <i class="fa-solid fa-ellipsis text-sm"></i>
-             </button>
+        <td class="px-6 py-5">
+          <span class="inline-flex rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">${escapeHtml(item.cat)}</span>
+        </td>
+        <td class="px-6 py-5 text-right font-bold ${positive ? 'text-emerald-300' : 'text-white'}">
+          ${positive ? '+' : '-'}${formatMoney(Math.abs(item.value))}
+        </td>
+        <td class="px-6 py-5">
+          <div class="flex items-center justify-center gap-2">
+            <button onclick="openEditTx('${item.id}')" title="Editar"
+              class="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-cyan-400/70 hover:bg-cyan-400/10 hover:border-cyan-400/30 hover:text-cyan-300 transition-all">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button onclick="confirmDeleteTx('${item.id}')" title="Excluir"
+              class="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-rose-400/60 hover:bg-rose-400/10 hover:border-rose-400/30 hover:text-rose-300 transition-all">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
+
+  const existing = document.getElementById('tx-load-more');
+  if (existing) existing.remove();
+  if (fullList.length > list.length) {
+    const remaining = fullList.length - list.length;
+    const btn = document.createElement('tr');
+    btn.id = 'tx-load-more';
+    btn.innerHTML = `<td colspan="6" class="px-6 py-5 text-center">
+      <button onclick="loadMoreTransactions()" class="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-cyan-300 hover:bg-white/10 transition-colors">
+        <i class="fa-solid fa-chevron-down mr-2"></i>Carregar mais ${remaining > TX_PAGE_SIZE ? TX_PAGE_SIZE : remaining} de ${remaining} restantes
+      </button>
+    </td>`;
+    body.appendChild(btn);
+  }
 }
 
 export function openTxModal() {
@@ -1090,18 +827,6 @@ export function bindTxEvents() {
 
   el('tx-delete-cancel')?.addEventListener('click', () => { el('tx-delete-overlay')?.classList.add('hidden'); });
   el('tx-delete-confirm')?.addEventListener('click', deleteTx);
-
-  // Modal de exclusão em massa
-  el('tx-bulk-delete-cancel')?.addEventListener('click', () => { el('tx-bulk-delete-overlay')?.classList.add('hidden'); });
-  el('tx-bulk-delete-confirm')?.addEventListener('click', _executeBulkDelete);
-
-  // Fechar modais clicando no backdrop
-  el('tx-bulk-delete-overlay')?.addEventListener('click', e => {
-    if (e.target === e.currentTarget) el('tx-bulk-delete-overlay')?.classList.add('hidden');
-  });
-  el('tx-delete-overlay')?.addEventListener('click', e => {
-    if (e.target === e.currentTarget) el('tx-delete-overlay')?.classList.add('hidden');
-  });
 
   el('tx-modal-payment')?.addEventListener('change', e => {
     const isCard = e.target.value.includes('cartao');

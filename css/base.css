@@ -61,37 +61,12 @@ body::before {
 .tab-panel { display: none; }
 .tab-panel.active {
   display: block;
-}
-
-/* ── Motion Design: Staggered Fade-in + Slide ── */
-.tab-panel.active > * {
-  opacity: 0;
-  animation: staggeredFade .5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.tab-panel.active > *:nth-child(1) { animation-delay: 0.05s; }
-.tab-panel.active > *:nth-child(2) { animation-delay: 0.10s; }
-.tab-panel.active > *:nth-child(3) { animation-delay: 0.15s; }
-.tab-panel.active > *:nth-child(4) { animation-delay: 0.20s; }
-.tab-panel.active > *:nth-child(5) { animation-delay: 0.25s; }
-.tab-panel.active > *:nth-child(6) { animation-delay: 0.30s; }
-.tab-panel.active > *:nth-child(7) { animation-delay: 0.35s; }
-.tab-panel.active > *:nth-child(8) { animation-delay: 0.40s; }
-.tab-panel.active > *:nth-child(n+9) { animation-delay: 0.45s; }
-
-@keyframes staggeredFade {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  animation: fadeUp .35s ease forwards;
 }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes popIn {
-  0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-  70% { transform: scale(1.02) translateY(-2px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .typing-dot {
@@ -123,11 +98,4 @@ body::before {
 select option {
   background: #0c111b;
   color: white;
-}
-
-/* Remove white borders from Home cards */
-#tab-0 .border-white\/8,
-#tab-0 .border-white\/12,
-#tab-0 .border-white\/10 {
-  border-color: transparent !important;
 }

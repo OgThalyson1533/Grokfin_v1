@@ -9,7 +9,7 @@ import { isSupabaseConfigured } from './services/supabase.js';
 import { syncFromSupabase } from './services/sync.js';
 import { fetchExchangeRates } from './services/exchange.js';
 import { bindNavigationEvents, syncLocationHash, syncActiveViewLabel, switchTab } from './ui/navigation.js';
-import { bindDashboardEvents, renderDashboard, renderHeaderMeta, renderReport, renderHomeWidgets } from './ui/dashboard-ui.js';
+import { bindDashboardEvents, renderDashboard, renderHeaderMeta, renderReport, renderHomeWidgets, renderHomeWidgetsV2, renderHomeCategoryBars, renderHomeGauge, renderHomePerformance, renderHomePaymentMethods, getFilteredTransactions, homePeriod } from './ui/dashboard-ui.js';
 import { renderCharts } from './ui/charts.js';
 import { bindTxEvents, renderTransactions } from './ui/transactions-ui.js';
 import { bindGoalEvents, renderGoals } from './ui/goals-ui.js';
@@ -19,7 +19,6 @@ import { bindInvestmentEvents, renderInvestments } from './ui/investments-ui.js'
 import { bindChatEvents, ensureChatSeed, renderChat, getAIProvider } from './ui/chat-ui.js';
 import { bindProfileEvents, renderProfile } from './ui/profile-ui.js';
 import { renderMarketTab } from './ui/market-ui.js';
-import { bindReportsEvents, renderReports } from './ui/reports-ui.js';
 import { calculateAnalytics, processRecurrences } from './analytics/engine.js';
 import { showToast } from './utils/dom.js';
 import { initOnboarding } from './ui/onboarding.js';
@@ -35,7 +34,7 @@ window.renderAll = function() {
     renderHeaderMeta(analytics);
     renderProfile(analytics);
     renderDashboard(analytics);
-    renderHomeWidgets(analytics);
+    renderHomeWidgetsV2(analytics);
     renderReport(analytics);
     renderCharts(analytics);
     renderTransactions();
@@ -43,7 +42,6 @@ window.renderAll = function() {
     renderCards();
     renderCashflow();
     renderInvestments();
-    renderReports();
     // [FIX] Aba Mercado nunca era renderizada no ciclo global
     if (state.ui.activeTab === 9) renderMarketTab(false);
     // [FIX CAL] Atualiza calendário financeiro com dados reais após qualquer mudança
@@ -57,7 +55,12 @@ window.appRenderAll = window.renderAll;
 window.renderHeaderMeta = renderHeaderMeta;
 // [FIX CAL] Expõe state globalmente para o calendário financeiro embutido no HTML
 window.appState = state;
-window.showToast = showToast;
+// Expõe funções do novo Home v2 globalmente
+window._homeRenderCategoryBars = renderHomeCategoryBars;
+window._homeRenderGauge = renderHomeGauge;
+window._homeRenderPerformance = renderHomePerformance;
+window._homeRenderPayment = renderHomePaymentMethods;
+window._homeGetTxs = getFilteredTransactions;
 
 async function initApp() {
   // 0. Autenticação restrita (bloquear se Supabase estiver configurado e o usuário não existir)
@@ -110,7 +113,6 @@ async function initApp() {
   bindInvestmentEvents();
   bindChatEvents();
   bindProfileEvents();
-  bindReportsEvents();
 
   // 3.2 Indicador de modo IA — atualiza o badge do header do chat
   // #ai-active-indicator e #ai-mode-label ficavam estáticos; agora refletem

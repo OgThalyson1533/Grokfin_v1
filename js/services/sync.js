@@ -21,26 +21,14 @@ function toSqlDate(brDateStr) {
   return brDateStr;
 }
 
-export function cleanUUID(idStr) {
+function cleanUUID(idStr) {
   if (!idStr) return crypto.randomUUID();
-  
-  if (idStr.length === 36 && idStr.split('-').length === 5) return idStr;
-
-  let cleaned = idStr;
   const knownPrefixes = ['tx-', 'goal-', 'card-', 'inv-', 'fx-', 'ctx-', 'msg-'];
   for (const prefix of knownPrefixes) {
-    if (cleaned.startsWith(prefix)) {
-      cleaned = cleaned.slice(prefix.length);
-      break;
-    }
+    if (idStr.startsWith(prefix)) return idStr.slice(prefix.length);
   }
-
-  if (cleaned.length === 36 && cleaned.split('-').length === 5) return cleaned;
-
-  let hash = 0;
-  for (let i = 0; i < cleaned.length; i++) hash = Math.imul(31, hash) + cleaned.charCodeAt(i) | 0;
-  const hex = (hash >>> 0).toString(16).padStart(12, '0');
-  return `00000000-0000-4000-8000-${hex}`;
+  if (idStr.length === 36 && idStr.split('-').length === 5) return idStr;
+  return crypto.randomUUID();
 }
 
 /** Retry com exponential backoff — 3 tentativas, delays 500ms/1s/2s */
@@ -66,9 +54,7 @@ async function upsertWithRetry(table, rows, maxRetries = 3) {
 function quickHash(obj) {
   try {
     const s = JSON.stringify(obj);
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-    return s.length + '|' + h;
+    return s.length + '|' + s.slice(0, 120);
   } catch { return Math.random().toString(); }
 }
 
@@ -124,34 +110,18 @@ export async function syncToSupabase(state) {
     tasks.push(upsertWithRetry('transactions', txRows));
   }
 
-  // 3. Metas — Estratégia "replace" (delete-then-insert) para garantir que
-  //    metas excluídas localmente também sejam removidas do Supabase.
-  //    O upsert puro só insere/atualiza — nunca remove registros deletados.
-  if (Array.isArray(state.goals) && hasChanged('goals', state.goals)) {
-    tasks.push(
-      supabase.from('goals').delete().eq('user_id', uid)
-        .then(({ error: delError }) => {
-          if (delError) {
-            console.error('[Sync] Falha ao limpar metas remotas antes do upsert:', delError.message);
-            return { ok: false, error: delError };
-          }
-          if (state.goals.length === 0) {
-            console.info('[Sync] Todas as metas remotas removidas (state vazio).');
-            return { ok: true };
-          }
-          return upsertWithRetry('goals', state.goals.map(g => ({
-            id: cleanUUID(g.id),
-            user_id: uid,
-            name: g.nome,
-            current_amount: g.atual,
-            target_amount: g.total,
-            theme: g.theme || 'generic',
-            custom_image: g.img || null,
-            deadline: g.deadline || null
-          })));
-        })
-        .catch(e => { console.error('[Sync] Falha crítica no sync de metas:', e); return { ok: false }; })
-    );
+  // 3. Metas
+  if (state.goals?.length && hasChanged('goals', state.goals)) {
+    tasks.push(upsertWithRetry('goals', state.goals.map(g => ({
+      id: cleanUUID(g.id),
+      user_id: uid,
+      name: g.nome,
+      current_amount: g.atual,
+      target_amount: g.total,
+      theme: g.theme || 'generic',
+      custom_image: g.img || null,
+      deadline: g.deadline || null
+    }))));
   }
 
   // 4. Cartões + Faturas (cartões primeiro, depois faturas — FK constraint)

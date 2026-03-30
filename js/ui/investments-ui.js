@@ -38,7 +38,7 @@ export function renderInvestments() {
       charts_extra.invAlloc = new Chart(allocCanvas, {
         type: 'doughnut',
         data: { labels: classes.map(c => INV_LABELS[c] || c), datasets: [{ data: classValues, backgroundColor: classes.map(c => INV_COLORS[c] || '#888'), borderWidth: 0, hoverOffset: 8 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '68%', animation: { duration: 1500, easing: 'easeOutQuart' }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${formatMoney(ctx.parsed)} (${formatPercent((ctx.parsed / totalValue) * 100, 1)})` } } } }
+        options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${formatMoney(ctx.parsed)} (${formatPercent((ctx.parsed / totalValue) * 100, 1)})` } } } }
       });
       const legend = document.getElementById('inv-alloc-legend');
       if (legend) legend.innerHTML = classes.map((c, i) => `<span class="pill text-xs" style="border-color:${INV_COLORS[c]}30;background:${INV_COLORS[c]}15;color:${INV_COLORS[c]}">${INV_LABELS[c] || c} ${formatPercent((classValues[i] / totalValue) * 100, 0)}</span>`).join('');
@@ -138,7 +138,7 @@ export function renderSimulator() {
         { label: 'Com juros compostos', data: valuesComp, borderColor: '#00ff85', backgroundColor: g1, fill: true, tension: .3, borderWidth: 2, pointRadius: 3 },
         { label: 'Sem juros (só aporte)', data: valuesSimple, borderColor: 'rgba(255,255,255,.3)', borderDash: [4,4], fill: false, tension: 0, borderWidth: 1.5, pointRadius: 0 }
       ]},
-      options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: 'rgba(255,255,255,.5)', font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${formatMoney(ctx.parsed.y)}` } } }, scales: { y: { grid: { color: 'rgba(255,255,255,.05)' }, border: { display: false }, ticks: { color: 'rgba(255,255,255,.4)', callback: v => formatMoneyShort(v), font: { size: 10 } } }, x: { grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,.35)', font: { size: 10 } } } } }
+      options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: 'rgba(255,255,255,.5)', font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${formatMoney(ctx.parsed.y)}` } } }, scales: { y: { grid: { color: 'rgba(255,255,255,.05)' }, border: { display: false }, ticks: { color: 'rgba(255,255,255,.4)', callback: v => formatMoneyShort(v), font: { size: 10 } } }, x: { grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,.35)', font: { size: 10 } } } } }
     });
   }
 }
