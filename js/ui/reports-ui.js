@@ -43,9 +43,14 @@ export function bindReportsEvents() {
   if(sB) sB.addEventListener('change', () => renderReports());
 }
 
+function getCurrentPeriod() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
 function getMonthsRange(monthsBack) {
   const dates = [];
-  const now = new Date(window.appState.currentPeriod + '-01T00:00:00');
+  const now = new Date(getCurrentPeriod() + '-01T00:00:00');
   for (let i = monthsBack; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const yyyy = d.getFullYear();
@@ -195,7 +200,8 @@ function renderDRE(state) {
 }
 
 function renderRxV(state) {
-  const ana = getMonthlyAnalytics(state, state.currentPeriod);
+  const currentP = getCurrentPeriod();
+  const ana = getMonthlyAnalytics(state, currentP);
 
   document.getElementById('rxv-total-incomes').innerText = fmtMoney(ana.incomes || 0);
   document.getElementById('rxv-total-expenses').innerText = fmtMoney(ana.expenses || 0);
@@ -205,7 +211,7 @@ function renderRxV(state) {
   document.getElementById('rxv-margin').innerText = mrg.toFixed(1) + '%';
 
   // Summary
-  const txs = getTransactionsForPeriod(state.currentPeriod);
+  const txs = getTransactionsForPeriod(currentP);
   document.getElementById('rxv-summary-count').innerText = txs.length;
   
   const inTxs = txs.filter(t => t.value > 0);
@@ -279,25 +285,29 @@ function renderRxV(state) {
 
   if (window.Chart) {
     reportChartRxV = new window.Chart(ctx, {
-      type: 'bar',
+      type: 'line',
       data: {
         labels: cData.labels,
         datasets: [
           {
             label: 'Receitas',
             data: cData.incomes,
-            backgroundColor: 'rgba(52, 211, 153, 0.8)',
-            borderRadius: 4,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
+            borderColor: '#34d399',
+            backgroundColor: 'rgba(52, 211, 153, 0.2)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 2,
+            pointBackgroundColor: '#34d399'
           },
           {
             label: 'Despesas',
             data: cData.expenses,
-            backgroundColor: 'rgba(244, 63, 94, 0.8)',
-            borderRadius: 4,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
+            borderColor: '#f43f5e',
+            backgroundColor: 'rgba(244, 63, 94, 0.2)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 2,
+            pointBackgroundColor: '#f43f5e'
           }
         ]
       },
@@ -337,32 +347,51 @@ function renderRxV(state) {
 }
 
 function renderCashflow(state) {
-  const ana = getMonthlyAnalytics(state, state.currentPeriod);
+  const currentP = getCurrentPeriod();
+  const ana = getMonthlyAnalytics(state, currentP);
 
   document.getElementById('cf-total-incomes').innerText = fmtMoney(ana.incomes || 0);
   document.getElementById('cf-total-expenses').innerText = fmtMoney(ana.expenses || 0);
   document.getElementById('cf-net').innerText = fmtMoney(ana.net || 0);
 
-  // Timeline
   const ctx = document.getElementById('canvas-cashflow');
   if(!ctx) return;
   if(reportChartCashflow) reportChartCashflow.destroy();
 
-  const txs = getTransactionsForPeriod(state.currentPeriod).sort((a,b) => new Date(a.date) - new Date(b.date));
+  const [yStr, mStr] = currentP.split('-');
+  const year = parseInt(yStr, 10);
+  const month = parseInt(mStr, 10) - 1; // 0-indexed
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startOfMonth = new Date(year, month, 1);
+
+  // Calcula o balance acumulado até o início deste mês
   let balance = 0;
+  (state.transactions || []).forEach(t => {
+    if (!t.date) return;
+    const parts = t.date.split('/');
+    if (parts.length === 3) {
+      const td = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`);
+      if (td < startOfMonth) balance += t.value;
+    }
+  });
+
+  const txs = getTransactionsForPeriod(currentP);
   const days = {};
   txs.forEach(t => {
-    if(!days[t.date]) days[t.date] = 0;
+    if (!days[t.date]) days[t.date] = 0;
     days[t.date] += t.value;
   });
 
   const labels = [];
   const data = [];
-  Object.keys(days).sort().forEach(d => {
-    labels.push(d.split('-')[2]); // day only
-    balance += days[d];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dayStr = `${String(d).padStart(2,'0')}/${String(month+1).padStart(2,'0')}/${year}`;
+    labels.push(String(d).padStart(2,'0'));
+    if (days[dayStr]) {
+      balance += days[dayStr];
+    }
     data.push(balance);
-  });
+  }
 
   if (window.Chart && labels.length > 0) {
     reportChartCashflow = new window.Chart(ctx, {
@@ -421,11 +450,11 @@ function renderComparison(state) {
     const opts = r.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
     sA.innerHTML = opts;
     sB.innerHTML = opts;
-    sA.value = state.currentPeriod;
+    sA.value = getCurrentPeriod();
     if(r.length > 1) sB.value = r[1].id;
   }
 
-  const pA = sA?.value || state.currentPeriod;
+  const pA = sA?.value || getCurrentPeriod();
   const pB = sB?.value || getMonthsRange(1)[1]?.id;
 
   const aA = getMonthlyAnalytics(state, pA);
