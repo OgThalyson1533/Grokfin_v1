@@ -21,14 +21,26 @@ function toSqlDate(brDateStr) {
   return brDateStr;
 }
 
-function cleanUUID(idStr) {
+export function cleanUUID(idStr) {
   if (!idStr) return crypto.randomUUID();
+  
+  if (idStr.length === 36 && idStr.split('-').length === 5) return idStr;
+
+  let cleaned = idStr;
   const knownPrefixes = ['tx-', 'goal-', 'card-', 'inv-', 'fx-', 'ctx-', 'msg-'];
   for (const prefix of knownPrefixes) {
-    if (idStr.startsWith(prefix)) return idStr.slice(prefix.length);
+    if (cleaned.startsWith(prefix)) {
+      cleaned = cleaned.slice(prefix.length);
+      break;
+    }
   }
-  if (idStr.length === 36 && idStr.split('-').length === 5) return idStr;
-  return crypto.randomUUID();
+
+  if (cleaned.length === 36 && cleaned.split('-').length === 5) return cleaned;
+
+  let hash = 0;
+  for (let i = 0; i < cleaned.length; i++) hash = Math.imul(31, hash) + cleaned.charCodeAt(i) | 0;
+  const hex = (hash >>> 0).toString(16).padStart(12, '0');
+  return `00000000-0000-4000-8000-${hex}`;
 }
 
 /** Retry com exponential backoff — 3 tentativas, delays 500ms/1s/2s */
