@@ -530,24 +530,14 @@ export function processRecurrences(state) {
  */
 export function getPaymentMethodStats(transactions) {
   const methodConfig = [
-    { key: 'pix',            label: 'Pix',             icon: 'fa-bolt' },
-    { key: 'credito',        label: 'Cartão Crédito',  icon: 'fa-credit-card' },
-    { key: 'debito',         label: 'Cartão Débito',   icon: 'fa-credit-card' },
-    { key: 'cartao_credito', label: 'Cartão Crédito',  icon: 'fa-credit-card' },
-    { key: 'cartao_debito',  label: 'Cartão Débito',   icon: 'fa-credit-card' },
-    { key: 'dinheiro',       label: 'Dinheiro',        icon: 'fa-money-bill' },
-    { key: 'transferencia',  label: 'Transferência',   icon: 'fa-arrow-right-arrow-left' },
-    { key: 'boleto',         label: 'Boleto',          icon: 'fa-barcode' },
-    { key: 'conta',          label: 'Débito Auto',     icon: 'fa-rotate' },
+    { key: 'pix',          label: 'Pix',             icon: 'fa-bolt' },
+    { key: 'credito',      label: 'Cartão Crédito',  icon: 'fa-credit-card' },
+    { key: 'debito',       label: 'Cartão Débito',   icon: 'fa-card-blank' },
+    { key: 'dinheiro',     label: 'Dinheiro',         icon: 'fa-money-bill' },
+    { key: 'transferencia',label: 'Transferência',    icon: 'fa-arrow-right-arrow-left' },
+    { key: 'boleto',       label: 'Boleto',           icon: 'fa-barcode' },
+    { key: 'conta',        label: 'Débito Auto',      icon: 'fa-rotate' },
   ];
-
-  // Normalize aliases so 'cartao_credito' merges into 'credito' bucket, etc.
-  const normalize = (raw) => {
-    const m = (raw || 'outros').toLowerCase().trim();
-    if (m === 'cartao_credito' || m === 'cartão_credito' || m === 'cartao credito') return 'credito';
-    if (m === 'cartao_debito'  || m === 'cartão_debito'  || m === 'cartao debito')  return 'debito';
-    return m;
-  };
 
   const incomeMap  = {};
   const expenseMap = {};
@@ -555,7 +545,7 @@ export function getPaymentMethodStats(transactions) {
   let totalOut = 0;
 
   transactions.forEach(t => {
-    const method = normalize(t.payment);
+    const method = (t.payment || 'outros').toLowerCase();
     if (t.value > 0) {
       incomeMap[method]  = (incomeMap[method]  || 0) + t.value;
       totalIn += t.value;

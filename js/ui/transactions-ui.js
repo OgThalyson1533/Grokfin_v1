@@ -14,22 +14,6 @@ import { SUPABASE_URL } from '../services/supabase.js';
 
 let _editingTxId = null;
 
-/** Sincroniza as abas visuais Entrada/Saída e atualiza o label do toggle "Realizado" */
-function _syncTypeTabs(type) {
-  const tabEntrada = document.getElementById('tx-tab-entrada');
-  const tabSaida   = document.getElementById('tx-tab-saida');
-  if (tabEntrada) {
-    tabEntrada.classList.toggle('active', type === 'entrada');
-  }
-  if (tabSaida) {
-    tabSaida.classList.toggle('active', type === 'saida');
-  }
-  const labelEl = document.getElementById('tx-realized-label');
-  if (labelEl) {
-    labelEl.textContent = type === 'entrada' ? 'Recebimento Realizado' : 'Pagamento Realizado';
-  }
-}
-
 /** Retorna categorias base + customizadas pelo usuário (sem duplicatas, ordenadas) */
 function getAllCategories() {
   const custom = Array.isArray(state.customCategories) ? state.customCategories : [];
@@ -249,13 +233,29 @@ export function getFilteredTransactions() {
 
   if (state.ui.txStatus && state.ui.txStatus !== 'all') {
     list = list.filter(item => {
-      let stat = 'concluido';
-      if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
-         stat = 'pendente';
-      } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
-         stat = 'vencido';
+      let stat = 'pendente';
+      if (item.is_paid === true) stat = 'concluido';
+      else if (item.is_paid === false && parseDateBR(item.date) < new Date()) stat = 'vencido';
+
+      // Fallback pra lógica text-based caso seja antiga (antes da migração)
+      if (item.is_paid === undefined) {
+         if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
+            stat = 'pendente';
+         } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
+            stat = 'vencido';
+         } else stat = 'concluido';
       }
       return stat === state.ui.txStatus;
+    });
+  }
+
+  // Novo: Filtro de Banco vs Cartão
+  if (state.ui.txAccountType && state.ui.txAccountType !== 'all') {
+    list = list.filter(item => {
+      // Pega de account_type se houver, ou descobre de payment
+      const isCard = item.account_type === 'credit_card' || (item.payment && item.payment.includes('cartao'));
+      if (state.ui.txAccountType === 'bank') return !isCard;
+      return isCard;
     });
   }
 
@@ -423,13 +423,20 @@ export function renderTransactions() {
   body.innerHTML = list.map(item => {
     const positive = item.value > 0;
     
-    // Mock status logic to match the Image 2 variants securely
-    let stat = 'concluido';
-    if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
-       stat = 'pendente';
-    } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
-       // If dummy 1 logic
-       stat = 'vencido';
+    // Lógica correta de status (Fingu based)
+    let stat = 'pendente';
+    const isPast = parseDateBR(item.date) < new Date();
+    
+    if (item.is_paid === true) stat = 'concluido';
+    else if (item.is_paid === false && isPast) stat = 'vencido';
+    
+    // Antigo fallback text-based (garantia pra dados velhos)
+    if (item.is_paid === undefined) {
+      if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
+         stat = 'pendente';
+      } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
+         stat = 'vencido';
+      } else stat = 'concluido';
     }
 
     let statClass = '';
@@ -442,7 +449,7 @@ export function renderTransactions() {
       statLabel = 'Vencido';
     } else {
       statClass = 'border-[#37bf8b]/40 bg-[#37bf8b]/10 text-[#37bf8b]';
-      statLabel = 'Concluído';
+      statLabel = 'Pago';
     }
 
     const typeHtml = positive
@@ -529,25 +536,26 @@ export function openTxModal() {
   const cardRow = document.getElementById('tx-card-selector-row');
   if (cardRow) cardRow.classList.add('hidden');
 
-  const errEl = document.getElementById('tx-modal-error');
-  if (errEl) errEl.classList.add('hidden');
+  // Novos campos: Banco vinculado e status real
+  const bankSelect = document.getElementById('tx-modal-bank');
+  if (bankSelect) {
+    const banks = state.banks || [];
+    bankSelect.innerHTML = '<option value="">Selecione um banco...</option>' + 
+      banks.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+    bankSelect.value = '';
+  }
+  
+  const isPaidToggle = document.getElementById('tx-modal-is-paid');
+  if (isPaidToggle) isPaidToggle.checked = true;
 
-  // [FIX TX] Limpa campos de observação e anexo
-  const notesEl = document.getElementById('tx-modal-notes');
-  if (notesEl) notesEl.value = '';
-  const attachNameEl = document.getElementById('tx-attachment-name');
-  if (attachNameEl) attachNameEl.textContent = 'Clique para anexar imagem ou PDF';
-  const attachInput = document.getElementById('tx-modal-attachment');
-  if (attachInput) attachInput.value = '';
+  const typeSwitchBtn = document.getElementById('tx-modal-type');
+  if (typeSwitchBtn) {
+    typeSwitchBtn.value = 'saida';
+    // Removemos o 'isIncome' automático da transação nova para manter padrão de Fingu
+  }
 
-  // Limpa campos extras do novo layout
-  const dueDateEl = document.getElementById('tx-modal-due-date');
-  if (dueDateEl) dueDateEl.value = '';
-  const realizedEl = document.getElementById('tx-modal-realized');
-  if (realizedEl) realizedEl.checked = false;
-
-  // Sincroniza abas visuais para "saida" (default)
-  _syncTypeTabs('saida');
+  const dueDate = document.getElementById('tx-modal-due-date');
+  if (dueDate) dueDate.value = '';
 
   document.getElementById('tx-modal-overlay')?.classList.remove('hidden');
   setTimeout(() => document.getElementById('tx-modal-desc')?.focus(), 60);
@@ -591,8 +599,20 @@ export function openEditTx(id) {
       : 'Clique para anexar imagem ou PDF';
   }
 
-  // Sincroniza abas visuais
-  _syncTypeTabs(isIncome ? 'entrada' : 'saida');
+  // Preenche novos campos: Banco vinculado, Pago, Vencimento
+  const bankSelect = document.getElementById('tx-modal-bank');
+  if (bankSelect) {
+    const banks = state.banks || [];
+    bankSelect.innerHTML = '<option value="">Selecione um banco...</option>' + 
+      banks.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+    bankSelect.value = tx.bank_id || '';
+  }
+  
+  const isPaidToggle = document.getElementById('tx-modal-is-paid');
+  if (isPaidToggle) isPaidToggle.checked = tx.is_paid !== false; // Padrão true
+
+  const dueDate = document.getElementById('tx-modal-due-date');
+  if (dueDate) dueDate.value = tx.due_date || '';
 
   document.getElementById('tx-modal-overlay')?.classList.remove('hidden');
 
@@ -752,14 +772,24 @@ export function saveTxModal() {
   // [FIX TX] Captura o arquivo de anexo (se selecionado)
   const attachFile = document.getElementById('tx-modal-attachment')?.files?.[0] || null;
 
+  // Novos campos do Fingu
+  const bankId = document.getElementById('tx-modal-bank')?.value || null;
+  const isPaid = document.getElementById('tx-modal-is-paid')?.checked ?? true;
+  const dueDate = document.getElementById('tx-modal-due-date')?.value.trim() || null;
+  const accountType = (payment === 'cartao_credito' || payment === 'cartao_debito') ? 'credit_card' : 'bank';
+
   const errEl = document.getElementById('tx-modal-error');
 
   if (!desc) { errEl.textContent = 'A descrição é obrigatória.'; errEl.classList.remove('hidden'); return; }
   if (!dateStr || dateStr.length < 8) { errEl.textContent = 'Use o formato DD/MM/AAAA.'; errEl.classList.remove('hidden'); return; }
   if (!rawValue) { errEl.textContent = 'O valor informado é inválido.'; errEl.classList.remove('hidden'); return; }
   
-  if ((payment === 'cartao_credito' || payment === 'cartao_debito') && (!cardId || cardId === '')) {
+  if (accountType === 'credit_card' && (!cardId || cardId === '')) {
     errEl.textContent = 'Selecione em qual cartão foi lançado.'; errEl.classList.remove('hidden'); return;
+  }
+  
+  if (accountType === 'bank' && !bankId) {
+    errEl.textContent = 'Selecione a conta bancária vinculada.'; errEl.classList.remove('hidden'); return;
   }
 
   const finalValue = isIncome ? rawValue : -rawValue;
@@ -794,10 +824,15 @@ export function saveTxModal() {
       state.transactions[idx] = { 
         ...state.transactions[idx], 
         desc, cat, date: dateStr, value: finalValue,
-        payment, cardId: (payment.includes('cartao') ? cardId : null),
+        payment, cardId: (accountType === 'credit_card' ? cardId : null),
         recurringTemplate: isRecurring,
         notes,
-        attachmentUrl: existingUrl // atualizado após upload assíncrono abaixo
+        attachmentUrl: existingUrl,
+        is_paid: isPaid,
+        account_type: accountType,
+        bank_id: bankId,
+        due_date: dueDate,
+        transaction_type: isIncome ? 'entrada' : 'saida'
       };
       const txId = state.transactions[idx].id;
       saveState();
@@ -830,15 +865,22 @@ export function saveTxModal() {
         cat,
         value: installValue,
         payment,
-        cardId: (payment.includes('cartao') ? cardId : null),
+        cardId: (accountType === 'credit_card' ? cardId : null),
         recurringTemplate: (i === 0 && isRecurring) ? true : undefined,
         installments: installments > 1 ? installments : undefined,
         installmentCurrent: installments > 1 ? i + 1 : undefined,
-        // [FIX TX] Persiste observação; attachmentUrl vira null e é preenchido após upload
         notes: (i === 0) ? notes : null,
-        attachmentUrl: null
+        attachmentUrl: null,
+        is_paid: isPaid,
+        account_type: accountType,
+        bank_id: bankId,
+        due_date: dueDate,
+        transaction_type: isIncome ? 'entrada' : 'saida'
       });
-      if (isPast || installments === 1) state.balance += installValue;
+      if (isPast || installments === 1) {
+        if (isPaid && accountType === 'bank') state.balance += installValue;
+      }
+    }
     }
     saveState();
     showToast(installments > 1 ? `Criada em ${installments} parcelas.` : (isRecurring ? 'Transação e recorrência criadas.' : 'Transação criada com sucesso.'), 'success');
@@ -1116,16 +1158,6 @@ export function bindTxEvents() {
   el('tx-modal-close')?.addEventListener('click', () => { el('tx-modal-overlay')?.classList.add('hidden'); });
   el('tx-modal-save')?.addEventListener('click', saveTxModal);
 
-  // ── Type tabs (Entrada / Saída) ──
-  document.querySelectorAll('.tx-type-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const type = btn.dataset.type;
-      _syncTypeTabs(type);
-      const typeSelect = document.getElementById('tx-modal-type');
-      if (typeSelect) typeSelect.value = type;
-    });
-  });
-
   el('tx-delete-cancel')?.addEventListener('click', () => { el('tx-delete-overlay')?.classList.add('hidden'); });
   el('tx-delete-confirm')?.addEventListener('click', deleteTx);
 
@@ -1143,21 +1175,24 @@ export function bindTxEvents() {
 
   el('tx-modal-payment')?.addEventListener('change', e => {
     const isCard = e.target.value.includes('cartao');
-    const row = document.getElementById('tx-card-selector-row');
+    const rowCard = document.getElementById('tx-card-selector-row');
+    const rowBank = document.getElementById('tx-bank-selector-row');
     const select = document.getElementById('tx-modal-card');
     const hint = document.getElementById('tx-card-hint');
     if (isCard) {
-      if (row) row.classList.remove('hidden');
+      if (rowCard) rowCard.classList.remove('hidden');
+      if (rowBank) rowBank.classList.add('hidden');
       if (select) {
         select.innerHTML = '<option value="">Selecione...</option>' + state.cards.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
       }
       if (hint && e.target.value === 'cartao_credito') {
-        hint.innerHTML = '<i class="fa-solid fa-circle-info mr-1"></i>O lançamento será somado à fatura e adiado no caixa.';
+        hint.innerHTML = '<i class="fa-solid fa-circle-info mr-1"></i>O lançamento será somado à fatura.';
       } else if (hint) {
-        hint.innerHTML = '<i class="fa-solid fa-bolt mr-1"></i>Lançado como débito: sai na hora do caixa.';
+        hint.innerHTML = '<i class="fa-solid fa-bolt mr-1"></i>Lançado como débito: debita da conta vinculada.';
       }
     } else {
-      if (row) row.classList.add('hidden');
+      if (rowCard) rowCard.classList.add('hidden');
+      if (rowBank) rowBank.classList.remove('hidden');
       if (select) select.value = '';
     }
   });

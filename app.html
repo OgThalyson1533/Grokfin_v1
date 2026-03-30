@@ -103,6 +103,10 @@
             <span class="nav-rail-icon"><i class="fa-solid fa-wallet"></i></span>
             <span class="nav-rail-tooltip">Conta</span>
           </button>
+          <button data-tab="11" class="nav-rail-button" aria-label="Bancos">
+            <span class="nav-rail-icon"><i class="fa-solid fa-building-columns"></i></span>
+            <span class="nav-rail-tooltip">Bancos</span>
+          </button>
           <button data-tab="4" class="nav-rail-button" aria-label="Metas">
             <span class="nav-rail-icon"><i class="fa-solid fa-bullseye"></i></span>
             <span class="nav-rail-tooltip">Metas</span>
@@ -240,45 +244,6 @@
         }
         .sensitive-value {
           transition: filter 0.3s ease, opacity 0.3s ease;
-        }
-
-        /* ── Estilos das abas do Modal de Transação ── */
-        .tx-type-tabs {
-          display: flex;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
-          padding: 4px;
-          gap: 4px;
-        }
-        .tx-type-tab {
-          flex: 1;
-          padding: 10px 0;
-          font-size: 13px;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.5);
-          border-radius: 8px;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-        .tx-type-tab:hover {
-          color: rgba(255, 255, 255, 0.8);
-          background: rgba(255, 255, 255, 0.05);
-        }
-        .tx-type-tab--entrada.active {
-          background: rgba(52, 211, 153, 0.12);
-          color: #34d399;
-          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 2px 4px rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(52, 211, 153, 0.2);
-        }
-        .tx-type-tab--saida.active {
-          background: rgba(251, 113, 133, 0.12);
-          color: #fb7185;
-          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 2px 4px rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(251, 113, 133, 0.2);
         }
       </style>
       
@@ -549,33 +514,18 @@
     </div>
   </div>
 
-  <!-- Linha 4: Rodapé 3 colunas — Fonte de Renda | Método de Pagamento | Calendário -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 w-full">
-
-    <!-- Fonte de Renda (gráfico de rosca) -->
-    <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex flex-col">
-      <div class="flex items-center justify-between mb-4">
-        <p class="home-section-title">Fonte de Renda</p>
-        <div class="flex items-center gap-1.5 h-6 px-2.5 rounded-full border border-emerald-400/20 bg-emerald-400/8">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span class="text-[9px] font-bold text-emerald-300 uppercase tracking-widest">Entradas</span>
-        </div>
-      </div>
-      <div id="home-income-source" class="flex-1">
-        <p class="text-xs text-white/25 text-center py-6">Sem entradas no período</p>
-      </div>
-    </div>
-
+  <!-- Linha 4: Rodapé (Calendário e Métodos de Pagamento) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
     <!-- Método de Pagamento -->
     <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex flex-col">
       <div class="flex items-center justify-between mb-4">
         <p class="home-section-title">Método de Pagamento</p>
         <span class="text-[10px] text-white/35">Entradas e saídas</span>
       </div>
-      <div class="flex flex-col gap-4 flex-1">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
         <!-- Entradas -->
-        <div class="rounded-2xl border border-emerald-400/12 bg-emerald-400/4 p-3.5">
-          <p class="text-[10px] font-bold text-emerald-300/70 uppercase tracking-widest mb-3">
+        <div class="rounded-3xl border border-emerald-400/12 bg-emerald-400/4 p-4 lg:p-5">
+          <p class="text-xs font-bold text-emerald-300/70 uppercase tracking-widest mb-4">
             <i class="fa-solid fa-arrow-up mr-1.5"></i>Entradas
           </p>
           <div class="space-y-2.5" id="home-payment-incomes">
@@ -583,8 +533,8 @@
           </div>
         </div>
         <!-- Saídas -->
-        <div class="rounded-2xl border border-rose-400/12 bg-rose-400/4 p-3.5">
-          <p class="text-[10px] font-bold text-rose-300/70 uppercase tracking-widest mb-3">
+        <div class="rounded-3xl border border-rose-400/12 bg-rose-400/4 p-4 lg:p-5">
+          <p class="text-xs font-bold text-rose-300/70 uppercase tracking-widest mb-4">
             <i class="fa-solid fa-arrow-down mr-1.5"></i>Saídas
           </p>
           <div class="space-y-2.5" id="home-payment-expenses">
@@ -636,7 +586,25 @@
 
         </div>
 
-
+        <!-- ═══════════════════════════ TAB 11: BANCOS ═══════════════════════════ -->
+        <div id="tab-11" class="tab-panel space-y-6">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 class="font-serif text-[32px] font-bold tracking-tight text-[#E8ECEC]">Bancos & Contas</h3>
+              <p class="mt-1 text-sm text-white/50">Gerencie seus saldos, contas correntes e investimentos</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <button id="bank-add-btn" class="flex items-center gap-2 rounded-lg bg-[#00f5ff] px-4 py-2.5 text-sm font-semibold text-[#0d121c] hover:bg-[#00e0eb] shadow-sm transition-all shadow-[#00f5ff]/20">
+                <i class="fa-solid fa-plus text-[10px]"></i> Nova Conta
+              </button>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="banks-grid">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
 
         <div id="tab-2" class="tab-panel space-y-5">
 <!-- Title & Desktop Buttons -->
@@ -657,11 +625,11 @@
 </div>
 
 <!-- Toggles Banco / Cartão -->
-<div class="flex items-center gap-2 mt-2">
-  <button class="flex items-center gap-2 rounded bg-[#2E5C41] border border-transparent px-4 py-2.5 text-sm font-semibold text-white">
+<div class="flex items-center gap-2 mt-2" id="tx-account-type-toggles">
+  <button data-account="bank" class="tx-account-toggle bg-[#2E5C41] border border-transparent text-white flex items-center gap-2 rounded px-4 py-2.5 text-sm font-semibold transition-colors">
     <i class="fa-solid fa-building-columns"></i> Banco
   </button>
-  <button class="flex items-center gap-2 rounded border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/50 hover:bg-white/5 transition-colors">
+  <button data-account="credit_card" class="tx-account-toggle border border-white/10 bg-transparent text-white/50 hover:bg-white/5 flex items-center gap-2 rounded px-4 py-2.5 text-sm font-semibold transition-colors">
     <i class="fa-regular fa-credit-card"></i> Cartão
   </button>
 </div>
@@ -1604,15 +1572,14 @@
         </button>
       </div>
 
-      <!-- ── Tipo: Abas Entrada / Saída ── -->
-      <div class="px-6 pt-5 pb-0">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Tipo *</p>
+      <!-- ── Tipo: Abas Entrada / Saída (logo abaixo do cabeçalho) ── -->
+      <div class="px-6 pt-4 pb-0">
         <div class="tx-type-tabs" id="tx-type-tabs">
           <button type="button" class="tx-type-tab tx-type-tab--entrada" data-type="entrada" id="tx-tab-entrada">
-            <i class="fa-solid fa-circle-plus text-[11px]"></i> Entrada
+            <i class="fa-solid fa-arrow-down-to-line"></i> Entrada
           </button>
           <button type="button" class="tx-type-tab tx-type-tab--saida active" data-type="saida" id="tx-tab-saida">
-            <i class="fa-solid fa-circle-minus text-[11px]"></i> Saída
+            <i class="fa-solid fa-arrow-up-from-line"></i> Saída
           </button>
         </div>
         <!-- Hidden select mantido para compatibilidade com JS existente -->
@@ -1622,190 +1589,154 @@
         </select>
       </div>
 
-      <!-- ── Corpo do formulário ── -->
-      <div class="px-6 py-5 flex flex-col gap-4" style="max-height:68vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent">
+      <div class="px-6 py-5 flex flex-col gap-4" style="max-height:72vh;overflow-y:auto">
+        <!-- Date with date picker -->
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Data</label>
+          <div class="tx-date-wrapper">
+            <input id="tx-modal-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric"
+                   autocomplete="off"
+                   class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 w-full"/>
+            <button type="button" id="tx-date-picker-btn" class="tx-date-picker-btn" title="Abrir calendário">
+              <i class="fa-regular fa-calendar"></i>
+            </button>
+            <!-- Native date input hidden — drives the picker -->
+            <input type="date" id="tx-modal-date-native" class="tx-date-native" />
+          </div>
+        </div>
+        <!-- Description -->
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Descrição</label>
+          <input id="tx-modal-desc" type="text" placeholder="Ex: Supermercado Extra"
+                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
+        </div>
+        <!-- Category -->
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Categoria</label>
+          <select id="tx-modal-cat"
+                  class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
+                  style="background-color:rgba(255,255,255,.05)">
+            <!-- Populado dinamicamente por transactions-ui.js (inclui categorias customizadas) -->
+            <option value="Alimentação">Alimentação</option>
+          </select>
+        </div>
+        <!-- Value (full width, since type moved to tabs) -->
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Valor (R$)</label>
+          <input id="tx-modal-value" type="text" placeholder="0,00"
+                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
+        </div>
 
-        <!-- Linha 1: Conta + Valor (2 colunas) -->
-        <div class="grid grid-cols-2 gap-3">
-          <!-- Conta -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Conta *</label>
-            <select id="tx-modal-account"
-                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors appearance-none"
+        <!-- Payment method — shown only for Saída -->
+        <div id="tx-payment-section" class="flex flex-col gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Forma de pagamento</label>
+            <select id="tx-modal-payment"
+                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
                     style="background-color:rgba(255,255,255,.05)">
-              <option value="" disabled selected>Selecione uma conta</option>
-              <option value="principal">Conta Principal</option>
+              <option value="" disabled selected>Selecione a forma de pagamento</option>
+              <option value="pix">Pix</option>
+              <option value="dinheiro">Dinheiro / Espécie</option>
+              <option value="cartao_credito">Cartão de crédito</option>
+              <option value="cartao_debito">Cartão de débito</option>
+              <option value="conta">Transferência / TED</option>
+              <option value="boleto">Boleto bancário</option>
             </select>
           </div>
-          <!-- Valor -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Valor *</label>
-            <div class="relative">
-              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-white/40 pointer-events-none select-none">R$</span>
-              <input id="tx-modal-value" type="text" placeholder="0,00" inputmode="decimal"
-                     class="w-full rounded-2xl border border-white/10 bg-white/5 pl-9 pr-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
-            </div>
-          </div>
-        </div>
-
-        <!-- Linha 2: Descrição + Categoria (2 colunas) -->
-        <div class="grid grid-cols-2 gap-3">
-          <!-- Descrição -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Descrição *</label>
-            <input id="tx-modal-desc" type="text" placeholder="Ex: Pagamento fornecedor"
-                   class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
-          </div>
-          <!-- Categoria -->
-          <div class="flex flex-col gap-1.5">
-            <div class="flex items-center justify-between">
-              <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Categoria *</label>
-              <span class="text-[9px] font-bold text-cyan-400/60 flex items-center gap-1">Auto <i class="fa-solid fa-wand-magic-sparkles text-[8px]"></i></span>
-            </div>
-            <select id="tx-modal-cat"
-                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors appearance-none"
+          <!-- Bank selector — shown by default for "Bank" transactions -->
+          <div id="tx-bank-selector-row" class="flex-col gap-1 w-full">
+            <label id="tx-bank-selector-label" class="text-xs font-semibold uppercase tracking-widest text-white/40">Conta Vinculada</label>
+            <select id="tx-modal-bank"
+                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
                     style="background-color:rgba(255,255,255,.05)">
-              <option value="Alimentação">Alimentação</option>
+              <option value="">Selecione um banco...</option>
             </select>
           </div>
-        </div>
-
-        <!-- Linha 3: Contato (full width) -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Contato</label>
-          <div class="relative">
-            <input id="tx-modal-contact" type="text" placeholder="Contato (opcional)"
-                   class="w-full rounded-2xl border border-white/10 bg-white/5 pl-4 pr-10 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
-            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
-              <i class="fa-solid fa-code-compare rotate-90 text-xs"></i>
-            </span>
-          </div>
-        </div>
-
-        <!-- Linha 4: Datas (2 colunas) — Data de Competência + Data de Vencimento -->
-        <div class="grid grid-cols-2 gap-3">
-          <!-- Data de Competência (campo principal) -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Data de Competência</label>
-            <div class="tx-date-wrapper relative">
-              <input id="tx-modal-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric"
-                     autocomplete="off"
-                     class="rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 pr-10 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 w-full"/>
-              <button type="button" id="tx-date-picker-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors" title="Abrir calendário">
-                <i class="fa-regular fa-calendar"></i>
-              </button>
-              <input type="date" id="tx-modal-date-native" class="tx-date-native hidden" />
-            </div>
-          </div>
-          <!-- Data de Vencimento -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Data de Vencimento</label>
-            <div class="relative">
-              <input id="tx-modal-due-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric"
-                     autocomplete="off"
-                     class="rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 pr-10 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 w-full"/>
-              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
-                <i class="fa-regular fa-calendar text-[13px]"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Linha 5: Toggle "Recebimento/Pagamento Realizado" -->
-        <div class="flex items-center gap-3 py-1">
-          <label class="relative cursor-pointer shrink-0 inline-flex items-center">
-            <input type="checkbox" id="tx-modal-realized" class="sr-only peer" checked>
-            <div class="w-10 h-[22px] rounded-full border border-white/15 bg-white/10 peer-checked:border-emerald-500 peer-checked:bg-emerald-500 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-[18px] after:h-[18px] after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-[18px]"></div>
-          </label>
-          <div>
-            <p class="text-sm font-semibold text-white" id="tx-realized-label">Pagamento Realizado</p>
-          </div>
-        </div>
-
-        <!-- Linha 6: Mais detalhes (expansível) -->
-        <div>
-          <button type="button" id="tx-more-details-btn" class="w-28 h-8 flex items-center justify-between px-3 rounded-lg border border-white/10 bg-white/5 text-[11px] font-bold text-white transition-colors hover:bg-white/10">
-             Mais detalhes <span id="tx-more-details-arrow" class="transition-transform duration-300">›</span>
-          </button>
           
-          <!-- Área expansível (campos escondidos por padrão, ex: Forma de Pagamento) -->
-          <div id="tx-more-details-area" class="tx-more-details-area pt-3">
-            
-            <!-- Forma de Pagamento movido para Mais Detalhes (já que não estava na tela principal da ref) -->
-            <div id="tx-payment-section" class="flex flex-col gap-3">
-              <div class="flex flex-col gap-1.5">
-                <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Forma de Pagamento</label>
-                <select id="tx-modal-payment"
-                        class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors appearance-none"
-                        style="background-color:rgba(255,255,255,.05)">
-                  <option value="" disabled selected>Selecione a forma de pagamento</option>
-                  <option value="pix">Pix</option>
-                  <option value="dinheiro">Dinheiro / Espécie</option>
-                  <option value="cartao_credito">Cartão de crédito</option>
-                  <option value="cartao_debito">Cartão de débito</option>
-                  <option value="conta">Transferência / TED</option>
-                  <option value="boleto">Boleto bancário</option>
-                </select>
-              </div>
-              <!-- Card selector -->
-              <div id="tx-card-selector-row" class="hidden flex-col gap-1.5">
-                <label id="tx-card-selector-label" class="text-[10px] font-bold uppercase tracking-widest text-white/40">Cartão</label>
-                <select id="tx-modal-card"
-                        class="rounded-2xl border border-cyan-400/25 bg-cyan-400/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
-                        style="background-color:rgba(0,245,255,.05)">
-                  <option value="">Selecione um cartão...</option>
-                </select>
-                <p id="tx-card-hint" class="text-xs text-cyan-300/60 px-1"><i class="fa-solid fa-circle-info mr-1"></i>O lançamento será adicionado à fatura do cartão.</p>
-              </div>
+          <!-- Card selector — only shows when cartao is selected -->
+          <div id="tx-card-selector-row" class="hidden flex-col gap-1 w-full">
+            <label id="tx-card-selector-label" class="text-xs font-semibold uppercase tracking-widest text-white/40">Cartão de crédito</label>
+            <select id="tx-modal-card"
+                    class="rounded-2xl border border-cyan-400/25 bg-cyan-400/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
+                    style="background-color:rgba(0,245,255,.05)">
+              <option value="">Selecione um cartão...</option>
+            </select>
+            <p id="tx-card-hint" class="text-xs text-cyan-300/60 px-1"><i class="fa-solid fa-circle-info mr-1"></i>O lançamento será adicionado à fatura do cartão.</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3" id="tx-fingu-fields-row">
+          <!-- Paid Toggle (Mudar o visual pra botão ou toggle) -->
+          <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2">
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-white/80">Pago</span>
+              <span class="text-[10px] text-white/50">Baixa no caixa</span>
             </div>
+            <label class="relative cursor-pointer">
+              <input type="checkbox" id="tx-modal-is-paid" class="sr-only peer" checked>
+              <div class="w-9 h-5 rounded-full border border-white/15 bg-white/10 peer-checked:bg-[#37bf8b] transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-4"></div>
+            </label>
+          </div>
 
-            <!-- Transação recorrente -->
-            <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 mt-4">
-              <div class="flex items-center gap-3">
-                <i class="fa-solid fa-rotate text-violet-400/70"></i>
-                <div>
-                  <p class="text-sm font-semibold text-white/80">Transação recorrente</p>
-                  <p class="text-[10px] text-white/40">Lançada automaticamente todo mês</p>
-                </div>
-              </div>
-              <label class="relative cursor-pointer">
-                <input type="checkbox" id="tx-modal-recurring" class="sr-only peer">
-                <div class="w-10 h-[22px] rounded-full border border-white/15 bg-white/10 peer-checked:bg-gradient-to-r peer-checked:from-violet-500 peer-checked:to-cyan-500 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-[18px] after:h-[18px] after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-[18px]"></div>
-              </label>
+          <!-- Due Date -->
+          <div class="flex flex-col gap-1 justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-2">
+            <label class="text-[10px] font-semibold uppercase tracking-widest text-white/40">Vencimento</label>
+            <input type="date" id="tx-modal-due-date" class="bg-transparent text-sm text-white outline-none" style="color-scheme:dark"/>
+          </div>
+        </div>
+
+        <!-- Recurring toggle -->
+        <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-rotate text-violet-400/70"></i>
+            <div>
+              <p class="text-sm font-semibold text-white/80">Transação recorrente</p>
+              <p class="text-xs text-white/40">Lançada automaticamente todo mês</p>
             </div>
+          </div>
+          <label class="relative cursor-pointer">
+            <input type="checkbox" id="tx-modal-recurring" class="sr-only peer">
+            <div class="w-11 h-6 rounded-full border border-white/15 bg-white/10 peer-checked:bg-gradient-to-r peer-checked:from-violet-500 peer-checked:to-cyan-500 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-5 after:h-5 after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <!-- Campo de parcelas -->
+        <div class="flex flex-col gap-1" id="tx-split-section">
+          <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Parcelas (opcional)</label>
+          <input id="tx-modal-split" type="number" min="1" max="24" placeholder="1 = à vista"
+                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
+          <p class="text-xs text-white/35 px-1"><i class="fa-solid fa-circle-info mr-1"></i>Para compras parceladas no cartão de crédito.</p>
+        </div>
 
-            <!-- Parcelas -->
-            <div class="flex flex-col gap-1.5 mt-3" id="tx-split-section">
-              <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Parcelas (opcional)</label>
-              <input id="tx-modal-split" type="number" min="1" max="24" placeholder="1 = à vista"
-                     class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
-            </div>
-
+        <!-- ── Botão Mais detalhes / Menos detalhes ── -->
+        <div>
+          <button type="button" id="tx-more-details-btn" class="tx-more-details-btn">
+            Mais detalhes <span id="tx-more-details-arrow">›</span>
+          </button>
+          <!-- Área expansível -->
+          <div id="tx-more-details-area" class="tx-more-details-area">
             <!-- Observações -->
-            <div class="flex flex-col gap-1.5 mt-3">
-              <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Observações</label>
+            <div class="flex flex-col gap-1 mt-4">
+              <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Observações</label>
               <textarea id="tx-modal-notes" rows="3" placeholder="Informações adicionais sobre esta transação..."
                         class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 resize-none"></textarea>
             </div>
-
             <!-- Anexos -->
-            <div class="flex flex-col gap-2 mt-3 mb-2">
-              <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Anexos</label>
+            <div class="flex flex-col gap-2 mt-3">
+              <label class="text-xs font-semibold uppercase tracking-widest text-white/40">Anexos</label>
               <label class="tx-file-upload-label" for="tx-modal-attachment">
                 <i class="fa-solid fa-paperclip text-cyan-400/70"></i>
                 <span id="tx-attachment-name" class="text-white/50 text-sm">Clique para anexar imagem ou PDF</span>
               </label>
               <input type="file" id="tx-modal-attachment" accept="image/*,.pdf" class="hidden"
                      onchange="document.getElementById('tx-attachment-name').textContent = this.files[0]?.name || 'Clique para anexar imagem ou PDF'" />
+              <p class="text-xs text-white/30 px-1">Aceita: imagens (JPG, PNG, WEBP) e arquivos PDF.</p>
             </div>
-
           </div>
         </div>
 
         <!-- Error message -->
         <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-1"></p>
       </div>
-
       <div class="px-6 pb-6 flex gap-3">
         <button id="tx-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
         <button id="tx-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90"

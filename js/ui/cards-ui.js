@@ -14,6 +14,23 @@ import { isSupabaseConfigured } from '../services/supabase.js';
 let _activeCardId = null;
 let _editingCardId = null;
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function _populateBankSelect(selectedBankId) {
+  const select = document.getElementById('card-modal-bank');
+  if (!select) return;
+  const banks = state.banks || [];
+  if (!banks.length) {
+    select.innerHTML = '<option value="">Crie um banco primeiro</option>';
+    select.disabled = true;
+  } else {
+    select.disabled = false;
+    select.innerHTML = banks.map(b => 
+      `<option value="${b.id}" ${b.id === selectedBankId ? 'selected' : ''}>${escapeHtml(b.name)}</option>`
+    ).join('');
+  }
+}
+
 export function renderCards() {
   const grid = document.getElementById('cards-grid');
   if (!grid) return;
@@ -26,7 +43,8 @@ export function renderCards() {
     const available = Math.max(0, card.limit - card.used);
     const color = card.color || '#7c3aed';
     const statusColor = usedPct > 80 ? '#ff6685' : usedPct > 60 ? '#facc15' : '#00ff85';
-    const flagIcons = { visa: 'VISA', mastercard: 'MC', elo: 'ELO', amex: 'AMEX' };
+    const flagIcons = { visa: 'VISA', mastercard: 'MC', elo: 'ELO', amex: 'AMEX', hipercard: 'HIPER' };
+    const linkedBank = state.banks?.find(b => b.id === card.bank_id);
     return `
       <div class="glass-panel card-hover rounded-[28px] p-6 relative overflow-hidden cursor-pointer ${_activeCardId === card.id ? 'ring-2 ring-cyan-400/40' : ''}" onclick="selectCard('${card.id}')">
         <div class="absolute inset-0 opacity-10" style="background:radial-gradient(circle at 80% 20%, ${color}, transparent 70%)"></div>
@@ -37,10 +55,9 @@ export function renderCards() {
               <div>
                 <p class="font-bold text-white text-sm">${escapeHtml(card.name)}</p>
                 <p class="text-xs text-white/45">
-                  ${card.cardType === 'debito'
-                    ? '<span style="color:#6ee7b7">● Débito</span>'
-                    : '<span style="color:#c4b5fd">● Crédito</span>'}
-                  ${card.cardType === 'credito' && card.closing ? ` • Fecha ${card.closing} • Vence ${card.due}` : ''}
+                  <span style="color:#c4b5fd">● Crédito</span>
+                  ${card.closing ? ` • Fecha dia ${card.closing} • Vence dia ${card.due}` : ''}
+                  ${linkedBank ? ` • <span class="text-cyan-300/70">${escapeHtml(linkedBank.name)}</span>` : ''}
                 </p>
               </div>
             </div>
@@ -144,6 +161,9 @@ export function openEditCard(id) {
   document.getElementById('card-modal-due').value = card.due || '';
   document.getElementById('card-modal-error').classList.add('hidden');
   
+  // Preenche o select de banco vinculado
+  _populateBankSelect(card.bank_id);
+
   const ct = card.cardType || 'credito';
   const radio = document.getElementById(`card-type-${ct}`);
   if (radio) radio.checked = true;
@@ -189,6 +209,7 @@ export function saveCardModal() {
   const limit = parseCurrencyInput(document.getElementById('card-modal-limit').value);
   const closing = cardType === 'credito' ? parseInt(document.getElementById('card-modal-closing').value) : 0;
   const due = cardType === 'credito' ? parseInt(document.getElementById('card-modal-due').value) : 0;
+  const bankId = document.getElementById('card-modal-bank')?.value || null;
   const errEl = document.getElementById('card-modal-error');
 
   if (!name) { errEl.textContent = 'Informe o nome do cartão.'; errEl.classList.remove('hidden'); return; }
@@ -196,11 +217,11 @@ export function saveCardModal() {
   
   if (_editingCardId) {
     const idx = state.cards.findIndex(c => c.id === _editingCardId);
-    if (idx >= 0) state.cards[idx] = { ...state.cards[idx], name, cardType, flag, color, limit, closing, due };
+    if (idx >= 0) state.cards[idx] = { ...state.cards[idx], name, cardType, flag, color, limit, closing, due, bank_id: bankId || null };
     showToast('Cartão atualizado.', 'success');
   } else {
     if (!state.cards) state.cards = [];
-    state.cards.push({ id: uid('card'), name, cardType, flag, color, limit, used: 0, closing, due, invoices: [] });
+    state.cards.push({ id: uid('card'), name, cardType, flag, color, limit, used: 0, closing, due, bank_id: bankId || null, invoices: [] });
     showToast(`Cartão de ${cardType} adicionado.`, 'success');
   }
   _editingCardId = null;
@@ -248,6 +269,7 @@ export function bindCardEvents() {
     ['card-modal-name','card-modal-limit','card-modal-closing','card-modal-due'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('card-modal-color').value = '#7c3aed';
     document.getElementById('card-modal-error')?.classList.add('hidden');
+    _populateBankSelect(null);
     
     const creditoRadio = document.getElementById('card-type-credito');
     if (creditoRadio) creditoRadio.checked = true;
