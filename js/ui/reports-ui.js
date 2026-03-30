@@ -59,16 +59,22 @@ function getMonthsRange(monthsBack) {
 }
 
 function getTransactionsForPeriod(periodId) {
-  // get transactions up to period end
   const state = window.appState;
   const d = new Date(periodId + '-01T00:00:00');
   const start = new Date(d.getFullYear(), d.getMonth(), 1);
   const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
   
-  return state.transactions.filter(t => {
-    const td = new Date(t.date + 'T00:00:00');
+  return (state.transactions || []).filter(t => {
+    const td = new Date(t.date.split('/').reverse().join('-') + 'T00:00:00');
     return td >= start && td <= end;
   });
+}
+
+function getMonthlyAnalytics(state, periodId) {
+  const txs = getTransactionsForPeriod(periodId);
+  const incomes = txs.filter(t => t.value > 0).reduce((acc, t) => acc + t.value, 0);
+  const expenses = txs.filter(t => t.value < 0).reduce((acc, t) => acc + Math.abs(t.value), 0);
+  return { incomes, expenses, net: incomes - expenses };
 }
 
 function groupByCategory(txs, type) {
@@ -189,9 +195,7 @@ function renderDRE(state) {
 }
 
 function renderRxV(state) {
-  // We use calculateAnalyticsForPeriod for current month statistics
-  // Assuming calculateAnalytics is available globally
-  const ana = window.calculateAnalyticsForPeriod ? window.calculateAnalyticsForPeriod(state.transactions, state.currentPeriod) : window.calculateAnalytics(state.transactions, state.settings);
+  const ana = getMonthlyAnalytics(state, state.currentPeriod);
 
   document.getElementById('rxv-total-incomes').innerText = fmtMoney(ana.incomes || 0);
   document.getElementById('rxv-total-expenses').innerText = fmtMoney(ana.expenses || 0);
@@ -268,7 +272,7 @@ function renderRxV(state) {
   const cData = { labels: [], incomes: [], expenses: [] };
   months.forEach(m => {
     cData.labels.push(m.label.substring(0,3));
-    const mAna = window.calculateAnalyticsForPeriod ? window.calculateAnalyticsForPeriod(state.transactions, m.id) : { incomes: 0, expenses: 0 };
+    const mAna = getMonthlyAnalytics(state, m.id);
     cData.incomes.push(mAna.incomes);
     cData.expenses.push(mAna.expenses);
   });
@@ -333,7 +337,7 @@ function renderRxV(state) {
 }
 
 function renderCashflow(state) {
-  const ana = window.calculateAnalyticsForPeriod ? window.calculateAnalyticsForPeriod(state.transactions, state.currentPeriod) : window.calculateAnalytics(state.transactions, state.settings);
+  const ana = getMonthlyAnalytics(state, state.currentPeriod);
 
   document.getElementById('cf-total-incomes').innerText = fmtMoney(ana.incomes || 0);
   document.getElementById('cf-total-expenses').innerText = fmtMoney(ana.expenses || 0);
@@ -424,8 +428,8 @@ function renderComparison(state) {
   const pA = sA?.value || state.currentPeriod;
   const pB = sB?.value || getMonthsRange(1)[1]?.id;
 
-  const aA = window.calculateAnalyticsForPeriod ? window.calculateAnalyticsForPeriod(state.transactions, pA) : {incomes:0, expenses:0, net:0};
-  const aB = window.calculateAnalyticsForPeriod ? window.calculateAnalyticsForPeriod(state.transactions, pB) : {incomes:0, expenses:0, net:0};
+  const aA = getMonthlyAnalytics(state, pA);
+  const aB = getMonthlyAnalytics(state, pB);
 
   const cDiff = (curr, prev) => curr - prev;
   const cPct = (curr, prev) => prev !== 0 ? ((curr - prev) / prev) * 100 : 0;
