@@ -488,7 +488,7 @@ export function deleteGoal() {
     state.balance += goal.atual;
     state.transactions.unshift({ id: uid('tx'), date: formatDateBR(new Date()), desc: 'Resgate meta: ' + goal.nome, cat: 'Metas', value: goal.atual });
   }
-  var goalIdToDelete = _goalToDelete;
+  var goalIdToDelete = _goalToDelete.replace(/^goal-/, '').replace(/^card-/, '').replace(/^tx-/, '');
   import('../services/supabase.js').then(function(m) {
     if (!m.isSupabaseConfigured || !m.supabase) return;
     m.supabase.from('goals').delete().eq('id', goalIdToDelete).catch(function(e) { console.error('[Goals] Falha ao deletar remoto:', e); });

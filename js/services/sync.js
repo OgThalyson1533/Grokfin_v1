@@ -54,7 +54,9 @@ async function upsertWithRetry(table, rows, maxRetries = 3) {
 function quickHash(obj) {
   try {
     const s = JSON.stringify(obj);
-    return s.length + '|' + s.slice(0, 120);
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    return s.length + '|' + h;
   } catch { return Math.random().toString(); }
 }
 

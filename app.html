@@ -217,47 +217,65 @@
       <div class="flex items-center gap-3 mb-1">
         <p class="text-[10px] font-bold uppercase tracking-widest text-white/35">SALDO ATUAL</p>
         <button id="btnOlho" aria-label="Ocultar/Mostrar saldo" class="flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-white/40 hover:text-white pb-0.5">
-          <!-- Olho Aberto -->
-          <svg id="olhoAberto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Olho Aberto (Escondido por padrão) -->
+          <svg id="olhoAberto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
 
-          <!-- Olho Fechado -->
-          <svg id="olhoFechado" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+          <!-- Olho Fechado (Visível por padrão) -->
+          <svg id="olhoFechado" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
             <line x1="1" y1="1" x2="23" y2="23"/>
           </svg>
         </button>
       </div>
-      <p class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none transition-all duration-300" id="saldo-total">R$ 0,00</p>
+      <p class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none sensitive-value" id="saldo-total">R$ 0,00</p>
+      
+      <style>
+        body.hide-values .sensitive-value {
+          filter: blur(8px) !important;
+          opacity: 0.5 !important;
+          user-select: none !important;
+        }
+        .sensitive-value {
+          transition: filter 0.3s ease, opacity 0.3s ease;
+        }
+      </style>
       
       <script>
         document.addEventListener('DOMContentLoaded', () => {
-          let visivel = true;
           const btn = document.getElementById('btnOlho');
           const aberto = document.getElementById('olhoAberto');
           const fechado = document.getElementById('olhoFechado');
-          const saldo = document.getElementById('saldo-total');
 
-          btn.addEventListener('click', () => {
-            visivel = !visivel;
+          // Lê do localStorage, se não existir assume como falso (oculto)
+          let visivel = localStorage.getItem('saldoVisivel') === 'true';
+
+          const updateUI = () => {
             if (visivel) {
               aberto.classList.remove('hidden');
               fechado.classList.add('hidden');
-              saldo.style.filter = 'none';
-              saldo.style.opacity = '1';
+              document.body.classList.remove('hide-values');
             } else {
               aberto.classList.add('hidden');
               fechado.classList.remove('hidden');
-              saldo.style.filter = 'blur(8px)';
-              saldo.style.opacity = '0.5';
+              document.body.classList.add('hide-values');
             }
+          };
+
+          // Inicializar UI de acordo com o state
+          updateUI();
+
+          btn.addEventListener('click', () => {
+            visivel = !visivel;
+            localStorage.setItem('saldoVisivel', visivel);
+            updateUI();
           });
         });
       </script>
       <div class="flex items-center gap-3 mt-3">
-        <p class="text-xs text-white/40">Média: <span class="text-white/65 font-semibold" id="home-burn-daily">R$ 0,00</span>/dia</p>
+        <p class="text-xs text-white/40">Média: <span class="text-white/65 font-semibold sensitive-value" id="home-burn-daily">R$ 0,00</span>/dia</p>
         <span id="home-net-chip" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border border-emerald-400/20 bg-emerald-400/8 text-emerald-300">
           <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> --
         </span>
@@ -299,7 +317,7 @@
             </div>
             <div>
               <p class="text-[9px] uppercase tracking-wider text-white/35 leading-none mb-1">Entrada</p>
-              <p class="text-sm font-bold text-emerald-300 leading-none" id="dashboard-income">R$ 0,00</p>
+              <p class="text-sm font-bold text-emerald-300 leading-none sensitive-value" id="dashboard-income">R$ 0,00</p>
             </div>
           </div>
           <!-- Saída -->
@@ -309,7 +327,7 @@
             </div>
             <div>
               <p class="text-[9px] uppercase tracking-wider text-white/35 leading-none mb-1">Saída</p>
-              <p class="text-sm font-bold text-rose-300 leading-none" id="dashboard-expense">R$ 0,00</p>
+              <p class="text-sm font-bold text-rose-300 leading-none sensitive-value" id="dashboard-expense">R$ 0,00</p>
             </div>
           </div>
        </div>

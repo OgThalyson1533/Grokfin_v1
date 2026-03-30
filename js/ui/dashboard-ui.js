@@ -1024,8 +1024,8 @@ export function renderPerformanceComparison(periodData) {
           </div>
           ${chipHtml}
         </div>
-        <p class="text-xl font-black ${valueColor} leading-tight">${card.format(current)}</p>
-        <p class="text-[10px] ${hasPrev ? 'text-white/32' : 'text-white/18'}">${hasPrev ? `Anterior: ${card.format(previous)}` : 'Sem dados anteriores'}</p>
+        <p class="text-xl font-black ${valueColor} leading-tight sensitive-value">${card.format(current)}</p>
+        <p class="text-[10px] ${hasPrev ? 'text-white/32' : 'text-white/18'} sensitive-value">${hasPrev ? `Anterior: ${card.format(previous)}` : 'Sem dados anteriores'}</p>
       </div>`;
   }).join('');
 }

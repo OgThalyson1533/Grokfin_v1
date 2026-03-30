@@ -182,6 +182,10 @@ let _syncTimeout = null;
 // diretamente, que é o objeto mutado pela aplicação inteira.
 export function saveState() {
   try {
+    if (state.isNewUser && (state.goals.length > 0 || state.transactions.length > 0)) {
+       state.isNewUser = false;
+    }
+
     const toSave = { ...state, chatHistory: (state.chatHistory || []).slice(-40) };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     
