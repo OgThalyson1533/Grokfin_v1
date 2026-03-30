@@ -488,13 +488,10 @@ export function deleteGoal() {
     state.balance += goal.atual;
     state.transactions.unshift({ id: uid('tx'), date: formatDateBR(new Date()), desc: 'Resgate meta: ' + goal.nome, cat: 'Metas', value: goal.atual });
   }
-  import('../services/sync.js').then(function(s) {
-    var goalIdToDelete = s.cleanUUID(_goalToDelete);
-    import('../services/supabase.js').then(function(m) {
-      if (!m.isSupabaseConfigured || !m.supabase) return;
-      m.supabase.from('goals').delete().eq('id', goalIdToDelete).catch(function(e) { console.error('[Goals] Falha ao deletar remoto:', e); });
-    });
-  });
+  // Remove a meta do state antes de salvar
+  // O saveState() → syncToSupabase() agora trata corretamente arrays vazios,
+  // enviando um DELETE geral quando não há mais metas. Não é necessário um
+  // delete direto paralelo (que causava race conditions e duplicidade).
   state.goals = state.goals.filter(function(g) { return g.id !== _goalToDelete; });
   _goalToDelete = null;
   saveState();

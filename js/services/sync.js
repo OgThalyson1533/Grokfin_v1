@@ -124,18 +124,34 @@ export async function syncToSupabase(state) {
     tasks.push(upsertWithRetry('transactions', txRows));
   }
 
-  // 3. Metas
-  if (state.goals?.length && hasChanged('goals', state.goals)) {
-    tasks.push(upsertWithRetry('goals', state.goals.map(g => ({
-      id: cleanUUID(g.id),
-      user_id: uid,
-      name: g.nome,
-      current_amount: g.atual,
-      target_amount: g.total,
-      theme: g.theme || 'generic',
-      custom_image: g.img || null,
-      deadline: g.deadline || null
-    }))));
+  // 3. Metas — Estratégia "replace" (delete-then-insert) para garantir que
+  //    metas excluídas localmente também sejam removidas do Supabase.
+  //    O upsert puro só insere/atualiza — nunca remove registros deletados.
+  if (Array.isArray(state.goals) && hasChanged('goals', state.goals)) {
+    tasks.push(
+      supabase.from('goals').delete().eq('user_id', uid)
+        .then(({ error: delError }) => {
+          if (delError) {
+            console.error('[Sync] Falha ao limpar metas remotas antes do upsert:', delError.message);
+            return { ok: false, error: delError };
+          }
+          if (state.goals.length === 0) {
+            console.info('[Sync] Todas as metas remotas removidas (state vazio).');
+            return { ok: true };
+          }
+          return upsertWithRetry('goals', state.goals.map(g => ({
+            id: cleanUUID(g.id),
+            user_id: uid,
+            name: g.nome,
+            current_amount: g.atual,
+            target_amount: g.total,
+            theme: g.theme || 'generic',
+            custom_image: g.img || null,
+            deadline: g.deadline || null
+          })));
+        })
+        .catch(e => { console.error('[Sync] Falha crítica no sync de metas:', e); return { ok: false }; })
+    );
   }
 
   // 4. Cartões + Faturas (cartões primeiro, depois faturas — FK constraint)
