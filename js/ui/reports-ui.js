@@ -9,30 +9,16 @@ const fmtMoney = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', cu
 const fmtPct = (val) => new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(val / 100);
 
 export function bindReportsEvents() {
-  document.querySelectorAll('.rep-tab').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.rep-tab').forEach(b => {
-        b.classList.remove('bg-white/10', 'text-white', 'font-semibold');
-        b.classList.add('text-white/50', 'hover:bg-white/5');
-      });
-      e.target.classList.remove('text-white/50', 'hover:bg-white/5');
-      e.target.classList.add('bg-white/10', 'text-white', 'font-semibold');
-
-      document.querySelectorAll('.rep-panel').forEach(p => {
-        p.classList.remove('block');
-        p.classList.add('hidden');
-      });
-
-      const targetId = e.target.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || e.target.id?.replace('btn-', '');
-      activeRepTab = targetId;
-
-      const panel = document.getElementById(`rep-content-${targetId}`);
-      if (panel) {
-        panel.classList.remove('hidden');
-        panel.classList.add('block');
+  // The HTML buttons have class 'rep-tab-item' and ids like 'rep-tab-dre', 'rep-tab-rxv', etc.
+  // They also have inline onclick="switchRepTab('...')" for the visual switching.
+  // We hook into them to also update our module-level activeRepTab and re-render data.
+  document.querySelectorAll('.rep-tab-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.id?.replace('rep-tab-', '');
+      if (tabId) {
+        activeRepTab = tabId;
+        renderReports();
       }
-
-      renderReports(); // re-render on tab change for chart animations
     });
   });
 

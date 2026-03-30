@@ -16,6 +16,7 @@ export function hashToTab(hash) {
 import { renderCashflow } from './cashflow-ui.js';
 import { renderInvestments, renderSimulator } from './investments-ui.js';
 import { renderMarketTab } from './market-ui.js';
+import { renderReports } from './reports-ui.js';
 
 export function syncActiveViewLabel(index = 0) {
   // FIX: HTML uses id="current-view-chip" (combined icon+text pill)
@@ -106,6 +107,7 @@ export function switchTab(index, { force = false, skipHistory = false } = {}) {
   if (target === 7) requestAnimationFrame(renderCashflow);
   if (target === 8) { requestAnimationFrame(renderInvestments); requestAnimationFrame(renderSimulator); }
   if (target === 9) requestAnimationFrame(() => renderMarketTab(false));
+  if (target === 10) requestAnimationFrame(renderReports);
 }
 
 export function openSidebar() {

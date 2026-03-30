@@ -57,6 +57,7 @@ window.appRenderAll = window.renderAll;
 window.renderHeaderMeta = renderHeaderMeta;
 // [FIX CAL] Expõe state globalmente para o calendário financeiro embutido no HTML
 window.appState = state;
+window.showToast = showToast;
 
 async function initApp() {
   // 0. Autenticação restrita (bloquear se Supabase estiver configurado e o usuário não existir)
