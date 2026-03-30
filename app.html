@@ -4,16 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com 'unsafe-inline'; connect-src 'self' *.supabase.co economia.awesomeapi.com.br api.coingecko.com fonts.googleapis.com api.anthropic.com generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data: blob: https://images.unsplash.com;">
-  <title>GrokFin Elite v6 • Hybrid PWA Organizado</title>
+  <title>Flox • Painel Financeiro Inteligente</title>
   <meta name="theme-color" content="#0b0f1b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="GrokFin">
-  <meta name="description" content="Painel financeiro premium com navegação híbrida, perfil editável e instalação como aplicativo.">
+  <meta name="apple-mobile-web-app-title" content="Flox">
+  <meta name="description" content="Flox — painel financeiro premium com IA, metas, investimentos e análises em tempo real.">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./Icon.png">
+  <link rel="shortcut icon" type="image/png" href="./Icon.png">
+  <link rel="apple-touch-icon" href="./Icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -675,9 +676,9 @@
               <img data-profile-image="avatar" alt="Avatar" class="h-28 w-28 rounded-full border-4 border-[#070a13] object-cover bg-black relative -mt-14 shadow-xl z-10 transition-transform hover:scale-105">
               
               <!-- Identidade -->
-              <h3 data-profile-text="displayName" class="mt-4 text-2xl font-black text-white tracking-tight leading-none">GrokFin User</h3>
+              <h3 data-profile-text="displayName" class="mt-4 text-2xl font-black text-white tracking-tight leading-none">Flox User</h3>
               <div class="flex items-center gap-1.5 mt-1.5 justify-center">
-                <span data-profile-text="handle" class="text-sm font-semibold text-cyan-200">@grokfin.user</span>
+                <span data-profile-text="handle" class="text-sm font-semibold text-cyan-200">@flox.user</span>
                 <span class="w-1 h-1 rounded-full bg-white/20"></span>
                 <span data-profile-text="nickname" class="text-xs text-white/50">Navigator</span>
               </div>
@@ -1968,12 +1969,12 @@
     <!-- Header do Painel -->
     <div class="flex items-center justify-between border-b border-white/5 px-6 py-5 shrink-0 bg-[#0f1115]">
       <div class="flex items-center gap-3">
-        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 text-[#0f1115] shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-          <i class="fa-solid fa-robot text-lg"></i>
+        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+          <img src="./Icon.png" alt="Flox" class="w-full h-full object-cover">
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h3 class="text-[15px] font-bold text-white tracking-tight leading-tight">GrokFin AI</h3>
+            <h3 class="text-[15px] font-bold text-white tracking-tight leading-tight">Flox AI</h3>
             <span id="ai-active-indicator" class="hidden items-center gap-1 rounded-full px-1.5 py-[2px] text-[9px] font-bold text-black bg-emerald-400 tracking-wider uppercase"></span>
           </div>
           <p class="text-[11px] text-white/50 tracking-wide mt-0.5">Assistente Financeiro</p>
