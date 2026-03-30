@@ -4,7 +4,7 @@
  */
 
 import { state } from '../state.js';
-import { formatMoney, formatNumber, formatPercent, formatMoneyShort, escapeHtml, richText } from '../utils/format.js';
+import { animateValue, formatMoney, formatNumber, formatPercent, formatMoneyShort, escapeHtml, richText } from '../utils/format.js';
 import { clamp } from '../utils/math.js';
 import { toneForCategory } from '../config.js';
 import { buildPrimaryInsight, buildSmartInsights, getHealthCaption, calculateAnalyticsForPeriod, getPeriodRange } from '../analytics/engine.js';
@@ -34,11 +34,11 @@ export function renderHeaderMeta(analytics) {
 export function renderDashboard(analytics) {
   const el = id => document.getElementById(id);
   
-  if (el('saldo-total')) el('saldo-total').textContent = formatMoney(state.balance);
-  if (el('dashboard-income')) el('dashboard-income').textContent = formatMoney(analytics.incomes);
-  if (el('dashboard-expense')) el('dashboard-expense').textContent = formatMoney(analytics.expenses);
+  if (el('saldo-total')) animateValue(el('saldo-total'), 0, state.balance, 1500, formatMoney);
+  if (el('dashboard-income')) animateValue(el('dashboard-income'), 0, analytics.incomes, 1500, formatMoney);
+  if (el('dashboard-expense')) animateValue(el('dashboard-expense'), 0, analytics.expenses, 1500, formatMoney);
   if (el('dashboard-runway')) el('dashboard-runway').textContent = `${formatNumber(analytics.runwayMonths, 1)} meses`;
-  if (el('dashboard-burn')) el('dashboard-burn').textContent = formatMoney(analytics.burnDaily);
+  if (el('dashboard-burn')) animateValue(el('dashboard-burn'), 0, analytics.burnDaily, 1500, formatMoney);
 
   const monthlyNetChip = document.getElementById('monthly-net-chip');
   if (monthlyNetChip) {
@@ -549,7 +549,7 @@ export function renderHomeWidgets(analytics) {
   const el = id => document.getElementById(id);
 
   // Burn diário
-  if (el('home-burn-daily')) el('home-burn-daily').textContent = formatMoney(analytics.burnDaily || 0);
+  if (el('home-burn-daily')) animateValue(el('home-burn-daily'), 0, analytics.burnDaily || 0, 1500, formatMoney);
 
   // Net chip
   const netChip = el('home-net-chip');
@@ -668,6 +668,7 @@ export function renderHomeLineChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 1500, easing: 'easeOutQuart' },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
