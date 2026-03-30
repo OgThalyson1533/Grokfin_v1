@@ -1119,62 +1119,16 @@
               <div class="overflow-x-auto w-full pb-4" style="scrollbar-color: rgba(255,255,255,0.1) transparent; scrollbar-width: thin;">
                 <table class="w-full text-left whitespace-nowrap min-w-[800px]">
                   <thead class="border-b border-white/5 text-xs font-semibold text-white/40">
-                    <tr>
+                    <tr id="dre-table-head">
                       <th class="px-5 py-4 w-64 uppercase tracking-widest sticky bg-black border-r border-white/5 left-0 z-10">Conta</th>
-                      <th class="px-5 py-4 text-right">JAN 2026</th>
-                      <th class="px-5 py-4 text-right">FEV 2026</th>
-                      <th class="px-5 py-4 text-right">MAR 2026</th>
+                      <th class="px-5 py-4 text-right">MÊS -2</th>
+                      <th class="px-5 py-4 text-right">MÊS -1</th>
+                      <th class="px-5 py-4 text-right">MÊS ATUAL</th>
                       <th class="px-5 py-4 text-right font-bold text-cyan-300">TOTAL</th>
                     </tr>
                   </thead>
-                  <tbody class="text-sm divide-y divide-white/[0.03]">
-                    <!-- Linha Agrupadora (Nível 1) -->
-                    <tr class="bg-white/[0.02]">
-                      <td class="px-5 py-3 font-bold text-emerald-400 sticky bg-[#131a20] border-r border-white/5 left-0 z-10 flex items-center gap-2">
-                        <button class="w-5 h-5 rounded hover:bg-white/10 flex items-center justify-center text-white/50"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                        RECEITA BRUTA
-                      </td>
-                      <td class="px-5 py-3 text-right text-emerald-300">R$ 45.000</td>
-                      <td class="px-5 py-3 text-right text-emerald-300">R$ 52.000</td>
-                      <td class="px-5 py-3 text-right text-emerald-300">R$ 48.000</td>
-                      <td class="px-5 py-3 text-right font-bold text-emerald-400 bg-emerald-400/5">R$ 145.000</td>
-                    </tr>
-                    <!-- Sublinha (Nível 2) -->
-                    <tr class="text-white/70">
-                      <td class="px-5 py-3 pl-12 sticky bg-black border-r border-white/5 left-0 z-10">Venda de Produtos</td>
-                      <td class="px-5 py-3 text-right">R$ 30.000</td>
-                      <td class="px-5 py-3 text-right">R$ 35.000</td>
-                      <td class="px-5 py-3 text-right">R$ 32.000</td>
-                      <td class="px-5 py-3 text-right font-semibold text-white bg-white/5">R$ 97.000</td>
-                    </tr>
-                    <tr class="text-white/70">
-                      <td class="px-5 py-3 pl-12 sticky bg-black border-r border-white/5 left-0 z-10">Consultoria e Serviços</td>
-                      <td class="px-5 py-3 text-right">R$ 15.000</td>
-                      <td class="px-5 py-3 text-right">R$ 17.000</td>
-                      <td class="px-5 py-3 text-right">R$ 16.000</td>
-                      <td class="px-5 py-3 text-right font-semibold text-white bg-white/5">R$ 48.000</td>
-                    </tr>
-
-                    <!-- Despesas DRE Nível 1 -->
-                    <tr class="bg-white/[0.02]">
-                      <td class="px-5 py-3 font-bold text-rose-400 sticky bg-[#1a141a] border-r border-white/5 left-0 z-10 flex items-center gap-2">
-                        <button class="w-5 h-5 rounded hover:bg-white/10 flex items-center justify-center text-white/50"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                        DESPESAS OPERACIONAIS
-                      </td>
-                      <td class="px-5 py-3 text-right text-rose-300">-R$ 18.000</td>
-                      <td class="px-5 py-3 text-right text-rose-300">-R$ 21.000</td>
-                      <td class="px-5 py-3 text-right text-rose-300">-R$ 19.500</td>
-                      <td class="px-5 py-3 text-right font-bold text-rose-400 bg-rose-400/5">-R$ 58.500</td>
-                    </tr>
-
-                    <!-- Resultado Operacional -->
-                    <tr>
-                      <td class="px-5 py-4 font-black text-cyan-400 sticky bg-black border-t border-r border-cyan-400/20 left-0 z-10">RESULTADO LÍQUIDO</td>
-                      <td class="px-5 py-4 text-right font-bold text-white border-t border-cyan-400/20">R$ 27.000</td>
-                      <td class="px-5 py-4 text-right font-bold text-white border-t border-cyan-400/20">R$ 31.000</td>
-                      <td class="px-5 py-4 text-right font-bold text-white border-t border-cyan-400/20">R$ 28.500</td>
-                      <td class="px-5 py-4 text-right font-black text-cyan-400 bg-cyan-400/10 border-t border-cyan-400/20">R$ 86.500</td>
-                    </tr>
+                  <tbody id="dre-table-body" class="text-sm divide-y divide-white/[0.03]">
+                    <!-- Linhas do DRE serão injetadas via JavaScript -->
                   </tbody>
                 </table>
               </div>
@@ -1189,8 +1143,8 @@
                   <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-300">Receitas</p>
                   <i class="fa-solid fa-arrow-trend-up text-emerald-400"></i>
                 </div>
-                <p class="text-3xl font-black text-white mt-1">R$ 145.000</p>
-                <p class="text-xs text-white/40"><span class="text-emerald-400">+12%</span> em relação ao período ant.</p>
+                <p class="text-3xl font-black text-white mt-1" id="rxv-total-incomes">R$ 0,00</p>
+                <p class="text-xs text-white/40"><span id="rxv-var-incomes" class="text-emerald-400">0%</span> em relação ao período ant.</p>
               </div>
               <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-2 relative overflow-hidden">
                 <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-rose-400/10 blur-3xl pointer-events-none"></div>
@@ -1198,8 +1152,8 @@
                   <p class="text-[10px] font-bold uppercase tracking-widest text-rose-300">Despesas</p>
                   <i class="fa-solid fa-arrow-trend-down text-rose-400"></i>
                 </div>
-                <p class="text-3xl font-black text-white mt-1">R$ 58.500</p>
-                <p class="text-xs text-white/40"><span class="text-rose-400">+5%</span> em relação ao período ant.</p>
+                <p class="text-3xl font-black text-white mt-1" id="rxv-total-expenses">R$ 0,00</p>
+                <p class="text-xs text-white/40"><span id="rxv-var-expenses" class="text-rose-400">0%</span> em relação ao período ant.</p>
               </div>
               <div class="glass-panel rounded-3xl p-6 border border-cyan-400/20 bg-cyan-400/5 flex flex-col gap-2 relative overflow-hidden">
                 <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none"></div>
@@ -1207,8 +1161,8 @@
                   <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-300">Resultado Líquido</p>
                   <i class="fa-solid fa-scale-balanced text-cyan-400"></i>
                 </div>
-                <p class="text-3xl font-black text-cyan-400 mt-1">R$ 86.500</p>
-                <p class="text-xs text-cyan-300/50">Margem de lucro atual: <span class="font-bold text-white/80">60%</span></p>
+                <p class="text-3xl font-black text-cyan-400 mt-1" id="rxv-net">R$ 0,00</p>
+                <p class="text-xs text-cyan-300/50">Margem de lucro atual: <span id="rxv-margin" class="font-bold text-white/80">0%</span></p>
               </div>
             </div>
 
@@ -1223,8 +1177,8 @@
                   <button class="w-8 h-8 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 transition-colors"><i class="fa-solid fa-download text-[10px]"></i></button>
                 </div>
               </div>
-              <div class="w-full h-64 flex items-center justify-center border border-dashed border-white/10 rounded-2xl bg-white/5" id="chart-receitas-despesas">
-                 <p class="text-sm text-white/30 italic">Área reservada para o Gráfico de Barras/Linha</p>
+              <div class="w-full h-64 flex items-center justify-center border border-dashed border-white/10 rounded-2xl bg-white/5 relative" id="chart-receitas-despesas">
+                 <canvas id="canvas-rxv" class="absolute inset-0 w-full h-full p-2"></canvas>
               </div>
             </div>
 
@@ -1236,19 +1190,19 @@
                  <div class="space-y-3">
                    <div class="flex justify-between items-center pb-2 border-b border-white/5">
                      <span class="text-xs text-white/50">Lançamentos</span>
-                     <span class="text-sm font-bold text-white">142</span>
+                     <span class="text-sm font-bold text-white" id="rxv-summary-count">0</span>
                    </div>
                    <div class="flex justify-between items-center pb-2 border-b border-white/5">
                      <span class="text-xs text-white/50">Ticket Médio (Entradas)</span>
-                     <span class="text-sm font-bold text-emerald-300">R$ 1.021,12</span>
+                     <span class="text-sm font-bold text-emerald-300" id="rxv-summary-avg-in">R$ 0,00</span>
                    </div>
                    <div class="flex justify-between items-center pb-2 border-b border-white/5">
                      <span class="text-xs text-white/50">Ticket Médio (Saídas)</span>
-                     <span class="text-sm font-bold text-rose-300">R$ 411,97</span>
+                     <span class="text-sm font-bold text-rose-300" id="rxv-summary-avg-out">R$ 0,00</span>
                    </div>
                    <div class="flex justify-between items-center">
                      <span class="text-xs text-white/50">Maior Despesa</span>
-                     <span class="text-sm font-bold text-rose-400 shrink-0">R$ 12.000</span>
+                     <span class="text-sm font-bold text-rose-400 shrink-0 truncate max-w-[150px] text-right" id="rxv-summary-max-exp">R$ 0,00</span>
                    </div>
                  </div>
               </div>
@@ -1256,15 +1210,8 @@
               <!-- Status -->
               <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-4">
                  <p class="text-sm font-semibold text-white">Status</p>
-                 <div class="flex-1 flex flex-col items-center justify-center relative">
-                   <!-- Simulações de anéis de donut -->
-                   <div class="w-28 h-28 rounded-full border-[10px] border-emerald-400 absolute flex items-center justify-center">
-                   </div>
-                   <div class="w-28 h-28 rounded-full border-[10px] border-rose-500/20 border-l-rose-500 border-t-rose-500 absolute rotate-45"></div>
-                   <div class="flex flex-col items-center z-10 relative mt-1">
-                     <p class="text-[9px] text-white/40 uppercase tracking-widest">Quitado</p>
-                     <p class="text-xl font-black text-white">85%</p>
-                   </div>
+                 <div id="rxv-status-container" class="flex-1 flex flex-col items-center justify-center relative">
+                   <!-- Substituído dinamicamente -->
                  </div>
                  <div class="flex gap-2 justify-center mt-2">
                    <span class="text-[9px] px-2 py-1 rounded bg-white/5 text-white/60"><span class="text-emerald-400 font-bold mr-1">■</span> Concluído</span>
@@ -1275,37 +1222,8 @@
               <!-- Top Categorias -->
               <div class="glass-panel rounded-3xl p-6 border border-white/10 xl:col-span-2">
                  <p class="text-sm font-semibold text-white mb-4">Top Categorias (Saídas)</p>
-                 <div class="space-y-4">
-                   <!-- Categoria 1 -->
-                   <div>
-                     <div class="flex justify-between text-xs mb-1">
-                       <span class="text-white/70">Folha de Pagamento</span>
-                       <span class="text-white font-bold">R$ 22.000</span>
-                     </div>
-                     <div class="w-full bg-white/5 rounded-full h-2">
-                       <div class="bg-gradient-to-r from-violet-500 to-fuchsia-500 h-2 rounded-full" style="width: 45%"></div>
-                     </div>
-                   </div>
-                   <!-- Categoria 2 -->
-                   <div>
-                     <div class="flex justify-between text-xs mb-1">
-                       <span class="text-white/70">Impostos</span>
-                       <span class="text-white font-bold">R$ 15.500</span>
-                     </div>
-                     <div class="w-full bg-white/5 rounded-full h-2">
-                       <div class="bg-gradient-to-r from-rose-500 to-orange-500 h-2 rounded-full" style="width: 30%"></div>
-                     </div>
-                   </div>
-                   <!-- Categoria 3 -->
-                   <div>
-                     <div class="flex justify-between text-xs mb-1">
-                       <span class="text-white/70">Infraestrutura</span>
-                       <span class="text-white font-bold">R$ 8.000</span>
-                     </div>
-                     <div class="w-full bg-white/5 rounded-full h-2">
-                       <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full" style="width: 15%"></div>
-                     </div>
-                   </div>
+                 <div id="rxv-top-categories" class="space-y-4">
+                   <!-- Categorias dinâmicas JS -->
                  </div>
               </div>
             </div>
@@ -1321,16 +1239,16 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div class="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col justify-center">
                  <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Entradas</p>
-                 <p class="text-2xl font-black text-emerald-400">R$ 145.000</p>
+                 <p class="text-2xl font-black text-emerald-400" id="cf-total-incomes">R$ 0,00</p>
               </div>
               <div class="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col justify-center">
                  <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Saídas</p>
-                 <p class="text-2xl font-black text-rose-400">R$ 58.500</p>
+                 <p class="text-2xl font-black text-rose-400" id="cf-total-expenses">R$ 0,00</p>
               </div>
               <div class="glass-panel rounded-3xl p-5 border border-cyan-400/20 bg-cyan-400/5 flex flex-col justify-center relative overflow-hidden">
                  <div class="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-cyan-400/10 blur-2xl pointer-events-none"></div>
                  <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-300/70 mb-1">Saldo Final</p>
-                 <p class="text-2xl font-black text-white">R$ 86.500</p>
+                 <p class="text-2xl font-black text-white" id="cf-net">R$ 0,00</p>
               </div>
             </div>
 
@@ -1342,8 +1260,8 @@
                   <p class="text-xs text-white/40">Acumulado diário</p>
                 </div>
               </div>
-              <div class="w-full h-80 flex items-center justify-center border border-dashed border-white/10 rounded-2xl bg-white/5" id="chart-cashflow">
-                 <p class="text-sm text-white/30 italic">Área reservada para o Gráfico de Linha (Timeline)</p>
+              <div class="w-full h-80 flex items-center justify-center border border-dashed border-white/10 rounded-2xl bg-white/5 relative" id="chart-cashflow">
+                 <canvas id="canvas-cashflow" class="absolute inset-0 w-full h-full p-2"></canvas>
               </div>
             </div>
           </div>
@@ -1352,8 +1270,8 @@
             <div class="glass-panel items-center justify-between rounded-3xl p-4 border border-white/10 flex flex-col md:flex-row gap-4">
               <div class="flex items-center gap-3 w-full md:w-auto">
                 <span class="text-xs font-bold uppercase tracking-widest text-white/50 w-20">Período A</span>
-                <select class="w-full md:w-48 appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none focus:border-cyan-400/50 cursor-pointer">
-                  <option>Março 2026</option>
+                <select id="comp-period-a" class="w-full md:w-48 appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none focus:border-cyan-400/50 cursor-pointer">
+                  <!-- Gerado dinamicamente -->
                 </select>
               </div>
               <div class="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
@@ -1361,8 +1279,8 @@
               </div>
               <div class="flex items-center gap-3 w-full md:w-auto">
                 <span class="text-xs font-bold uppercase tracking-widest text-white/50 w-20">Período B</span>
-                <select class="w-full md:w-48 appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none focus:border-cyan-400/50 cursor-pointer">
-                  <option>Fevereiro 2026</option>
+                <select id="comp-period-b" class="w-full md:w-48 appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none focus:border-cyan-400/50 cursor-pointer">
+                  <!-- Gerado dinamicamente -->
                 </select>
               </div>
             </div>
@@ -1374,16 +1292,16 @@
                  <div class="flex items-end justify-between">
                    <div>
                      <p class="text-xs text-white/50 mb-1">Período A</p>
-                     <p class="text-lg font-bold text-white">R$ 48.000</p>
+                     <p class="text-lg font-bold text-white" id="comp-inc-a">R$ 0,00</p>
                    </div>
                    <div class="text-right">
                      <p class="text-xs text-white/50 mb-1">Período B</p>
-                     <p class="text-lg font-bold text-white">R$ 52.000</p>
+                     <p class="text-lg font-bold text-white" id="comp-inc-b">R$ 0,00</p>
                    </div>
                  </div>
                  <div class="border-t border-white/5 pt-3 mt-1 flex justify-between items-center">
                    <span class="text-xs text-white/50">Diferença</span>
-                   <span class="text-sm font-bold text-rose-400">-R$ 4.000 <span class="bg-rose-500/10 text-[10px] px-1.5 py-0.5 rounded ml-1">-7.6%</span></span>
+                   <span class="text-sm font-bold text-emerald-400 flex items-center gap-2" id="comp-inc-diff">R$ 0,00 <span class="bg-emerald-500/10 text-[10px] px-1.5 py-0.5 rounded" id="comp-inc-pct">0%</span></span>
                  </div>
               </div>
 
@@ -1392,17 +1310,16 @@
                  <div class="flex items-end justify-between">
                    <div>
                      <p class="text-xs text-white/50 mb-1">Período A</p>
-                     <p class="text-lg font-bold text-white">R$ 19.500</p>
+                     <p class="text-lg font-bold text-white" id="comp-exp-a">R$ 0,00</p>
                    </div>
                    <div class="text-right">
                      <p class="text-xs text-white/50 mb-1">Período B</p>
-                     <p class="text-lg font-bold text-white">R$ 21.000</p>
+                     <p class="text-lg font-bold text-white" id="comp-exp-b">R$ 0,00</p>
                    </div>
                  </div>
                  <div class="border-t border-white/5 pt-3 mt-1 flex justify-between items-center">
                    <span class="text-xs text-white/50">Diferença</span>
-                   <!-- Despesa menor no período A (redução de gastos = positivo) -->
-                   <span class="text-sm font-bold text-emerald-400">-R$ 1.500 <span class="bg-emerald-500/10 text-[10px] px-1.5 py-0.5 rounded ml-1">-7.1%</span></span>
+                   <span class="text-sm font-bold flex items-center gap-2 text-rose-400" id="comp-exp-diff">R$ 0,00 <span class="bg-rose-500/10 text-[10px] px-1.5 py-0.5 rounded" id="comp-exp-pct">0%</span></span>
                  </div>
               </div>
 
@@ -1411,16 +1328,16 @@
                  <div class="flex items-end justify-between">
                    <div>
                      <p class="text-xs text-white/50 mb-1">Período A</p>
-                     <p class="text-lg font-bold text-cyan-300">R$ 28.500</p>
+                     <p class="text-lg font-bold text-cyan-300" id="comp-net-a">R$ 0,00</p>
                    </div>
                    <div class="text-right">
                      <p class="text-xs text-white/50 mb-1">Período B</p>
-                     <p class="text-lg font-bold text-cyan-300">R$ 31.000</p>
+                     <p class="text-lg font-bold text-cyan-300" id="comp-net-b">R$ 0,00</p>
                    </div>
                  </div>
                  <div class="border-t border-white/5 pt-3 mt-1 flex justify-between items-center">
                    <span class="text-xs text-white/50">Diferença</span>
-                   <span class="text-sm font-bold text-rose-400">-R$ 2.500 <span class="bg-rose-500/10 text-[10px] px-1.5 py-0.5 rounded ml-1">-8.0%</span></span>
+                   <span class="text-sm font-bold text-cyan-400 flex items-center gap-2" id="comp-net-diff">R$ 0,00 <span class="bg-cyan-500/10 text-[10px] px-1.5 py-0.5 rounded" id="comp-net-pct">0%</span></span>
                  </div>
               </div>
             </div>
@@ -1439,21 +1356,8 @@
                        <th class="px-4 py-3 text-right">Variação (%)</th>
                      </tr>
                    </thead>
-                   <tbody class="text-sm divide-y divide-white/[0.03]">
-                     <tr>
-                       <td class="px-4 py-3 text-white">Folha de Pagamento</td>
-                       <td class="px-4 py-3 text-right text-rose-300">R$ 22.000</td>
-                       <td class="px-4 py-3 text-right text-rose-300">R$ 22.000</td>
-                       <td class="px-4 py-3 text-right text-white/50">R$ 0</td>
-                       <td class="px-4 py-3 text-right"><span class="bg-white/5 text-white/50 text-[10px] px-2 py-1 rounded">0%</span></td>
-                     </tr>
-                     <tr>
-                       <td class="px-4 py-3 text-white">Vendas de Produtos</td>
-                       <td class="px-4 py-3 text-right text-emerald-300">R$ 32.000</td>
-                       <td class="px-4 py-3 text-right text-emerald-300">R$ 35.000</td>
-                       <td class="px-4 py-3 text-right text-rose-400 font-bold">-R$ 3.000</td>
-                       <td class="px-4 py-3 text-right"><span class="bg-rose-500/10 text-rose-400 text-[10px] px-2 py-1 rounded">-8.5%</span></td>
-                     </tr>
+                   <tbody id="comp-table-body" class="text-sm divide-y divide-white/[0.03]">
+                     <!-- Linhas da tabela populadas via relatórios -->
                    </tbody>
                  </table>
                </div>

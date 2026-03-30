@@ -19,6 +19,7 @@ import { bindInvestmentEvents, renderInvestments } from './ui/investments-ui.js'
 import { bindChatEvents, ensureChatSeed, renderChat, getAIProvider } from './ui/chat-ui.js';
 import { bindProfileEvents, renderProfile } from './ui/profile-ui.js';
 import { renderMarketTab } from './ui/market-ui.js';
+import { bindReportsEvents, renderReports } from './ui/reports-ui.js';
 import { calculateAnalytics, processRecurrences } from './analytics/engine.js';
 import { showToast } from './utils/dom.js';
 import { initOnboarding } from './ui/onboarding.js';
@@ -42,6 +43,7 @@ window.renderAll = function() {
     renderCards();
     renderCashflow();
     renderInvestments();
+    renderReports();
     // [FIX] Aba Mercado nunca era renderizada no ciclo global
     if (state.ui.activeTab === 9) renderMarketTab(false);
     // [FIX CAL] Atualiza calendário financeiro com dados reais após qualquer mudança
@@ -107,6 +109,7 @@ async function initApp() {
   bindInvestmentEvents();
   bindChatEvents();
   bindProfileEvents();
+  bindReportsEvents();
 
   // 3.2 Indicador de modo IA — atualiza o badge do header do chat
   // #ai-active-indicator e #ai-mode-label ficavam estáticos; agora refletem
