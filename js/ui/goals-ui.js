@@ -50,10 +50,23 @@ export function getGoalThemeLabel(theme = 'generic') {
   return GOAL_THEME_CATALOG[theme]?.label || GOAL_THEME_CATALOG.generic.label;
 }
 
-export function pickGoalImage(name, explicitTheme = 'auto') {
+const _unsplashCache = {};
+const _unsplashAccessKey = 'ixMO39pKTehyhN0EZBYhf7VA-1SdP6YSgTm0ouHkk0U';
+
+export async function pickGoalImageAsync(name, explicitTheme = 'auto') {
   if (name && name.trim().length > 0) {
-    var query = encodeURIComponent(name.trim().toLowerCase());
-    return 'https://source.unsplash.com/1200x800/?' + query;
+    const q = name.trim().toLowerCase();
+    if (_unsplashCache[q]) return _unsplashCache[q];
+    try {
+      const res = await fetch('https://api.unsplash.com/photos/random?query=' + encodeURIComponent(q) + '&orientation=landscape&client_id=' + _unsplashAccessKey);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.urls?.regular) {
+          _unsplashCache[q] = data.urls.regular;
+          return data.urls.regular;
+        }
+      }
+    } catch (e) { console.warn('Unsplash API error:', e); }
   }
   const theme = detectGoalTheme(name, explicitTheme);
   return GOAL_THEME_CATALOG[theme]?.img || GOAL_THEME_CATALOG.generic.img;
@@ -348,7 +361,7 @@ export function openEditGoal(id) {
   _updateModalPreview();
 }
 
-function _updateModalPreview() {
+async function _updateModalPreview() {
   var nameEl    = document.getElementById('goal-modal-name');
   var themeEl   = document.getElementById('goal-modal-theme');
   var previewEl = document.getElementById('goal-modal-img-preview');
@@ -358,9 +371,16 @@ function _updateModalPreview() {
   var theme    = (themeEl && themeEl.value) || 'auto';
   var resolved = detectGoalTheme(name, theme);
   var catalog  = GOAL_THEME_CATALOG[resolved] || GOAL_THEME_CATALOG.generic;
-  var imgSrc   = pickGoalImage(name, theme);
-  previewEl.style.backgroundImage = "url('" + imgSrc + "')";
+  
   if (iconEl) { iconEl.className = 'fa-solid ' + catalog.icon; iconEl.style.color = catalog.color; }
+  
+  try {
+    var imgSrc = await pickGoalImageAsync(name, theme);
+    if (nameEl && nameEl.value !== name && name !== '') return;
+    previewEl.style.backgroundImage = "url('" + imgSrc + "')";
+  } catch(e) {
+    previewEl.style.backgroundImage = "url('" + catalog.img + "')";
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -393,13 +413,15 @@ export function applyGoalContribution(goalId, amount, options) {
 /* ══════════════════════════════════════════════════════════════
    SALVAR MODAL
 ══════════════════════════════════════════════════════════════ */
-export function saveGoalModal() {
+export async function saveGoalModal() {
   var name        = document.getElementById('goal-modal-name').value.trim();
   var target      = parseCurrencyInput(document.getElementById('goal-modal-total').value);
   var current     = parseCurrencyInput(document.getElementById('goal-modal-atual').value) || 0;
   var deadlineStr = document.getElementById('goal-modal-deadline').value;
   var themeInput  = document.getElementById('goal-modal-theme').value;
   var errEl       = document.getElementById('goal-modal-error');
+  var saveBtn     = document.getElementById('goal-modal-save');
+  
   if (!name) { _showModalErr(errEl, 'Preencha o nome da meta.'); return; }
   var resolvedTheme = detectGoalTheme(name, themeInput);
   if (!target) target = estimateGoalTarget(name, resolvedTheme);
@@ -407,25 +429,38 @@ export function saveGoalModal() {
   var deadline = deadlineStr ? new Date(deadlineStr + 'T12:00:00Z').toISOString() : estimateGoalDeadline(name, resolvedTheme);
   if (errEl) errEl.classList.add('hidden');
 
+  var originalBtnHtml = saveBtn ? saveBtn.innerHTML : '';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...'; }
+
+  var imgSrc = await pickGoalImageAsync(name, themeInput);
+
   if (_editingGoalId) {
     var idx = state.goals.findIndex(function(g) { return g.id === _editingGoalId; });
     if (idx >= 0) {
       var g = state.goals[idx];
       var diff = current - g.atual;
-      if (diff > 0 && state.balance < diff) { _showModalErr(errEl, 'Saldo insuficiente para atualizar o valor guardado.'); return; }
+      if (diff > 0 && state.balance < diff) { 
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalBtnHtml; }
+        _showModalErr(errEl, 'Saldo insuficiente para atualizar o valor guardado.'); return; 
+      }
       state.balance -= diff;
-      state.goals[idx] = Object.assign({}, g, { nome: name, total: target, atual: current, deadline: deadline, theme: resolvedTheme, img: pickGoalImage(name, themeInput) });
+      state.goals[idx] = Object.assign({}, g, { nome: name, total: target, atual: current, deadline: deadline, theme: resolvedTheme, img: imgSrc });
       saveState(); showToast('Meta atualizada com sucesso.', 'success');
     }
   } else {
-    if (current > 0 && state.balance < current) { _showModalErr(errEl, 'Saldo insuficiente para o valor inicial.'); return; }
+    if (current > 0 && state.balance < current) { 
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalBtnHtml; }
+        _showModalErr(errEl, 'Saldo insuficiente para o valor inicial.'); return; 
+    }
     if (current > 0) {
       state.balance -= current;
       state.transactions.unshift({ id: uid('tx'), date: formatDateBR(new Date()), desc: 'Depósito inicial: ' + name, cat: 'Metas', value: -current });
     }
-    state.goals.unshift({ id: uid('goal'), nome: name, atual: current, total: target, theme: resolvedTheme, img: pickGoalImage(name, themeInput), deadline: deadline });
+    state.goals.unshift({ id: uid('goal'), nome: name, atual: current, total: target, theme: resolvedTheme, img: imgSrc, deadline: deadline });
     saveState(); showToast('Meta "' + name + '" criada! 🎯', 'success');
   }
+  
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalBtnHtml; }
   document.getElementById('goal-modal-overlay')?.classList.add('hidden');
   if (window.appRenderAll) window.appRenderAll();
 }
