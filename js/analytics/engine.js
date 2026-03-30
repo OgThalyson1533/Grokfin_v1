@@ -15,6 +15,69 @@ import { parseDateBR, addMonths } from '../utils/date.js';
 import { formatMoney, formatNumber, formatPercent } from '../utils/format.js';
 import { clamp, uid } from '../utils/math.js';
 
+// ── Period helpers ────────────────────────────────────────────────────────────
+
+/**
+ * Returns { start, end } Date objects for a given homeFilter period.
+ */
+export function getPeriodRange(filter = 'this_month', refDate = null) {
+  const today = refDate || new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth();
+
+  switch (filter) {
+    case 'last_month':
+      return {
+        start: new Date(y, m - 1, 1),
+        end:   new Date(y, m, 0, 23, 59, 59)
+      };
+    case '3_months':
+      return {
+        start: new Date(y, m - 2, 1),
+        end:   new Date(y, m + 1, 0, 23, 59, 59)
+      };
+    case '6_months':
+      return {
+        start: new Date(y, m - 5, 1),
+        end:   new Date(y, m + 1, 0, 23, 59, 59)
+      };
+    case 'this_year':
+      return {
+        start: new Date(y, 0, 1),
+        end:   new Date(y, 11, 31, 23, 59, 59)
+      };
+    case 'this_month':
+    default:
+      return {
+        start: new Date(y, m, 1),
+        end:   new Date(y, m + 1, 0, 23, 59, 59)
+      };
+  }
+}
+
+/**
+ * Returns the "previous" equivalent range to compare against.
+ */
+export function getPreviousPeriodRange(filter = 'this_month', refDate = null) {
+  const today = refDate || new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth();
+
+  switch (filter) {
+    case 'last_month': // prev = 2 months ago
+      return { start: new Date(y, m - 2, 1), end: new Date(y, m - 1, 0, 23, 59, 59) };
+    case '3_months':  // prev = 6–3 months ago
+      return { start: new Date(y, m - 5, 1), end: new Date(y, m - 2, 0, 23, 59, 59) };
+    case '6_months':  // prev = 12–6 months ago
+      return { start: new Date(y, m - 11, 1), end: new Date(y, m - 5, 0, 23, 59, 59) };
+    case 'this_year': // prev = last year
+      return { start: new Date(y - 1, 0, 1), end: new Date(y - 1, 11, 31, 23, 59, 59) };
+    case 'this_month': // prev = last month
+    default:
+      return { start: new Date(y, m - 1, 1), end: new Date(y, m, 0, 23, 59, 59) };
+  }
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function addDays(date, n) {
@@ -457,4 +520,139 @@ export function processRecurrences(state) {
   // Invalida memo após cron
   _memoKey = null;
   return changesMade;
+}
+
+// ── getPaymentMethodStats ─────────────────────────────────────────────────────
+
+/**
+ * Returns payment method breakdown for a set of transactions.
+ * Returns { incomes: [{method, label, icon, value, pct}], expenses: [...] }
+ */
+export function getPaymentMethodStats(transactions) {
+  const methodConfig = [
+    { key: 'pix',            label: 'Pix',             icon: 'fa-bolt' },
+    { key: 'credito',        label: 'Cartão Crédito',  icon: 'fa-credit-card' },
+    { key: 'debito',         label: 'Cartão Débito',   icon: 'fa-credit-card' },
+    { key: 'cartao_credito', label: 'Cartão Crédito',  icon: 'fa-credit-card' },
+    { key: 'cartao_debito',  label: 'Cartão Débito',   icon: 'fa-credit-card' },
+    { key: 'dinheiro',       label: 'Dinheiro',        icon: 'fa-money-bill' },
+    { key: 'transferencia',  label: 'Transferência',   icon: 'fa-arrow-right-arrow-left' },
+    { key: 'boleto',         label: 'Boleto',          icon: 'fa-barcode' },
+    { key: 'conta',          label: 'Débito Auto',     icon: 'fa-rotate' },
+  ];
+
+  // Normalize aliases so 'cartao_credito' merges into 'credito' bucket, etc.
+  const normalize = (raw) => {
+    const m = (raw || 'outros').toLowerCase().trim();
+    if (m === 'cartao_credito' || m === 'cartão_credito' || m === 'cartao credito') return 'credito';
+    if (m === 'cartao_debito'  || m === 'cartão_debito'  || m === 'cartao debito')  return 'debito';
+    return m;
+  };
+
+  const incomeMap  = {};
+  const expenseMap = {};
+  let totalIn  = 0;
+  let totalOut = 0;
+
+  transactions.forEach(t => {
+    const method = normalize(t.payment);
+    if (t.value > 0) {
+      incomeMap[method]  = (incomeMap[method]  || 0) + t.value;
+      totalIn += t.value;
+    } else {
+      expenseMap[method] = (expenseMap[method] || 0) + Math.abs(t.value);
+      totalOut += Math.abs(t.value);
+    }
+  });
+
+  function buildList(map, total) {
+    return Object.entries(map)
+      .map(([key, value]) => {
+        const cfg = methodConfig.find(m => m.key === key) ||
+                    { key, label: key.charAt(0).toUpperCase() + key.slice(1), icon: 'fa-circle-question' };
+        return { ...cfg, value, pct: total > 0 ? (value / total) * 100 : 0 };
+      })
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }
+
+  return {
+    incomes:  buildList(incomeMap,  totalIn),
+    expenses: buildList(expenseMap, totalOut),
+    totalIn,
+    totalOut
+  };
+}
+
+// ── calculateAnalyticsForPeriod ───────────────────────────────────────────────
+
+/**
+ * Computes analytics metrics for an arbitrary date range.
+ * Used by the Home tab period filter.
+ */
+export function calculateAnalyticsForPeriod(state, filter = 'this_month') {
+  const ref = getReferenceDate(state);
+  const { start, end }   = getPeriodRange(filter, ref);
+  const { start: ps, end: pe } = getPreviousPeriodRange(filter, ref);
+
+  function txInRange(t, s, e) {
+    const d = parseDateBR(t.date);
+    return d && d >= s && d <= e;
+  }
+
+  const current  = state.transactions.filter(t => txInRange(t, start, end));
+  const previous = state.transactions.filter(t => txInRange(t, ps, pe));
+
+  function summary(txList) {
+    const incomes  = txList.filter(t => t.value > 0).reduce((a, t) => a + t.value, 0);
+    const expenses = txList.filter(t => t.value < 0).reduce((a, t) => a + Math.abs(t.value), 0);
+    const net      = incomes - expenses;
+    const avgTicket = txList.filter(t => t.value < 0).length
+      ? expenses / txList.filter(t => t.value < 0).length
+      : 0;
+    const categoriesMap = {};
+    txList.filter(t => t.value < 0).forEach(t => {
+      categoriesMap[t.cat] = (categoriesMap[t.cat] || 0) + Math.abs(t.value);
+    });
+    const categories = Object.entries(categoriesMap).sort((a, b) => b[1] - a[1]);
+    return { incomes, expenses, net, avgTicket, categories };
+  }
+
+  const cur = summary(current);
+  const prev = summary(previous);
+
+  // payment methods
+  const paymentStats = getPaymentMethodStats(current);
+
+  // fixed costs in current period
+  const fixedCosts = (state.fixedExpenses || [])
+    .filter(e => !e.isIncome && e.active !== false)
+    .reduce((a, e) => a + Math.abs(e.value), 0);
+  const variableExpenses = Math.max(0, cur.expenses - fixedCosts);
+  const surplus = Math.max(0, cur.incomes - cur.expenses);
+  const expenseRatio = cur.incomes > 0 ? (cur.expenses / cur.incomes) * 100 : 0;
+
+  // comparison chips
+  function pctChange(curr, prev) {
+    if (!prev) return null;
+    return ((curr - prev) / prev) * 100;
+  }
+
+  const comparison = {
+    incomes:  { current: cur.incomes,  previous: prev.incomes,  pct: pctChange(cur.incomes,  prev.incomes)  },
+    expenses: { current: cur.expenses, previous: prev.expenses, pct: pctChange(cur.expenses, prev.expenses) },
+    net:      { current: cur.net,      previous: prev.net,      pct: pctChange(cur.net,      prev.net)      },
+    avgTicket:{ current: cur.avgTicket,previous: prev.avgTicket,pct: pctChange(cur.avgTicket,prev.avgTicket)},
+  };
+
+  return {
+    ...cur,
+    fixedCosts,
+    variableExpenses,
+    surplus,
+    expenseRatio,
+    paymentStats,
+    comparison,
+    period: { start, end, filter }
+  };
 }

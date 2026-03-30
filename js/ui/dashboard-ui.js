@@ -4,10 +4,10 @@
  */
 
 import { state } from '../state.js';
-import { formatMoney, formatNumber, formatPercent, formatMoneyShort, escapeHtml, richText } from '../utils/format.js';
+import { animateValue, formatMoney, formatNumber, formatPercent, formatMoneyShort, escapeHtml, richText } from '../utils/format.js';
 import { clamp } from '../utils/math.js';
 import { toneForCategory } from '../config.js';
-import { buildPrimaryInsight, buildSmartInsights, getHealthCaption } from '../analytics/engine.js';
+import { buildPrimaryInsight, buildSmartInsights, getHealthCaption, calculateAnalyticsForPeriod, getPeriodRange } from '../analytics/engine.js';
 import { formatLongDate, formatShortTime } from '../utils/date.js';
 import { syncActiveViewLabel, switchTab } from './navigation.js';
 
@@ -34,11 +34,11 @@ export function renderHeaderMeta(analytics) {
 export function renderDashboard(analytics) {
   const el = id => document.getElementById(id);
   
-  if (el('saldo-total')) el('saldo-total').textContent = formatMoney(state.balance);
-  if (el('dashboard-income')) el('dashboard-income').textContent = formatMoney(analytics.incomes);
-  if (el('dashboard-expense')) el('dashboard-expense').textContent = formatMoney(analytics.expenses);
+  if (el('saldo-total')) animateValue(el('saldo-total'), 0, state.balance, 1500, formatMoney);
+  if (el('dashboard-income')) animateValue(el('dashboard-income'), 0, analytics.incomes, 1500, formatMoney);
+  if (el('dashboard-expense')) animateValue(el('dashboard-expense'), 0, analytics.expenses, 1500, formatMoney);
   if (el('dashboard-runway')) el('dashboard-runway').textContent = `${formatNumber(analytics.runwayMonths, 1)} meses`;
-  if (el('dashboard-burn')) el('dashboard-burn').textContent = formatMoney(analytics.burnDaily);
+  if (el('dashboard-burn')) animateValue(el('dashboard-burn'), 0, analytics.burnDaily, 1500, formatMoney);
 
   const monthlyNetChip = document.getElementById('monthly-net-chip');
   if (monthlyNetChip) {
@@ -549,7 +549,7 @@ export function renderHomeWidgets(analytics) {
   const el = id => document.getElementById(id);
 
   // Burn diário
-  if (el('home-burn-daily')) el('home-burn-daily').textContent = formatMoney(analytics.burnDaily || 0);
+  if (el('home-burn-daily')) animateValue(el('home-burn-daily'), 0, analytics.burnDaily || 0, 1500, formatMoney);
 
   // Net chip
   const netChip = el('home-net-chip');
@@ -573,9 +573,18 @@ export function renderHomeWidgets(analytics) {
   renderHomeGoals();
   renderHomeAIInsight(analytics);
   renderHomeUpcoming();
-  renderHomeTopGastos(analytics);
   renderHomeLineChart();
   renderHomeFinancialCalendar();
+
+  // New period-aware widgets
+  const filter = state.ui.homeFilter || 'this_month';
+  const periodData = calculateAnalyticsForPeriod(state, filter);
+  renderPeriodFilter(filter);
+  renderHealthGauge(periodData, filter, analytics);
+  renderCategoryBars(periodData);
+  renderPerformanceComparison(periodData);
+  renderPaymentMethods(periodData);
+  renderIncomeSource(periodData);
 }
 
 // ── Instância do gráfico de linha do home (evita leak) ──
@@ -618,11 +627,13 @@ export function renderHomeLineChart() {
 
   const ctx = canvas.getContext('2d');
 
-  const gradIncome = ctx.createLinearGradient(0, 0, 0, 180);
+  const gradientHeight = Math.max(300, canvas.height || 300);
+  
+  const gradIncome = ctx.createLinearGradient(0, 0, 0, gradientHeight);
   gradIncome.addColorStop(0, 'rgba(52,211,153,.30)');
   gradIncome.addColorStop(1, 'rgba(52,211,153,0)');
 
-  const gradExpense = ctx.createLinearGradient(0, 0, 0, 180);
+  const gradExpense = ctx.createLinearGradient(0, 0, 0, gradientHeight);
   gradExpense.addColorStop(0, 'rgba(251,113,133,.25)');
   gradExpense.addColorStop(1, 'rgba(251,113,133,0)');
 
@@ -660,6 +671,7 @@ export function renderHomeLineChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 1500, easing: 'easeOutQuart' },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
@@ -699,18 +711,26 @@ function _parseDateBRLocal(str = '') {
   return new Date(str);
 }
 
-/** Calendário financeiro: mostra entradas/saídas por dia do mês corrente */
+window._homeCalendarMonthOffset = 0;
+window.changeCalendarMonth = (offset) => {
+  window._homeCalendarMonthOffset += offset;
+  import('./dashboard-ui.js').then(m => m.renderHomeFinancialCalendar());
+};
+
+/** Calendário financeiro: mostra entradas/saídas por dia do mês selecionado */
 export function renderHomeFinancialCalendar() {
   const container = document.getElementById('home-financial-calendar');
   const label = document.getElementById('home-cal-month-label');
   if (!container) return;
 
+  const todayStr = new Date();
+  const baseDate = new Date(todayStr.getFullYear(), todayStr.getMonth() + (window._homeCalendarMonthOffset || 0), 1);
+  const year = baseDate.getFullYear();
+  const month = baseDate.getMonth();
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
 
   if (label) {
-    label.textContent = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(today);
+    label.textContent = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(baseDate);
   }
 
   // Agrupa transações do mês por dia
@@ -729,7 +749,9 @@ export function renderHomeFinancialCalendar() {
   const firstDay  = new Date(year, month, 1).getDay(); // 0=Dom
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrev  = new Date(year, month, 0).getDate();
-  const todayNum    = today.getDate();
+  
+  const todayNum = today.getDate();
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
 
   const weekdays = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
@@ -751,7 +773,7 @@ export function renderHomeFinancialCalendar() {
       dayNum = i - firstDay + 1;
     }
 
-    const isToday = !isOther && dayNum === todayNum;
+    const isToday = isCurrentMonth && !isOther && dayNum === todayNum;
     const data = !isOther ? byDay[dayNum] : null;
 
     cells += `<div class="fin-cal-day${isOther ? ' other-month' : ''}${isToday ? ' today' : ''}">
@@ -764,374 +786,423 @@ export function renderHomeFinancialCalendar() {
   container.innerHTML = headerHtml + `<div class="fin-cal-grid">${cells}</div>`;
 }
 
-// ══════════════════════════════════════════════════════════════════
-// NOVOS WIDGETS HOME v2: Período, Gauge, Desempenho, Pagamento
-// ══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+// NEW HOME WIDGETS — Period-aware widgets
+// ══════════════════════════════════════════════════════════
 
-/** Estado global do período selecionado no home */
-export let homePeriod = 'month'; // 'month' | 'lastmonth' | '3m' | '6m' | 'year'
-
-/** Filtra transações de acordo com o período selecionado */
-export function getFilteredTransactions(periodKey) {
-  const today = new Date();
-  const txs = state.transactions || [];
-
-  if (periodKey === 'month') {
-    return txs.filter(t => {
-      const d = _parseDateBRLocal(t.date);
-      return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth();
-    });
-  }
-  if (periodKey === 'lastmonth') {
-    const ref = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    return txs.filter(t => {
-      const d = _parseDateBRLocal(t.date);
-      return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
-    });
-  }
-  if (periodKey === '3m') {
-    const cutoff = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-    return txs.filter(t => _parseDateBRLocal(t.date) >= cutoff);
-  }
-  if (periodKey === '6m') {
-    const cutoff = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-    return txs.filter(t => _parseDateBRLocal(t.date) >= cutoff);
-  }
-  if (periodKey === 'year') {
-    return txs.filter(t => _parseDateBRLocal(t.date).getFullYear() === today.getFullYear());
-  }
-  return txs;
-}
-
-/** Handler global de mudança de período */
-window.setHomePeriod = function(periodKey, btn) {
-  homePeriod = periodKey;
-  // Atualizar botões ativos
-  document.querySelectorAll('.home-period-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  // Atualizar label
-  const labels = { month:'no mês', lastmonth:'mês anterior', '3m':'em 3 meses', '6m':'em 6 meses', year:'no ano' };
-  const perfLabels = { month:'vs mês anterior', lastmonth:'vs há 2 meses', '3m':'vs 3 meses atrás', '6m':'vs 6 meses atrás', year:'vs ano anterior' };
-  const el = id => document.getElementById(id);
-  if (el('home-period-label')) el('home-period-label').textContent = labels[periodKey] || 'no período';
-  if (el('perf-period-label')) el('perf-period-label').textContent = perfLabels[periodKey] || 'vs período anterior';
-
-  // Re-renderizar todos os novos widgets
-  const txs = getFilteredTransactions(periodKey);
-  renderHomeCategoryBars(txs);
-  renderHomeGauge(txs);
-  renderHomePerformance(txs, periodKey);
-  renderHomePaymentMethods(txs);
+const PERIOD_LABELS = {
+  this_month:  'Este mês',
+  last_month:  'Mês anterior',
+  '3_months':  '3 meses',
+  '6_months':  '6 meses',
+  this_year:   'Este ano'
 };
 
-/** Barras de gastos por categoria */
-export function renderHomeCategoryBars(txs) {
-  const container = document.getElementById('home-cat-bars');
+/** Renderiza os pills de filtro de período e bind de cliques */
+export function renderPeriodFilter(activeFilter) {
+  const container = document.getElementById('home-period-filter');
   if (!container) return;
 
-  const expenses = (txs || []).filter(t => t.value < 0);
-  if (!expenses.length) {
-    container.innerHTML = '<div class="rounded-2xl border border-white/8 bg-white/4 p-4 text-center text-xs text-white/25">Sem transações no período</div>';
+  container.querySelectorAll('.home-period-pill').forEach(btn => {
+    const period = btn.dataset.period;
+    if (period === activeFilter) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+    // Bind once — avoid duplicating listeners
+    if (!btn._periodBound) {
+      btn._periodBound = true;
+      btn.addEventListener('click', () => {
+        state.ui.homeFilter = period;
+        import('../state.js').then(m => m.saveState());
+        if (window.renderAll) window.renderAll();
+      });
+    }
+  });
+
+  // Update the period chip below the balance
+  const chipLabel = document.getElementById('home-period-label-chip');
+  if (chipLabel) chipLabel.textContent = PERIOD_LABELS[activeFilter] || 'no período';
+}
+
+/** Gauge SVG semicircle — Medidor de Risco */
+export function renderHealthGauge(periodData, filter, analytics) {
+  const arc     = document.getElementById('home-gauge-arc');
+  const needle  = document.getElementById('home-gauge-needle');
+  const pctEl   = document.getElementById('home-gauge-pct');
+  const labelEl = document.getElementById('home-gauge-label');
+  const periodLabelEl = document.getElementById('home-gauge-period-label');
+  if (!arc) return;
+
+  const exp = periodData.expenses || 0;
+  const inc = Math.max(periodData.incomes || 0, 0.01); // fallback safely to calculate risk
+  const riskRatio = clamp((exp / inc) * 100, 0, 100);
+  const ratio = isNaN(riskRatio) ? 0 : riskRatio;
+
+  // Arc total length is ~251.3 (π × r = π × 80)
+  const totalArc = 251.3;
+  const filled   = (ratio / 100) * totalArc;
+  arc.style.strokeDashoffset = String(totalArc - filled);
+
+  if (needle) {
+    const needleDeg = -90 + (ratio / 100) * 180;
+    needle.style.transform = `rotate(${needleDeg}deg)`;
+  }
+
+  if (pctEl) {
+    pctEl.innerHTML = `${Math.round(ratio)}%<span style="display:block;font-size:10px;font-weight:900;margin-top:2px;">RISCO</span>`;
+  }
+
+  // Reversed color logic: 100% Risk = Bad (Red)
+  let zoneColor, zoneLabel, gradId;
+  if (ratio >= 80) {
+    zoneColor = '#ff6685'; zoneLabel = 'Risco'; gradId = 'url(#gaugeRed)';
+  } else if (ratio >= 50) {
+    zoneColor = '#facc15'; zoneLabel = 'Atenção'; gradId = 'url(#gaugeYellow)';
+  } else {
+    zoneColor = '#00ff85'; zoneLabel = 'Saudável'; gradId = 'url(#gaugeGreen)';
+  }
+
+  arc.setAttribute('stroke', gradId);
+  if (labelEl) { labelEl.textContent = zoneLabel; labelEl.style.color = zoneColor; }
+  if (periodLabelEl) periodLabelEl.textContent = PERIOD_LABELS[filter] || 'Período';
+
+  // Breakdown bars
+  const total = Math.max(periodData.incomes, periodData.expenses, 1);
+  const set = (id, val) => { const e = document.getElementById(id); if (e) e.style.width = `${clamp((val/total)*100, 0, 100)}%`; };
+  const setText = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = formatMoneyShort(val); };
+
+  set('gauge-variable-bar', periodData.variableExpenses);
+  set('gauge-fixed-bar',    periodData.fixedCosts);
+  set('gauge-surplus-bar',  periodData.surplus);
+  setText('gauge-variable-val', periodData.variableExpenses);
+  setText('gauge-fixed-val',    periodData.fixedCosts);
+  setText('gauge-surplus-val',  periodData.surplus);
+
+  // KPIs
+  const el = id => document.getElementById(id);
+  if (el('gauge-kpi-expenses')) el('gauge-kpi-expenses').textContent = formatMoneyShort(periodData.expenses);
+  if (el('gauge-kpi-incomes'))  el('gauge-kpi-incomes').textContent  = formatMoneyShort(periodData.incomes);
+  if (el('gauge-kpi-fixed'))    el('gauge-kpi-fixed').textContent    = formatMoneyShort(periodData.fixedCosts);
+  const netEl = el('gauge-kpi-net');
+  if (netEl) {
+    netEl.textContent = formatMoneyShort(periodData.net);
+    netEl.className = `text-sm font-black mt-0.5 ${periodData.net >= 0 ? 'text-emerald-300' : 'text-rose-300'}`;
+  }
+}
+
+let _categoryDonutChart = null;
+
+let _incomeSourceChart = null;
+
+/** Gráfico de rosca — Fonte de Renda por categoria */
+export function renderIncomeSource(periodData) {
+  const container = document.getElementById('home-income-source');
+  if (!container) return;
+
+  // Collect income transactions by category
+  const filter = window.state?.ui?.homeFilter || 'this_month';
+  const { start, end } = (window._getPeriodRange || (() => ({ start: new Date(0), end: new Date() })))(filter);
+
+  // Use the categories from incomes in the current period
+  const incomeItems = (window.state?.transactions || []).filter(t => {
+    if (t.value <= 0) return false;
+    // check period via periodData already filtered
+    return true; // periodData already has the right txns — we derive from it
+  });
+
+  // Build income-category map from periodData transactions (use all incomes in periodData)
+  const incomeCatMap = {};
+  const total = periodData.incomes || 0;
+
+  // periodData doesn't expose raw txns, so re-derive from global state
+  try {
+    const { calculateAnalyticsForPeriod } = window.__analyticsEngine__ || {};
+    // fallback: use categories from state directly for the period
+  } catch (e) {}
+
+  // Safe: derive from state.transactions filtered by same period logic in periodData
+  const txs = window.state?.transactions || [];
+  const pd = periodData.period || {};
+  const pStart = pd.start ? new Date(pd.start) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const pEnd   = pd.end   ? new Date(pd.end)   : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59);
+
+  txs.forEach(t => {
+    if (t.value <= 0) return;
+    const parts = (t.date || '').split('/');
+    const d = parts.length === 3 ? new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])) : null;
+    if (!d || d < pStart || d > pEnd) return;
+    const cat = t.cat || 'Outros';
+    incomeCatMap[cat] = (incomeCatMap[cat] || 0) + t.value;
+  });
+
+  const cats = Object.entries(incomeCatMap).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  const grandTotal = cats.reduce((s, c) => s + c[1], 0);
+
+  if (!cats.length) {
+    if (_incomeSourceChart) { _incomeSourceChart.destroy(); _incomeSourceChart = null; }
+    container.innerHTML = '<p class="text-xs text-white/25 text-center py-6">Sem entradas no período</p>';
     return;
   }
 
-  // Agrupa por categoria
-  const bycat = {};
-  expenses.forEach(t => {
-    const cat = t.category || t.cat || 'Outros';
-    bycat[cat] = (bycat[cat] || 0) + Math.abs(t.value);
-  });
-  const sorted = Object.entries(bycat).sort((a, b) => b[1] - a[1]);
-  const total = sorted.reduce((s, [, v]) => s + v, 0);
+  const bgColors = ['#34d399', '#00f5ff', '#a855f7', '#facc15', '#38bdf8', '#fb7185', '#f97316'];
 
-  const catColors = [
-    'linear-gradient(90deg,#00f5ff,#a855f7)',
-    'linear-gradient(90deg,#f97316,#facc15)',
-    'linear-gradient(90deg,#a855f7,#ec4899)',
-    'linear-gradient(90deg,#34d399,#00f5ff)',
-    'linear-gradient(90deg,#fb7185,#f97316)',
-    'linear-gradient(90deg,#818cf8,#a855f7)',
+  if (!document.getElementById('home-income-donut')) {
+    container.innerHTML = `
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-center">
+          <div class="relative" style="width:140px;height:140px">
+            <canvas id="home-income-donut"></canvas>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span class="text-[9px] text-white/35 uppercase tracking-widest leading-none mb-1">Total</span>
+              <span class="text-base font-black text-white leading-none" id="home-income-total"></span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-2" id="home-income-legend"></div>
+      </div>
+    `;
+  }
+
+  const totalEl = document.getElementById('home-income-total');
+  if (totalEl) totalEl.textContent = formatMoneyShort(grandTotal);
+
+  const canvas = document.getElementById('home-income-donut');
+  const legend = document.getElementById('home-income-legend');
+  if (!canvas || !window.Chart) return;
+
+  if (_incomeSourceChart) { _incomeSourceChart.destroy(); _incomeSourceChart = null; }
+
+  _incomeSourceChart = new window.Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: cats.map(c => c[0]),
+      datasets: [{
+        data: cats.map(c => c[1]),
+        backgroundColor: bgColors.slice(0, cats.length),
+        borderWidth: 0,
+        hoverOffset: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '74%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(6,9,17,.92)',
+          borderColor: 'rgba(255,255,255,.08)',
+          borderWidth: 1,
+          padding: 10,
+          callbacks: { label: ctx => ` ${ctx.label}: ${formatMoney(ctx.raw)}` }
+        }
+      }
+    }
+  });
+
+  if (legend) {
+    legend.innerHTML = cats.map((cat, i) => {
+      const pct = grandTotal > 0 ? ((cat[1] / grandTotal) * 100).toFixed(0) : 0;
+      const color = bgColors[i % bgColors.length];
+      return `
+        <div class="flex items-center justify-between text-xs py-1 border-b border-white/5 last:border-0">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color}"></span>
+            <span class="text-white/75 truncate max-w-[100px]" title="${escapeHtml(cat[0] || '')}">${escapeHtml(cat[0] || '')}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-white font-bold">${formatMoneyShort(cat[1])}</span>
+            <span class="text-[10px] text-white/35 w-7 text-right">${pct}%</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+}
+
+
+/** Gastos por categoria — gráfico de rosca avançado */
+export function renderCategoryBars(periodData) {
+  const container = document.getElementById('home-category-bars');
+  if (!container) return;
+
+  const cats = (periodData.categories || []).slice(0, 8);
+  if (!cats.length) {
+    if (_categoryDonutChart) { _categoryDonutChart.destroy(); _categoryDonutChart = null; }
+    container.innerHTML = '<div class="text-xs text-white/30 text-center py-4">Sem transações no período</div>';
+    return;
+  }
+
+  // Injeta canvas e legenda
+  if (!document.getElementById('home-category-donut')) {
+    container.innerHTML = `
+      <div class="flex flex-col md:flex-row items-center gap-8">
+        <div class="relative w-48 h-48 shrink-0">
+          <canvas id="home-category-donut"></canvas>
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span class="text-[10px] text-white/40 uppercase tracking-widest leading-none mb-1.5">Total</span>
+            <span class="text-xl font-black text-white leading-none" id="home-category-total">${formatMoneyShort(periodData.expenses)}</span>
+          </div>
+        </div>
+        <div class="flex-1 w-full flex flex-col gap-3" id="home-category-legend"></div>
+      </div>
+    `;
+  } else {
+    const totalEl = document.getElementById('home-category-total');
+    if (totalEl) totalEl.textContent = formatMoneyShort(periodData.expenses);
+  }
+
+  const canvas = document.getElementById('home-category-donut');
+  const legend = document.getElementById('home-category-legend');
+  if (!canvas || !window.Chart) return;
+
+  const bgColors = ['#a855f7', '#00f5ff', '#34d399', '#facc15', '#f97316', '#fb7185', '#38bdf8', '#818cf8'];
+
+  const labels = cats.map(c => c[0]);
+  const data = cats.map(c => c[1]);
+  const bg = cats.map((_, i) => bgColors[i % bgColors.length]);
+
+  if (_categoryDonutChart) {
+    _categoryDonutChart.destroy();
+  }
+
+  _categoryDonutChart = new window.Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: bg,
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '76%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(6,9,17,.92)',
+          borderColor: 'rgba(255,255,255,.08)',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${formatMoney(ctx.raw)}`
+          }
+        }
+      }
+    }
+  });
+
+  legend.innerHTML = cats.map((cat, i) => {
+    const val = cat[1];
+    const pct = periodData.expenses > 0 ? (val / periodData.expenses) * 100 : 0;
+    const color = bgColors[i % bgColors.length];
+    const budget = window.state?.budgets?.[cat[0]] || 0;
+    const overBudget = budget > 0 && val > budget;
+    return `
+      <div class="flex items-center justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
+        <div class="flex items-center gap-3">
+          <span class="w-3.5 h-3.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.3)]" style="background:${color}"></span>
+          <span class="text-white/85 font-medium truncate w-24" title="${escapeHtml(cat[0] || '')}">${escapeHtml(cat[0] || '')}</span>
+          ${overBudget ? '<span class="text-[9px] font-bold text-rose-300 border border-rose-400/30 bg-rose-400/10 rounded-full px-1.5 py-0.5">⚠ Limite</span>' : ''}
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-white font-bold">${formatMoneyShort(val)}</span>
+          <span class="text-[10px] text-white/40 w-8 text-right font-medium">${Math.round(pct)}%</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/** Comparativo de Desempenho — 4 cards período atual vs anterior */
+export function renderPerformanceComparison(periodData) {
+  const container = document.getElementById('home-comparison-cards');
+  if (!container) return;
+
+  const cards = [
+    { label: 'Receitas',      icon: 'fa-arrow-trend-up',   accentClass: 'cc-green',  iconBg: 'rgba(52,211,153,.15)',  iconColor: '#34d399', data: periodData.comparison?.incomes,   format: formatMoneyShort, positive: v => v >= 0 },
+    { label: 'Gastos',        icon: 'fa-arrow-trend-down', accentClass: 'cc-red',    iconBg: 'rgba(251,113,133,.15)', iconColor: '#fb7185', data: periodData.comparison?.expenses,  format: formatMoneyShort, positive: v => v <= 0 },
+    { label: 'Saldo Líquido', icon: 'fa-scale-balanced',   accentClass: 'cc-cyan',   iconBg: 'rgba(0,245,255,.12)',   iconColor: '#00f5ff', data: periodData.comparison?.net,       format: formatMoneyShort, positive: v => v >= 0 },
+    { label: 'Ticket Médio',  icon: 'fa-receipt',          accentClass: 'cc-violet', iconBg: 'rgba(168,85,247,.15)', iconColor: '#c084fc', data: periodData.comparison?.avgTicket, format: formatMoneyShort, positive: v => v <= 0 }
   ];
 
-  const catIcons = {
-    'Alimentação':'fa-bowl-food','Transporte':'fa-car-side','Lazer':'fa-film',
-    'Moradia':'fa-house','Investimentos':'fa-chart-line','Assinaturas':'fa-repeat',
-    'Saúde':'fa-heart-pulse','Metas':'fa-bullseye','Rotina':'fa-bag-shopping',
-    'Outros':'fa-wallet'
-  };
-
-  container.innerHTML = sorted.slice(0, 6).map(([name, value], i) => {
-    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-    const budgetVal = (state.budgets || {})[name] || 0;
-    const overBudget = budgetVal > 0 && value > budgetVal;
-    const icon = catIcons[name] || 'fa-wallet';
+  container.innerHTML = cards.map(card => {
+    const d = card.data;
+    const current  = d?.current  ?? 0;
+    const previous = d?.previous ?? 0;
+    const pct      = d?.pct;
+    const hasPrev  = previous > 0;
+    const isPositive = pct !== null && card.positive(pct);
+    const chipHtml = hasPrev && pct !== null
+      ? `<span class="text-[10px] font-bold rounded-full px-2 py-0.5 border ${isPositive ? 'bg-emerald-400/12 text-emerald-300 border-emerald-400/25' : 'bg-rose-400/12 text-rose-300 border-rose-400/25'}">${isPositive ? '↑' : '↓'} ${Math.abs(pct).toFixed(1)}%</span>`
+      : `<span class="text-[10px] font-semibold text-white/25 rounded-full px-2 py-0.5 border border-white/8">—</span>`;
+    const valueColor = current >= 0 ? 'text-white' : 'text-rose-300';
     return `
-      <div class="home-cat-bar-row">
-        <div class="home-cat-bar-row-header">
-          <div class="flex items-center gap-2 min-w-0">
-            <i class="fa-solid ${icon} text-[11px] text-white/40 shrink-0"></i>
-            <span class="text-xs font-semibold text-white/80 truncate">${name}</span>
-            ${overBudget ? '<span class="text-[9px] text-rose-400 font-bold shrink-0">● acima do limite</span>' : ''}
+      <div class="compare-card ${card.accentClass}">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="pay-icon-badge" style="background:${card.iconBg}">
+              <i class="fa-solid ${card.icon} text-xs" style="color:${card.iconColor}"></i>
+            </span>
+            <span class="text-[10px] uppercase tracking-widest text-white/45 font-bold">${card.label}</span>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <span class="text-[10px] text-white/40">${pct}%</span>
-            <span class="text-xs font-bold text-white">${formatMoneyShort(value)}</span>
-          </div>
+          ${chipHtml}
         </div>
-        <div class="home-cat-bar-track">
-          <div class="home-cat-bar-fill" style="width:${pct}%;background:${catColors[i % catColors.length]}"></div>
-        </div>
+        <p class="text-xl font-black ${valueColor} leading-tight sensitive-value">${card.format(current)}</p>
+        <p class="text-[10px] ${hasPrev ? 'text-white/32' : 'text-white/18'} sensitive-value">${hasPrev ? `Anterior: ${card.format(previous)}` : 'Sem dados anteriores'}</p>
       </div>`;
   }).join('');
 }
 
-/** Gauge SVG de saúde financeira */
-export function renderHomeGauge(txs) {
-  const el = id => document.getElementById(id);
-  if (!el('gauge-pct-label')) return;
+/** Método de Pagamento — entradas e saídas por método */
+export function renderPaymentMethods(periodData) {
+  const incEl = document.getElementById('home-payment-incomes');
+  const expEl = document.getElementById('home-payment-expenses');
+  if (!incEl || !expEl) return;
 
-  const incomes  = (txs || []).filter(t => t.value > 0).reduce((a, t) => a + t.value, 0);
-  const expenses = (txs || []).filter(t => t.value < 0).reduce((a, t) => a + Math.abs(t.value), 0);
-  const fixedMonthly = (state.fixedExpenses || []).filter(e => !e.isIncome && e.active !== false).reduce((a, e) => a + Math.abs(e.value), 0);
+  const { incomes, expenses, totalIn, totalOut } = periodData.paymentStats || { incomes: [], expenses: [], totalIn: 0, totalOut: 0 };
 
-  const ratio = incomes > 0 ? Math.min((expenses / incomes) * 100, 120) : (expenses > 0 ? 120 : 0);
-  const varExp = Math.max(0, expenses - fixedMonthly);
-  const net = incomes - expenses;
-  const savePct = incomes > 0 ? Math.max(0, (net / incomes) * 100) : 0;
-  const varPct  = incomes > 0 ? Math.min(100, (varExp / incomes) * 100) : 0;
-  const fixPct  = incomes > 0 ? Math.min(100, (fixedMonthly / incomes) * 100) : 0;
-
-  // Atualiza gauge SVG
-  const gaugeEl = el('gauge-fill-path');
-  if (gaugeEl) {
-    // Semicírculo: de (18,98) até X ao longo do arco de 180°
-    // ratio 0=esq, 100=dir → ângulo de 180° a 0° (sentido anti-horário)
-    const capped = Math.min(ratio, 100);
-    const ang = Math.PI - (capped / 100) * Math.PI; // 180° → 0°
-    const r = 72, cx = 90, cy = 98;
-    const ex = cx + r * Math.cos(ang);
-    const ey = cy - r * Math.sin(ang);
-    const large = capped > 50 ? 1 : 0;
-    gaugeEl.setAttribute('d', `M 18 98 A ${r} ${r} 0 ${large} 1 ${ex.toFixed(2)} ${ey.toFixed(2)}`);
-
-    // Cor dinâmica
-    const col = ratio <= 70 ? 'url(#gaugeGreen)' : ratio <= 90 ? 'url(#gaugeOrange)' : 'url(#gaugeRed)';
-    gaugeEl.setAttribute('stroke', col);
-  }
-
-  // Labels
-  if (el('gauge-pct-label')) el('gauge-pct-label').textContent = `${Math.round(ratio)}%`;
-
-  const statusEl = el('gauge-status-label');
-  if (statusEl) {
-    if (ratio <= 70) {
-      statusEl.textContent = '✓ Saudável';
-      statusEl.style.color = '#00ff85';
-      statusEl.style.background = 'rgba(0,255,133,.08)';
-      statusEl.style.borderColor = 'rgba(0,255,133,.2)';
-    } else if (ratio <= 90) {
-      statusEl.textContent = '⚠ Atenção';
-      statusEl.style.color = '#facc15';
-      statusEl.style.background = 'rgba(250,204,21,.08)';
-      statusEl.style.borderColor = 'rgba(250,204,21,.2)';
-    } else {
-      statusEl.textContent = '✕ Risco';
-      statusEl.style.color = '#ff4466';
-      statusEl.style.background = 'rgba(255,68,102,.08)';
-      statusEl.style.borderColor = 'rgba(255,68,102,.2)';
-    }
-  }
-
-  // Barras de breakdown
-  if (el('gauge-var-pct')) el('gauge-var-pct').textContent = `${Math.round(varPct)}%`;
-  if (el('gauge-var-bar')) el('gauge-var-bar').style.width = `${Math.min(varPct, 100)}%`;
-  if (el('gauge-fixed-pct')) el('gauge-fixed-pct').textContent = `${Math.round(fixPct)}%`;
-  if (el('gauge-fixed-bar')) el('gauge-fixed-bar').style.width = `${Math.min(fixPct, 100)}%`;
-  if (el('gauge-save-pct')) el('gauge-save-pct').textContent = `${Math.round(savePct)}%`;
-  if (el('gauge-save-bar')) el('gauge-save-bar').style.width = `${Math.min(savePct, 100)}%`;
-
-  // KPIs
-  if (el('gauge-total-expense')) el('gauge-total-expense').textContent = formatMoneyShort(expenses);
-  if (el('gauge-total-income')) el('gauge-total-income').textContent = formatMoneyShort(incomes);
-  if (el('gauge-fixed-value')) el('gauge-fixed-value').textContent = formatMoneyShort(fixedMonthly);
-  const netEl = el('gauge-net-value');
-  if (netEl) {
-    netEl.textContent = formatMoneyShort(net);
-    netEl.style.color = net >= 0 ? '#00ff85' : '#ff4466';
-  }
-}
-
-/** Comparativo de desempenho vs período anterior */
-export function renderHomePerformance(currentTxs, periodKey) {
-  const container = document.getElementById('home-performance-cards');
-  if (!container) return;
-
-  // Determina período anterior para comparação
-  const today = new Date();
-  let prevTxs = [];
-
-  if (periodKey === 'month') {
-    const ref = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    prevTxs = (state.transactions || []).filter(t => {
-      const d = _parseDateBRLocal(t.date);
-      return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
-    });
-  } else if (periodKey === 'lastmonth') {
-    const ref = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-    prevTxs = (state.transactions || []).filter(t => {
-      const d = _parseDateBRLocal(t.date);
-      return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
-    });
-  } else if (periodKey === '3m') {
-    const cutoff = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-    const cutoffEnd = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-    prevTxs = (state.transactions || []).filter(t => {
-      const d = _parseDateBRLocal(t.date);
-      return d >= cutoff && d < cutoffEnd;
-    });
-  } else if (periodKey === '6m') {
-    const cutoff = new Date(today.getFullYear(), today.getMonth() - 11, 1);
-    const cutoffEnd = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-    prevTxs = (state.transactions || []).filter(t => {
-      const d = _parseDateBRLocal(t.date);
-      return d >= cutoff && d < cutoffEnd;
-    });
-  } else if (periodKey === 'year') {
-    prevTxs = (state.transactions || []).filter(t =>
-      _parseDateBRLocal(t.date).getFullYear() === today.getFullYear() - 1
-    );
-  }
-
-  const curInc  = (currentTxs || []).filter(t => t.value > 0).reduce((a, t) => a + t.value, 0);
-  const curExp  = (currentTxs || []).filter(t => t.value < 0).reduce((a, t) => a + Math.abs(t.value), 0);
-  const prevInc = prevTxs.filter(t => t.value > 0).reduce((a, t) => a + t.value, 0);
-  const prevExp = prevTxs.filter(t => t.value < 0).reduce((a, t) => a + Math.abs(t.value), 0);
-  const curNet  = curInc  - curExp;
-  const prevNet = prevInc - prevExp;
-  const curCount  = (currentTxs || []).length;
-  const prevCount = prevTxs.length;
-
-  function pctChange(cur, prev) {
-    if (!prev) return cur > 0 ? 100 : 0;
-    return ((cur - prev) / prev) * 100;
-  }
-
-  function perfCard({ label, cur, prev, icon, invert }) {
-    const diff = pctChange(cur, prev);
-    // invert: para gastos, redução é positivo (verde); aumento é negativo (vermelho)
-    const isGood = invert ? diff <= 0 : diff >= 0;
-    const chipClass = isGood ? 'perf-chip-up' : 'perf-chip-down';
-    const cardClass = isGood ? 'perf-card-up' : 'perf-card-down';
-    const arrow = diff >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
-    const sign = diff >= 0 ? '+' : '';
-    return `
-      <div class="perf-card ${cardClass}">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] text-white/40 uppercase tracking-widest">${label}</span>
-          <i class="fa-solid ${icon} text-white/20 text-xs"></i>
-        </div>
-        <p class="text-lg font-black text-white leading-tight">${formatMoneyShort(cur)}</p>
-        <div class="flex items-center gap-2">
-          <span class="perf-chip ${chipClass}">
-            <i class="fa-solid ${arrow} text-[9px]"></i>
-            ${sign}${Math.round(Math.abs(diff))}%
-          </span>
-          <span class="text-[10px] text-white/30">vs ant. ${formatMoneyShort(prev)}</span>
-        </div>
-      </div>`;
-  }
-
-  container.innerHTML = [
-    perfCard({ label:'Receitas', cur:curInc, prev:prevInc, icon:'fa-arrow-up', invert:false }),
-    perfCard({ label:'Gastos', cur:curExp, prev:prevExp, icon:'fa-arrow-down', invert:true }),
-    perfCard({ label:'Saldo líquido', cur:curNet, prev:prevNet, icon:'fa-scale-balanced', invert:false }),
-    // Ticket médio
-    (() => {
-      const curAvg = curCount > 0 ? curExp / curCount : 0;
-      const prevAvg = prevCount > 0 ? prevExp / prevCount : 0;
-      return perfCard({ label:'Ticket médio', cur:curAvg, prev:prevAvg, icon:'fa-receipt', invert:true });
-    })(),
-  ].join('');
-}
-
-/** Métodos de pagamento: barras de entradas e saídas */
-export function renderHomePaymentMethods(txs) {
-  const txArr = txs || [];
-  const outEl = document.getElementById('home-payment-out');
-  const inEl  = document.getElementById('home-payment-in');
-  if (!outEl || !inEl) return;
-
-  const paymentNames = {
-    pix: 'Pix',
-    dinheiro: 'Dinheiro',
-    cartao_credito: 'Cartão Crédito',
-    cartao_debito: 'Cartão Débito',
-    conta: 'Transferência',
-    ted: 'TED/DOC',
-    boleto: 'Boleto',
-    '': 'Não informado',
-  };
-  const payIcons = {
-    pix: { icon:'fa-bolt', bg:'rgba(0,245,255,.12)', color:'#00f5ff' },
-    dinheiro: { icon:'fa-money-bill-wave', bg:'rgba(0,255,133,.12)', color:'#00ff85' },
-    cartao_credito: { icon:'fa-credit-card', bg:'rgba(168,85,247,.12)', color:'#a855f7' },
-    cartao_debito: { icon:'fa-credit-card', bg:'rgba(99,102,241,.12)', color:'#818cf8' },
-    conta: { icon:'fa-landmark', bg:'rgba(250,204,21,.12)', color:'#facc15' },
-    ted: { icon:'fa-paper-plane', bg:'rgba(249,115,22,.12)', color:'#f97316' },
-    boleto: { icon:'fa-barcode', bg:'rgba(156,163,175,.12)', color:'#9ca3af' },
-    '': { icon:'fa-question', bg:'rgba(255,255,255,.06)', color:'rgba(255,255,255,.3)' },
+  const methodColors = {
+    'pix':           '#00f5ff',
+    'credito':       '#a855f7',
+    'debito':        '#facc15',
+    'dinheiro':      '#34d399',
+    'transferencia': '#38bdf8',
+    'boleto':        '#fb7185',
+    'conta':         '#94a3b8',
   };
 
-  function buildPayBars(subset, isOut) {
-    if (!subset.length) return '<p class="text-xs text-white/25 py-2">Sem dados</p>';
-    const total = subset.reduce((a, t) => a + Math.abs(t.value), 0);
-    const byPay = {};
-    subset.forEach(t => {
-      const k = t.payment || '';
-      byPay[k] = (byPay[k] || 0) + Math.abs(t.value);
-    });
-    const sorted = Object.entries(byPay).sort((a, b) => b[1] - a[1]);
-    const barColor = isOut ? 'linear-gradient(90deg,#fb7185,#f97316)' : 'linear-gradient(90deg,#34d399,#00f5ff)';
-    return sorted.map(([key, value]) => {
-      const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-      const cfg = payIcons[key] || payIcons[''];
-      const name = paymentNames[key] || key || 'Não informado';
+  function renderMethodList(list, total, emptyMsg) {
+    if (!list.length) return `<p class="text-xs text-white/25 text-center py-3">${emptyMsg}</p>`;
+    return list.map(m => {
+      const color = methodColors[m.key] || '#9ca3af';
       return `
-        <div class="home-pay-bar-row">
-          <div class="home-pay-bar-icon" style="background:${cfg.bg}">
-            <i class="fa-solid ${cfg.icon}" style="color:${cfg.color}"></i>
+        <div class="payment-method-row">
+          <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg flex items-center justify-center" style="background:${color}22;border:1px solid ${color}44">
+                <i class="fa-solid ${m.icon} text-[10px]" style="color:${color}"></i>
+              </span>
+              <span class="text-xs font-semibold text-white/80">${m.label}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-white/70">${formatMoneyShort(m.value)}</span>
+              <span class="text-[10px] text-white/35 min-w-[32px] text-right">${formatPercent(m.pct, 0)}</span>
+            </div>
           </div>
-          <div class="home-pay-bar-info">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-white/75">${name}</span>
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] text-white/35">${pct}%</span>
-                <span class="text-xs font-bold text-white">${formatMoneyShort(value)}</span>
-              </div>
-            </div>
-            <div class="home-pay-bar-track">
-              <div class="home-pay-bar-fill" style="width:${pct}%;background:${barColor}"></div>
-            </div>
+          <div class="progress-track" style="height:5px">
+            <div class="progress-fill" style="width:${clamp(m.pct, 0, 100)}%;background:linear-gradient(90deg,${color},${color}88);transition:width .5s ease"></div>
           </div>
         </div>`;
     }).join('');
   }
 
-  const outs = txArr.filter(t => t.value < 0);
-  const ins  = txArr.filter(t => t.value > 0);
-  outEl.innerHTML = buildPayBars(outs, true);
-  inEl.innerHTML  = buildPayBars(ins,  false);
+  incEl.innerHTML = renderMethodList(incomes, totalIn,  'Sem entradas no período');
+  expEl.innerHTML = renderMethodList(expenses, totalOut, 'Sem saídas no período');
 }
 
-/** Override renderHomeWidgets para incluir novos componentes */
-const _origRenderHomeWidgets = renderHomeWidgets;
-// Patch exportado pelo módulo — vamos chamar diretamente em renderAll via app.js
-export function renderHomeWidgetsV2(analytics) {
-  _origRenderHomeWidgets(analytics);
-  // Período atual
-  const txs = getFilteredTransactions(homePeriod);
-  renderHomeCategoryBars(txs);
-  renderHomeGauge(txs);
-  renderHomePerformance(txs, homePeriod);
-  renderHomePaymentMethods(txs);
-}

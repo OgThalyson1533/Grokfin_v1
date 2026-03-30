@@ -61,6 +61,7 @@ export function renderCharts(analytics) {
       responsive: true,
       maintainAspectRatio: false,
       cutout: '72%',
+      animation: { duration: 1500, easing: 'easeOutQuart' },
       plugins: {
         legend: {
           position: window.innerWidth < 1280 ? 'bottom' : 'right',
@@ -124,6 +125,7 @@ export function renderCharts(analytics) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: { duration: 1500, easing: 'easeOutQuart' },
         scales: {
           y: {
             grid: { color: 'rgba(255,255,255,.06)' },
@@ -209,6 +211,7 @@ export function renderCharts(analytics) {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: { duration: 1500, easing: 'easeOutQuart' },
           interaction: { mode: 'index', intersect: false },
           scales: {
             y: {

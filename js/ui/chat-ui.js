@@ -19,36 +19,139 @@ export function scrollChatToBottom() {
 }
 
 export function ensureChatSeed() {
-  if (!state.chatHistory?.length) {
-    if (!state.chatHistory) state.chatHistory = [];
-    state.chatHistory.push({
-      id: uid('msg'),
-      role: 'assistant',
-      text: 'Olá! Eu sou o **GrokFin**. Seu painel agora lê **saldo, metas, categorias e projeção** em tempo real. Pergunte algo como **"onde estou gastando mais?"** ou anexe um comprovante.',
-      createdAt: new Date().toISOString()
-    });
-    saveState();
+  if (!state.chatHistory) state.chatHistory = [];
+  // Removemos o seed inicial hardcoded, o empty-state agora reside nativamente no HTML do Sidebar.
+  saveState();
+}
+
+export function toggleAiSidePanel(forceState) {
+  const panel = document.getElementById('ai-side-panel');
+  const backdrop = document.getElementById('ai-panel-backdrop');
+  if (!panel || !backdrop) return;
+  
+  const isOpen = forceState !== undefined ? forceState : panel.classList.contains('translate-x-full');
+  
+  if (isOpen) {
+    panel.classList.remove('translate-x-full');
+    panel.classList.add('translate-x-0');
+    backdrop.classList.remove('hidden');
+    void backdrop.offsetWidth;
+    backdrop.classList.remove('opacity-0');
+    
+    // Gera sugestões contextuais baseadas nos dados reais do usuário
+    buildContextualSuggestions();
+    
+    setTimeout(() => {
+      document.getElementById('chat-input')?.focus();
+      scrollChatToBottom();
+    }, 300);
+  } else {
+    panel.classList.add('translate-x-full');
+    panel.classList.remove('translate-x-0');
+    backdrop.classList.add('opacity-0');
+    setTimeout(() => { backdrop.classList.add('hidden'); }, 500);
   }
+}
+
+window.toggleAiSidePanel = toggleAiSidePanel;
+
+// ── Sugestões contextuais dinâmicas ──────────────────────────────────────────
+export function buildContextualSuggestions() {
+  const container = document.getElementById('ai-suggestions-container');
+  if (!container) return;
+
+  const analytics = calculateAnalytics(state);
+  const suggestions = [];
+
+  if (analytics.overspend) {
+    suggestions.push({
+      label: `Por que ultrapassei ${analytics.overspend.cat}?`,
+      prompt: `Por que meu orçamento de ${analytics.overspend.cat} estourou?`
+    });
+  }
+
+  if (analytics.urgentGoal && suggestions.length < 3) {
+    suggestions.push({
+      label: `Como está a meta "${analytics.urgentGoal.nome}"?`,
+      prompt: `Como está minha meta de ${analytics.urgentGoal.nome}?`
+    });
+  }
+
+  if (analytics.runwayMonths < 2 && analytics.burnDaily > 0 && suggestions.length < 3) {
+    suggestions.push({
+      label: 'Como está meu fôlego de caixa?',
+      prompt: 'Qual é o meu runway e como posso aumentar meu fôlego financeiro?'
+    });
+  }
+
+  if (analytics.topCategory && analytics.topCategory.value > 0 && suggestions.length < 3) {
+    suggestions.push({
+      label: `Maior gasto: ${analytics.topCategory.name}`,
+      prompt: `Quanto gastei em ${analytics.topCategory.name} e como posso reduzir?`
+    });
+  }
+
+  if (analytics.lastMonthExpenses > 0 && suggestions.length < 3) {
+    const diff = analytics.expenses - analytics.lastMonthExpenses;
+    suggestions.push({
+      label: `Gastei ${diff > 0 ? 'mais' : 'menos'} que o mês passado?`,
+      prompt: 'Compare meus gastos deste mês com o mês passado.'
+    });
+  }
+
+  if ((state.investments || []).length && suggestions.length < 3) {
+    suggestions.push({
+      label: 'Como estão meus investimentos?',
+      prompt: 'Como estão meus investimentos e qual o total aplicado?'
+    });
+  }
+
+  const fallbacks = [
+    { label: 'Qual é o meu saldo atual?', prompt: 'Qual é o meu saldo atual e patrimônio total?' },
+    { label: 'Onde estou gastando mais?', prompt: 'Onde estou gastando mais dinheiro este mês?' },
+    { label: 'Como está minha saúde financeira?', prompt: 'Como está meu score e saúde financeira geral?' },
+  ];
+  fallbacks.forEach(f => { if (suggestions.length < 3) suggestions.push(f); });
+
+  const btnClass = 'w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-[13px] font-medium text-white/80 transition-all hover:bg-emerald-400/10 hover:border-emerald-400/50 hover:text-emerald-300 group shadow-sm';
+  const arrowClass = 'fa-solid fa-arrow-right opacity-0 -translate-x-2 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 text-emerald-400';
+
+  container.innerHTML = suggestions.slice(0, 3).map(s => `
+    <button class="${btnClass}" data-chat-prompt="${s.prompt.replace(/"/g, '&quot;')}">
+      <span>${s.label}</span>
+      <i class="${arrowClass}"></i>
+    </button>
+  `).join('');
 }
 
 export function renderChat() {
   const container = document.getElementById('chat-messages');
   if (!container) return;
 
+  const aiSidePanel = document.getElementById('ai-side-panel');
+  if (aiSidePanel) {
+    if (state.chatHistory && state.chatHistory.length > 0) {
+      aiSidePanel.classList.add('has-messages');
+    } else {
+      aiSidePanel.classList.remove('has-messages');
+    }
+  }
+
   container.innerHTML = state.chatHistory.map(message => {
     const isUser = message.role === 'user';
     return `
-      <div class="flex ${isUser ? 'justify-end' : 'gap-3'}">
-        ${isUser ? '' : `
-          <div class="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-black shadow-brand">
-            <i class="fa-solid fa-robot"></i>
+      <div class="flex flex-col ${isUser ? 'items-end' : 'items-start'}">
+        <div class="flex gap-2 max-w-[88%] ${isUser ? 'flex-row-reverse' : 'flex-row'}">
+          ${isUser ? '' : `
+            <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 text-[#0f1115] shadow-sm">
+              <i class="fa-solid fa-robot text-sm"></i>
+            </div>
+          `}
+          <div class="flex-1 min-w-0">
+            <div class="${isUser ? 'bg-[#10b981] text-[#0b0d14] rounded-[18px] rounded-tr-sm shadow-[0_2px_10px_rgba(16,185,129,0.1)]' : 'bg-white/5 border border-white/5 text-white/90 rounded-[18px] rounded-tl-sm'} px-4 py-3">
+              <div class="text-[13px] leading-relaxed break-words whitespace-pre-wrap ${isUser ? 'font-medium' : ''}">${richText(message.text)}</div>
+            </div>
           </div>
-        `}
-        <div class="max-w-[82%]">
-          <div class="${isUser ? 'message-bubble-user' : 'message-bubble-ai'} rounded-[24px] px-5 py-4 ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}">
-            <div class="text-[15px] leading-relaxed ${isUser ? 'text-black' : 'text-white/90'}">${richText(message.text)}</div>
-          </div>
-          <p class="mt-2 text-xs text-white/35 ${isUser ? 'text-right' : ''}">${formatShortTime(message.createdAt)}</p>
         </div>
       </div>
     `;
@@ -56,14 +159,16 @@ export function renderChat() {
 
   if (chatTyping) {
     const typingNode = document.createElement('div');
-    typingNode.className = 'flex gap-3';
+    typingNode.className = 'flex flex-col items-start';
     typingNode.innerHTML = `
-      <div class="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-black shadow-brand">
-        <i class="fa-solid fa-robot"></i>
-      </div>
-      <div class="message-bubble-ai rounded-[24px] rounded-tl-sm px-5 py-4">
-        <div class="flex items-center">
-          <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+      <div class="flex gap-2 max-w-[88%] flex-row">
+        <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 text-[#0f1115] shadow-sm">
+          <i class="fa-solid fa-robot text-sm"></i>
+        </div>
+        <div class="bg-white/5 border border-white/5 rounded-[18px] rounded-tl-sm px-4 py-3">
+          <div class="flex items-center h-[19px]">
+            <span class="typing-dot bg-emerald-400"></span><span class="typing-dot bg-emerald-400"></span><span class="typing-dot bg-emerald-400"></span>
+          </div>
         </div>
       </div>
     `;
@@ -192,91 +297,260 @@ export async function sendGeminiMessage(userText, apiKey) {
   return text;
 }
 
+// ── Helpers de detecção de categoria ────────────────────────────────────────
+function detectCategoryInText(q) {
+  const catMap = {
+    'alimentacao|comida|mercado|supermercado|ifood|restaurante|lanche|padaria|fruta|pao|cafe|pizza|hamburguer|almoco|jantar': 'Alimentação',
+    'transporte|uber|99|taxi|gasolina|combustivel|posto|onibus|metro|brt|trem|passagem|pedagio': 'Transporte',
+    'lazer|netflix|spotify|cinema|show|ingresso|shopee|roupa|calcado|sapato|jogo|steam|xbox|playstation|bar|balada|festa|amazon': 'Lazer',
+    'farmacia|remedio|medico|hospital|saude|plano de saude|dentista|psicol|terapia': 'Saúde',
+    'aluguel|condominio|agua|luz|energia|internet|gas de cozinha|moradia|iptu|manutencao': 'Moradia',
+    'faculdade|escola|curso|livro|mensalidade|material|educacao': 'Assinaturas',
+    'investimento|aporte|tesouro|cdb|acoes|fundo|renda fixa|poupanca': 'Investimentos',
+  };
+  for (const [pattern, cat] of Object.entries(catMap)) {
+    if (new RegExp(pattern).test(q)) return cat;
+  }
+  return null;
+}
+
 export function buildAssistantReply(rawText) {
   const q = normalizeText(rawText);
   const analytics = calculateAnalytics(state);
+  const nick = state.profile?.nickname || state.profile?.displayName || '';
+  const hasData = analytics.expenses > 0 || analytics.incomes > 0;
 
-  // Intent: Saldo / Patrimônio
-  if (/saldo|quanto (tenho|dinheiro)|caixa|patrimonio/.test(q)) {
-    const invTotal = (state.investments || []).reduce((a, i) => a + i.value, 0);
-    const goalsTotal = (state.goals || []).reduce((a, g) => a + g.atual, 0);
+  // ── 1. Saudações ───────────────────────────────────────────────────────────
+  if (/^(oi|ola|bom dia|boa tarde|boa noite|e ai|tudo bem|hey|hello|opa)\b/.test(q)) {
+    const statusMsg = !hasData
+      ? 'Percebi que ainda não há transações registradas. Comece adicionando uma receita ou despesa na aba **Conta**!'
+      : `Você está com **${formatMoney(state.balance)}** em conta e score **${analytics.healthScore}/100**.`;
+    return `Olá${nick ? ', ' + nick : ''}! Sou o **GrokFin**, seu assessor financeiro. ${statusMsg} Como posso ajudar?`;
+  }
+
+  // ── 2. Saldo e Patrimônio ──────────────────────────────────────────────────
+  if (/saldo|quanto (tenho|tem)|caixa|dinheiro em conta|patrimonio|quanto (eu tenho|sobrou)/.test(q)) {
+    const invTotal = (state.investments || []).reduce((a, i) => a + (i.value || 0), 0);
+    const goalsTotal = (state.goals || []).reduce((a, g) => a + (g.atual || 0), 0);
     const patrimonio = state.balance + invTotal + goalsTotal;
-    let msg = `Seu saldo em conta é **${formatMoney(state.balance)}**, com fluxo líquido de **${formatMoney(analytics.net)}** no mês.`;
-    if (invTotal > 0) msg += ` Somando investimentos (**${formatMoney(invTotal)}**) e metas (**${formatMoney(goalsTotal)}**), seu patrimônio total é **${formatMoney(patrimonio)}**.`;
+    let msg = `Seu **saldo em conta** é **${formatMoney(state.balance)}**.`;
+    if (analytics.net !== 0) {
+      msg += ` O fluxo líquido deste mês está em **${formatMoney(analytics.net)}** (${analytics.net >= 0 ? '✅ positivo' : '⚠️ negativo'}).`;
+    }
+    if (invTotal > 0) msg += `\n\nSomando **investimentos** (${formatMoney(invTotal)}) e **reservas de metas** (${formatMoney(goalsTotal)}), seu patrimônio total estimado é **${formatMoney(patrimonio)}**.`;
+    if (analytics.runwayMonths < 3 && analytics.burnDaily > 0) {
+      msg += `\n\n⚠️ Atenção: com o ritmo atual, seu caixa dura **${analytics.runwayMonths.toFixed(1)} meses**. Considere revisar despesas.`;
+    }
     return msg;
   }
 
-  // Intent: Gastos específicos por categoria (ex: "gasto com alimentação")
-  const gastocats = ['alimentacao', 'comida', 'mercado', 'restaurante', 'transporte', 'uber', 'gasolina', 'lazer', 'saude', 'moradia'];
-  const matchedCat = gastocats.find(c => q.includes(c));
-  if (matchedCat && /gasto|despesa|custo/.test(q)) {
-    // Map fuzzy matches to exact categories
-    const catMap = { alimentacao: 'Alimentação', comida: 'Alimentação', mercado: 'Alimentação', restaurante: 'Alimentação', transporte: 'Transporte', uber: 'Transporte', gasolina: 'Transporte', lazer: 'Lazer', saude: 'Saúde', moradia: 'Moradia' };
-    const exactCat = catMap[matchedCat];
-    const catSpentMs = analytics.monthTransactions.filter(t => t.cat === exactCat && t.value < 0).reduce((a, t) => a + Math.abs(t.value), 0);
-    const budget = state.budgets[exactCat];
-    return `Você gastou **${formatMoney(catSpentMs)}** com **${exactCat}** este mês.${budget ? ` Isso representa **${formatPercent((catSpentMs/budget)*100,0)}** do seu teto estipulado para esta área.` : ''}`;
-  }
-
-  // Intent: Maior gasto
-  if (/gasto|despesa|onde|estou gastando mais/.test(q)) {
-    if (!analytics.categories.length) return 'Ainda não há despesas suficientes registradas neste mês para podermos calcular seu maior ralo de dinheiro.';
-    const [category, value] = analytics.categories[0];
-    return `Sua maior pressão financeira no momento é **${category}**, acumulando **${formatMoney(value)}** em despesas no mês. Talvez seja um bom ponto para avaliarmos otimizações.`;
-  }
-
-  // Intent: Metas e objetivos
-  if (/meta|objetivo|acelerar|caminho|sonho/.test(q)) {
-    const goal = analytics.urgentGoal;
-    if (!goal) return 'Parece que você não possui metas ativas. Podemos cadastrar um novo objetivo na aba Metas e eu ajudarei a traçar um plano de aportes.';
-    return `Sua prioridade atual é a meta **"${goal.nome}"**. Ela se encontra com **${goal.progress}%** concluídos. Para atingi-la no prazo, o ideal é investir cerca de **${formatMoney(goal.monthlyNeed)}** todos os meses.`;
-  }
-
-  // Intent: Planejamento / Economia / Cortes
-  if (/econom|cortar|poupar|ajudar|dica/.test(q)) {
-    if (analytics.overspend) {
-      const exceed = Math.max(0, analytics.overspend.value - analytics.overspend.limit);
-      return `Seu orçamento em **${analytics.overspend.cat}** estourou. Uma manobra rápida seria reduzir os custos aí, o que liberaria **${formatMoney(exceed)}** para compor seu fluxo ou investir.`;
+  // ── 3. Receita / Renda ─────────────────────────────────────────────────────
+  if (/receita|renda|salario|quanto (ganhei|entrou|recebi)|entrada|ganho/.test(q)) {
+    const diff = analytics.incomes - analytics.lastMonthIncomes;
+    let msg = `Sua **receita total** deste mês foi **${formatMoney(analytics.incomes)}**.`;
+    if (analytics.lastMonthIncomes > 0) {
+      const pct = ((diff / analytics.lastMonthIncomes) * 100).toFixed(1);
+      msg += ` Comparado ao mês anterior (${formatMoney(analytics.lastMonthIncomes)}), isso representa **${diff >= 0 ? '+' : ''}${pct}%**.`;
     }
-    return `Sua taxa de poupança encontra-se em **${formatPercent(analytics.savingRate, 1)}**. Para dar um boost nisso, o melhor caminho é focar em enxugar **${analytics.topCategory?.name || 'suas despesas secundárias'}**, que tem pesado bastante ultimamente.`;
+    return msg;
   }
 
-  // Intent: Cartões e faturas
-  if (/cartao|fatura|credito|limite/.test(q)) {
-    if (!state.cards || state.cards.length === 0) return 'Você não tem cartões de crédito monitorados no sistema. Caso possua, você pode adicioná-los na aba Cartões para visualizar as faturas aqui.';
-    const nextFatura = [...state.cards].sort((a,b) => b.used - a.used)[0];
-    return `O seu cartão com maior saldo em uso no momento é o **${nextFatura.name}**, totalizando **${formatMoney(nextFatura.used)}** utilizados no limite. Fique atento às datas de corte!`;
+  // ── 4. Gastos por categoria específica ────────────────────────────────────
+  const matchedCat = detectCategoryInText(q);
+  if (matchedCat && /gasto|despesa|custo|quanto (gastei|paguei)|gasto com/.test(q)) {
+    const catValue = analytics.categories.find(([c]) => c === matchedCat)?.[1] || 0;
+    const budget = (state.budgets || {})[matchedCat];
+    const txCount = analytics.monthTransactions.filter(t => t.value < 0 && t.cat === matchedCat).length;
+    let msg = `Você gastou **${formatMoney(catValue)}** em **${matchedCat}** este mês`;
+    if (txCount) msg += ` (${txCount} transação${txCount > 1 ? 'ões' : ''})`;
+    msg += '.';
+    if (budget > 0) {
+      const pct = (catValue / budget * 100).toFixed(0);
+      msg += ` Orçamento: ${formatMoney(budget)} — ${catValue > budget ? '⚠️ **ESTOURADO**' : `${pct}% utilizado`}.`;
+    }
+    return msg;
   }
 
-  // Intent: Câmbio / Cotação
-  if (/dolar|euro|btc|bitcoin|cambio|moeda/.test(q)) {
-    return `Acompanhando o mercado em tempo real: O **USD** está cotado em **R$ ${state.exchange.usd}**; o **EUR** em **R$ ${state.exchange.eur}**; e o **Bitcoin** batendo **R$ ${state.exchange.btc}**. Ideal para quem planeja exposições internacionais.`;
+  // ── 5. Maior gasto / onde estou gastando ─────────────────────────────────
+  if (/maior gasto|onde (estou|to) gastando|mais (gasto|despesa)|o que mais gast/.test(q)) {
+    if (!analytics.categories.length) return 'Ainda não há despesas registradas neste mês. Adicione transações na aba **Conta**.';
+    const top3 = analytics.categories.slice(0, 3);
+    let msg = `**Seus maiores gastos do mês:**\n`;
+    top3.forEach(([cat, val], i) => {
+      const pct = analytics.expenses > 0 ? (val / analytics.expenses * 100).toFixed(0) : 0;
+      msg += `\n${i + 1}. **${cat}**: ${formatMoney(val)} (${pct}% das despesas)`;
+    });
+    if (analytics.overspend) {
+      msg += `\n\n⚠️ Alerta: **${analytics.overspend.cat}** ultrapassou o orçamento em **${formatMoney(Math.max(0, analytics.overspend.value - analytics.overspend.limit))}**.`;
+    }
+    return msg;
   }
 
-  // Intent: Diagnóstico completo
-  if (/relatorio|diagnostico|resumo|geral|analytics/.test(q)) {
-    return `**Diagnóstico Elite Automático**\n• Fluxo Líquido: **${formatMoney(analytics.net)}**\n• Poupando: **${formatPercent(analytics.savingRate, 1)}** de tudo que entra\n• Runway (fôlego do caixa base): **${(analytics.runwayMonths||0).toFixed(1)} meses**\n• Seu maior custo atual: **${analytics.topCategory?.name || 'N/A'}**.`;
+  // ── 6. Orçamento ──────────────────────────────────────────────────────────
+  if (/orcamento|budget|limite (de gasto|mensal)|teto|estourou|quanto posso gastar/.test(q)) {
+    const budgets = Object.entries(state.budgets || {}).filter(([, v]) => v > 0);
+    if (!budgets.length) return 'Você ainda não configurou nenhum orçamento. Defina limites por categoria na aba **Conta**.';
+    const lines = analytics.budgetUse.filter(b => b.limit).map(b => {
+      const pct = (b.ratio * 100).toFixed(0);
+      const status = b.ratio > 1 ? '🔴' : b.ratio > 0.8 ? '🟡' : '🟢';
+      return `${status} **${b.cat}**: ${formatMoney(b.value)} / ${formatMoney(b.limit)} (${pct}%)`;
+    });
+    return `**Status dos orçamentos deste mês:**\n\n${lines.join('\n')}${analytics.overspend ? `\n\n⚠️ **${analytics.overspend.cat}** estourou. Considere revisar.` : '\n\n✅ Todos os orçamentos sob controle!'}`;
   }
 
-  // Intent: Runway / Burn rate
-  if (/burn|queimando|dia|folego/.test(q)) {
-    return `Calculando o custo de vida... Você tem queimado, em média, **${formatMoney(analytics.burnDaily)} por dia**. Se todas as receitas parassem agora, seu caixa atual seguraria a operação por cerca de **${(analytics.runwayMonths||0).toFixed(1)} meses**.`;
+  // ── 7. Metas ──────────────────────────────────────────────────────────────
+  if (/meta|objetivo|guardar para|poupar para|quando (vou|consigo) (atingir|alcançar)|acelerar|sonho/.test(q)) {
+    if (!state.goals?.length) return 'Você não tem metas cadastradas. Crie um objetivo na aba **Metas**!';
+    if (analytics.urgentGoal) {
+      const g = analytics.urgentGoal;
+      const deadlineLabel = g.deadline ? `prazo: ${new Date(g.deadline).toLocaleDateString('pt-BR')}` : 'sem prazo';
+      let msg = `Sua meta mais urgente é **"${g.nome}"**:\n\n• Progresso: **${g.progress}%** (${formatMoney(g.atual || 0)} de ${formatMoney(g.total || 0)})\n• Faltam: **${formatMoney(g.remaining)}** (${deadlineLabel})\n• Aporte ideal: **${formatMoney(g.monthlyNeed)}/mês**`;
+      if ((state.goals || []).length > 1) msg += `\n\nVocê tem **${state.goals.length} metas** no total. Quer detalhes de outra?`;
+      return msg;
+    }
+    return '🎉 Todas as suas metas estão concluídas! Quer criar um novo objetivo?';
   }
 
-  // Intent: Saudações
-  if (/^(oi|ola|bom dia|boa tarde|boa noite|e ai|tudo bem)/.test(q)) {
-    return `Olá${state.profile?.nickname ? ' ' + state.profile.nickname : ''}! Sou o cérebro financeiro do GrokFin. Tente me perguntar qual foi o seu maior gasto do mês, ou quanto você deve economizar para sua próxima meta.`;
+  // ── 8. Cartões ────────────────────────────────────────────────────────────
+  if (/cartao|fatura|credito|limite (do|de) cart|card/.test(q)) {
+    const cards = state.cards || [];
+    if (!cards.length) return 'Você não tem cartões cadastrados. Adicione na aba **Cartões**.';
+    const sorted = [...cards].sort((a, b) => (b.used || 0) - (a.used || 0));
+    let msg = `**Situação dos seus cartões:**\n`;
+    sorted.forEach(c => {
+      const usado = c.used || 0;
+      const limite = c.limit || 0;
+      const pct = limite > 0 ? (usado / limite * 100).toFixed(0) : 0;
+      const status = pct > 80 ? '🔴' : pct > 50 ? '🟡' : '🟢';
+      msg += `\n${status} **${c.name}**: ${formatMoney(usado)} / ${formatMoney(limite)} (${pct}%)`;
+    });
+    return msg;
   }
 
-  // Default fallback com snapshot dos dados do usuário
-  const hasData = analytics.expenses > 0 || analytics.incomes > 0;
+  // ── 9. Comparativo mês a mês ──────────────────────────────────────────────
+  if (/comparado|mes passado|anterior|esse mes vs|variacao|mudou esse mes/.test(q)) {
+    if (!analytics.lastMonthExpenses && !analytics.lastMonthIncomes) return 'Ainda não há dados do mês anterior para comparar.';
+    const expDiff = analytics.expenses - analytics.lastMonthExpenses;
+    const incDiff = analytics.incomes - analytics.lastMonthIncomes;
+    const expPct = analytics.lastMonthExpenses > 0 ? (expDiff / analytics.lastMonthExpenses * 100).toFixed(1) : null;
+    const incPct = analytics.lastMonthIncomes > 0 ? (incDiff / analytics.lastMonthIncomes * 100).toFixed(1) : null;
+    let msg = `**Comparativo com o mês anterior:**\n\n`;
+    msg += `• Receitas: **${formatMoney(analytics.incomes)}** ${incPct ? `(${incDiff >= 0 ? '+' : ''}${incPct}%)` : ''}\n`;
+    msg += `• Despesas: **${formatMoney(analytics.expenses)}** ${expPct ? `(${expDiff >= 0 ? '+' : ''}${expPct}% ${expDiff >= 0 ? '📈' : '📉'})` : ''}\n`;
+    msg += `• Fluxo: **${formatMoney(analytics.net)}**`;
+    return msg;
+  }
+
+  // ── 10. Investimentos ─────────────────────────────────────────────────────
+  if (/invest(imento)?|aplicacao|carteira|renda fixa|acoes|fundo|tesouro|cdb/.test(q)) {
+    const invs = state.investments || [];
+    if (!invs.length) return 'Você não tem investimentos cadastrados. Adicione suas aplicações na aba **Invest.**.';
+    const total = invs.reduce((a, i) => a + (i.value || 0), 0);
+    let msg = `**Sua carteira:** Total aplicado: **${formatMoney(total)}**\n`;
+    invs.slice(0, 5).forEach(inv => {
+      const pct = total > 0 ? (inv.value / total * 100).toFixed(1) : 0;
+      msg += `\n• **${inv.name || 'Investimento'}**: ${formatMoney(inv.value || 0)} (${pct}%)`;
+    });
+    return msg;
+  }
+
+  // ── 11. Câmbio / crypto ───────────────────────────────────────────────────
+  if (/dolar|usd|euro|eur|btc|bitcoin|cambio|crypto/.test(q)) {
+    const ex = state.exchange || {};
+    const trend = ex.trend || {};
+    let msg = `**Cotações em tempo real:**\n\n`;
+    if (ex.usd) msg += `🇺🇸 **Dólar:** R$ ${ex.usd}${trend.usd ? ` (${trend.usd > 0 ? '+' : ''}${trend.usd}% hoje)` : ''}\n`;
+    if (ex.eur) msg += `🇪🇺 **Euro:** R$ ${ex.eur}${trend.eur ? ` (${trend.eur > 0 ? '+' : ''}${trend.eur}% hoje)` : ''}\n`;
+    if (ex.btc) msg += `₿ **Bitcoin:** R$ ${Number(ex.btc).toLocaleString('pt-BR')}${trend.btc ? ` (${trend.btc > 0 ? '+' : ''}${trend.btc}% hoje)` : ''}`;
+    return msg;
+  }
+
+  // ── 12. Score / Saúde financeira ──────────────────────────────────────────
+  if (/score|saude financeira|nota|pontuacao|avaliacao|como estou financeiramente/.test(q)) {
+    const { healthScore, scoreBreakdown } = analytics;
+    const caption = healthScore >= 82 ? '🏆 Excelente' : healthScore >= 68 ? '✅ Bom' : healthScore >= 50 ? '⚠️ Atenção' : '🔴 Crítico';
+    let msg = `${caption} — seu **score** é **${healthScore}/100**.\n\n**Composição:**\n`;
+    msg += `• Poupança: +${scoreBreakdown?.saving ?? 0} pts (${formatPercent(analytics.savingRate, 1)} poupada)\n`;
+    msg += `• Runway: +${scoreBreakdown?.runway ?? 0} pts (${analytics.runwayMonths.toFixed(1)} meses)\n`;
+    msg += `• Metas: +${scoreBreakdown?.goals ?? 0} pts\n`;
+    msg += `• Orçamento: ${scoreBreakdown?.budget >= 0 ? '+' : ''}${scoreBreakdown?.budget ?? 0} pts`;
+    return msg;
+  }
+
+  // ── 13. Runway / Burn rate ────────────────────────────────────────────────
+  if (/runway|burn|folego|quantos meses|caixa dura|aguentar/.test(q)) {
+    let msg = `**Análise de Runway:**\n\n`;
+    msg += `• Burn diário: **${formatMoney(analytics.burnDaily)}/dia**\n`;
+    msg += `• Burn mensal estimado: **${formatMoney(analytics.burnDaily * 30)}/mês**\n`;
+    msg += `• Saldo: **${formatMoney(state.balance)}**\n`;
+    msg += `• **Fôlego atual: ${analytics.runwayMonths.toFixed(1)} meses**`;
+    if (analytics.runwayMonths < 3) {
+      msg += '\n\n🚨 **Zona de risco!** Recomendo construir uma reserva de emergência de pelo menos 6 meses.';
+    } else if (analytics.runwayMonths >= 6) {
+      msg += '\n\n✅ Boa reserva! Acima de 6 meses é o ideal para emergências.';
+    }
+    return msg;
+  }
+
+  // ── 14. Despesas fixas ────────────────────────────────────────────────────
+  if (/fixo|recorrente|conta fixa|vence|mensalidade de conta|compromisso/.test(q)) {
+    const fixed = (state.fixedExpenses || []).filter(e => e.active !== false);
+    if (!fixed.length) return 'Você não tem despesas fixas cadastradas. Adicione contas recorrentes no seu perfil para eu monitorá-las automaticamente.';
+    const out = fixed.filter(e => !e.isIncome);
+    const totalOut = out.reduce((a, e) => a + Math.abs(e.value), 0);
+    let msg = `**Compromissos fixos:** Total saídas: **${formatMoney(totalOut)}/mês**\n`;
+    out.forEach(e => { msg += `\n• ${e.name}: ${formatMoney(Math.abs(e.value))}${e.day ? ` (dia ${e.day})` : ''}`; });
+    if (analytics.nextFixedEvent) {
+      const ev = analytics.nextFixedEvent;
+      msg += `\n\n📅 Próximo: **${ev.name}** em **${ev.daysUntil === 0 ? 'hoje' : `${ev.daysUntil} dia(s)`}** (${formatMoney(Math.abs(ev.value))}).`;
+    }
+    return msg;
+  }
+
+  // ── 15. Diagnóstico completo ──────────────────────────────────────────────
+  if (/relatorio|diagnostico|resumo|geral|overview|como estou|visao geral/.test(q)) {
+    const invTotal = (state.investments || []).reduce((a, i) => a + (i.value || 0), 0);
+    let msg = `**📊 Diagnóstico GrokFin — ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}**\n\n`;
+    msg += `💰 **Saldo:** ${formatMoney(state.balance)}\n`;
+    msg += `📈 **Receitas:** ${formatMoney(analytics.incomes)} | 📉 **Despesas:** ${formatMoney(analytics.expenses)}\n`;
+    msg += `⚖️ **Fluxo:** ${formatMoney(analytics.net)} | 💾 **Poupança:** ${formatPercent(analytics.savingRate, 1)}\n`;
+    msg += `🔥 **Burn:** ${formatMoney(analytics.burnDaily)}/dia | ⏳ **Runway:** ${analytics.runwayMonths.toFixed(1)} meses\n`;
+    msg += `🏆 **Score:** ${analytics.healthScore}/100\n`;
+    if (analytics.topCategory?.name) msg += `\n🎯 **Maior gasto:** ${analytics.topCategory.name} (${formatMoney(analytics.topCategory.value)})\n`;
+    if (analytics.overspend) msg += `⚠️ **Alerta:** ${analytics.overspend.cat} estourou o orçamento.\n`;
+    if (analytics.urgentGoal) msg += `🎯 **Meta urgente:** ${analytics.urgentGoal.nome} — ${analytics.urgentGoal.progress}% concluída.\n`;
+    if (invTotal > 0) msg += `💼 **Investimentos:** ${formatMoney(invTotal)}\n`;
+    return msg;
+  }
+
+  // ── 16. Dicas de economia ─────────────────────────────────────────────────
+  if (/como econom|dica|cortar|poupar|como (reduzir|gastar menos)|onde (cortar|economizar)/.test(q)) {
+    const tips = [];
+    if (analytics.overspend) {
+      const excess = Math.max(0, analytics.overspend.value - analytics.overspend.limit);
+      tips.push(`🔴 **${analytics.overspend.cat}** estourou em **${formatMoney(excess)}** — cortar aqui é a ação de maior impacto.`);
+    }
+    if (analytics.topCategory?.value > analytics.incomes * 0.3 && analytics.incomes > 0) {
+      tips.push(`📊 **${analytics.topCategory.name}** representa **${(analytics.topCategory.value / analytics.incomes * 100).toFixed(0)}%** da renda — acima do ideal de 30%.`);
+    }
+    if (analytics.savingRate < 10 && analytics.incomes > 0) {
+      const needToSave = analytics.incomes * 0.2 - Math.max(0, analytics.net);
+      tips.push(`💡 Para atingir 20% de poupança, reduza **${formatMoney(needToSave)}** dos gastos mensais.`);
+    }
+    if (!tips.length) return `✅ Seus gastos estão bem controlados! Taxa de poupança: **${formatPercent(analytics.savingRate, 1)}**. Avalie oportunidades de investimento para crescer o patrimônio.`;
+    return tips.join('\n\n') + '\n\n_Posso detalhar qualquer categoria ou meta._';
+  }
+
+  // ── Default inteligente ───────────────────────────────────────────────────
   if (!hasData) {
-    return `Olá! Ainda não vejo transações registradas. Comece adicionando uma receita ou despesa na aba **Conta**, ou me diga algo como **"recebi 5000 de salário"** ou **"gastei 80 no mercado"** que eu registro pra você.`;
+    return `Olá${nick ? ', ' + nick : ''}! Ainda não vejo transações este mês. Comece na aba **Conta**, ou diga:\n\n• **"recebi 5000 de salário"** → registro automático\n• **"gastei 80 no mercado"** → despesa em Alimentação\n\nAssim eu posso te dar insights reais! 👋`;
   }
   const topTip = analytics.overspend
-    ? `Seu maior alerta hoje é em **${analytics.overspend.cat}** — orçamento ultrapassado.`
-    : `Seu maior gasto é **${analytics.topCategory.name}** (${formatMoney(analytics.topCategory.value)}).`;
-  return `${topTip} Score financeiro: **${analytics.healthScore}/100**, poupança: **${formatPercent(analytics.savingRate, 1)}**. Pergunte sobre metas, cartões, projeções ou diga um gasto para registrar (ex: "gastei 50 com uber").`;
+    ? `⚠️ Alerta: **${analytics.overspend.cat}** com ${formatPercent(analytics.overspend.ratio * 100, 0)} do orçamento utilizado.`
+    : analytics.categories.length
+      ? `Maior gasto: **${analytics.topCategory.name}** (${formatMoney(analytics.topCategory.value)}).`
+      : `Fluxo do mês: **${formatMoney(analytics.net)}**.`;
+  return `${topTip}\n\nScore: **${analytics.healthScore}/100** | Poupança: **${formatPercent(analytics.savingRate, 1)}** | Runway: **${analytics.runwayMonths.toFixed(1)} meses**.\n\nPosso detalhar: _gastos, metas, cartões, investimentos, comparativos, dicas..._`;
 }
 
 export function handleBotTransaction(text) {
@@ -392,7 +666,7 @@ export async function sendChatMessage() {
   if (!text) return;
 
   if (!checkChatRateLimit()) {
-    showToast('Limite de mensagens atingido. Aguarde 1 minuto.', 'danger');
+    showToast('Muitas mensagens! Aguarde um momento.', 'danger');
     return;
   }
 
@@ -400,6 +674,7 @@ export async function sendChatMessage() {
   input.value = '';
   setChatTyping(true);
 
+  // ── Tentativa 1: Registrar transação via linguagem natural ────────────────
   const txReply = handleBotTransaction(text);
   if (txReply) {
     setChatTyping(false);
@@ -407,29 +682,12 @@ export async function sendChatMessage() {
     return;
   }
 
-  const apiKey   = localStorage.getItem('grokfin_anthropic_key');
-  const provider = getAIProvider(apiKey);
-  if (provider !== 'none') {
-    try {
-      const reply = await sendClaudeAPIMessage(text, apiKey);
-      setChatTyping(false);
-      pushChatMessage('assistant', reply);
-      return;
-    } catch (err) {
-      setChatTyping(false);
-      const providerName = provider === 'gemini' ? 'Gemini' : 'Claude';
-      pushChatMessage('assistant', `⚠️ **Erro na IA (${providerName}):** ${err.message}\n\nRespondendo com modo básico:`);
-      const fallback = buildAssistantReply(text);
-      pushChatMessage('assistant', fallback);
-      return;
-    }
-  }
-
+  // ── Tentativa 2: Motor de inteligência local ──────────────────────────────
   setTimeout(() => {
     const reply = buildAssistantReply(text);
     setChatTyping(false);
-    pushChatMessage('assistant', reply + '\n\n💡 _Conecte o Gemini (gratuito) pelas configurações para respostas mais inteligentes._');
-  }, 720);
+    pushChatMessage('assistant', reply);
+  }, 480);
 }
 
 export async function sendClaudeAPIMessage(userText, apiKey) {
@@ -601,6 +859,16 @@ export function bindChatEvents() {
     fileInput.addEventListener('change', handleChatImageInput);
   }
 
+  // Eventos de toggle do AI Side Panel
+  const triggerBtn = document.getElementById('ai-panel-trigger');
+  const closeBtn = document.getElementById('ai-panel-close');
+  const backdrop = document.getElementById('ai-panel-backdrop');
+
+  triggerBtn?.addEventListener('click', () => window.toggleAiSidePanel(true));
+  closeBtn?.addEventListener('click', () => window.toggleAiSidePanel(false));
+  backdrop?.addEventListener('click', () => window.toggleAiSidePanel(false));
+
+
   // [FIX #5] Transcrição de áudio via SpeechRecognition (Web Speech API)
   const micBtn = document.getElementById('chat-mic-btn');
   const micIcon = document.getElementById('chat-mic-icon');
@@ -659,28 +927,37 @@ export function bindChatEvents() {
     }
   }
 
-  // ── Botões de prompt rápido (data-chat-prompt) ────────────────────────────
-  // Os pills "Saldo", "Gastos", "Metas" e "Detalhar recomendação" existem no
-  // HTML mas nunca foram ligados a evento algum — cliques não faziam nada.
-  document.querySelectorAll('[data-chat-prompt]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const prompt = btn.dataset.chatPrompt;
-      if (prompt) sendChatPrompt(prompt);
-    });
+  // ── Tecla ESC fecha o painel ─────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const panel = document.getElementById('ai-side-panel');
+      if (panel && !panel.classList.contains('translate-x-full')) {
+        window.toggleAiSidePanel(false);
+      }
+    }
   });
 
-  // ── Atalhos rápidos do painel lateral (data-quick-action) ─────────────────
-  document.querySelectorAll('[data-quick-action]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const action = btn.dataset.quickAction;
-      if (action === 'open-transactions') window.switchTab?.(2);
-      if (action === 'open-report')       window.switchTab?.(1);
-      if (action === 'apply-insight') {
-        const insight = document.getElementById('chat-side-insight')?.textContent?.trim();
-        if (insight && insight !== '--') sendChatPrompt(`Explique e aplique: ${insight}`);
+  // ── Event Delegation para botões injetados dinamicamente ─────────────────
+  // [FIX] Usa delegação de eventos no contêiner pai (#ai-side-panel) para
+  // capturar cliques em [data-chat-prompt] gerados pelo buildContextualSuggestions().
+  // O querySelectorAll anterior não capturava botões criados após o bindChatEvents().
+  const panel = document.getElementById('ai-side-panel');
+  if (panel) {
+    panel.addEventListener('click', e => {
+      const promptBtn = e.target.closest('[data-chat-prompt]');
+      if (promptBtn) {
+        const prompt = promptBtn.dataset.chatPrompt;
+        if (prompt) sendChatPrompt(prompt);
+        return;
+      }
+      const actionBtn = e.target.closest('[data-quick-action]');
+      if (actionBtn) {
+        const action = actionBtn.dataset.quickAction;
+        if (action === 'open-transactions') window.switchTab?.(2);
+        if (action === 'open-report') window.switchTab?.(1);
       }
     });
-  });
+  }
 }
 
 // [FIX #6] sendChatPrompt: função para acionar o chat programaticamente.
@@ -692,6 +969,7 @@ export function sendChatPrompt(text) {
   const input = document.getElementById('chat-input');
   if (!input) return;
   input.value = String(text || '').trim();
+  window.toggleAiSidePanel(true);
   sendChatMessage();
 }
 

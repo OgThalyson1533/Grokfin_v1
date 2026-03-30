@@ -82,7 +82,7 @@ export function buildSeedState() {
 
   return {
     isNewUser: true,
-    balance: 0,
+    balance: 1550,
     exchange: {
       usd: 5.92, eur: 6.45, btc: 312450,
       trend: { usd: 0.4, eur: 0.2, btc: -1.2 }
@@ -105,9 +105,14 @@ export function buildSeedState() {
       displayName: 'GrokFin User',
       handle: '@grokfin.user'
     },
-    transactions: [],
+    transactions: [
+      { id: uid('tx'), date: formatDateBR(today), desc: 'Pendência', cat: 'Alimentação', value: -500.00, payment: 'conta', notes: 'Feijão' },
+      { id: uid('tx'), date: formatDateBR(addDays(today, -1)), desc: 'Aluguel', cat: 'Moradia', value: -1500.00, payment: 'conta' },
+      { id: uid('tx'), date: formatDateBR(addDays(today, -3)), desc: 'Supermercado', cat: 'Alimentação', value: -450.00, payment: 'cartao_credito' },
+      { id: uid('tx'), date: formatDateBR(addDays(today, -5)), desc: 'Salário', cat: 'Receita', value: 4000.00, payment: 'conta' }
+    ],
     customCategories: [], // categorias criadas pelo usuário — persistidas por conta
-    ui: { txSearch: '', txCategory: 'all', txSort: 'date-desc', txDateStart: null, txDateEnd: null, txPage: 0, activeTab: 0 },
+    ui: { txSearch: '', txCategory: 'all', txSort: 'date-desc', txDateStart: null, txDateEnd: null, txPage: 0, txPageSize: 10, activeTab: 0, homeFilter: 'this_month' },
     chatHistory: [],
     lastUpdated: new Date().toISOString()
   };
@@ -119,13 +124,13 @@ export function buildSeedState() {
 // Antes limitava erroneamente ao índice 5, bloqueando as tabs 6, 7 e 8
 // de serem restauradas após recarregar a página.
 function mapCurrentActiveTab(index) {
-  const mapping = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 };
-  return mapping[index] ?? Math.min(Math.max(index, 0), 8);
+  const mapping = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9 };
+  return mapping[index] ?? Math.min(Math.max(index, 0), 9);
 }
 
 function mapLegacyActiveTab(index) {
   const mapping = { 0: 0, 1: 2, 2: 4, 3: 3, 4: 1 };
-  return mapping[index] ?? Math.min(Math.max(index, 0), 8);
+  return mapping[index] ?? Math.min(Math.max(index, 0), 9);
 }
 
 // ── loadState ─────────────────────────────────────────────────────────────────
@@ -177,6 +182,10 @@ let _syncTimeout = null;
 // diretamente, que é o objeto mutado pela aplicação inteira.
 export function saveState() {
   try {
+    if (state.isNewUser && (state.goals.length > 0 || state.transactions.length > 0)) {
+       state.isNewUser = false;
+    }
+
     const toSave = { ...state, chatHistory: (state.chatHistory || []).slice(-40) };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     
