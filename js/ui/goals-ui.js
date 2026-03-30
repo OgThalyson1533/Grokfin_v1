@@ -51,6 +51,10 @@ export function getGoalThemeLabel(theme = 'generic') {
 }
 
 export function pickGoalImage(name, explicitTheme = 'auto') {
+  if (name && name.trim().length > 0) {
+    var query = encodeURIComponent(name.trim().toLowerCase());
+    return 'https://source.unsplash.com/1200x800/?' + query;
+  }
   const theme = detectGoalTheme(name, explicitTheme);
   return GOAL_THEME_CATALOG[theme]?.img || GOAL_THEME_CATALOG.generic.img;
 }
@@ -354,7 +358,8 @@ function _updateModalPreview() {
   var theme    = (themeEl && themeEl.value) || 'auto';
   var resolved = detectGoalTheme(name, theme);
   var catalog  = GOAL_THEME_CATALOG[resolved] || GOAL_THEME_CATALOG.generic;
-  previewEl.style.backgroundImage = "url('" + catalog.img + "')";
+  var imgSrc   = pickGoalImage(name, theme);
+  previewEl.style.backgroundImage = "url('" + imgSrc + "')";
   if (iconEl) { iconEl.className = 'fa-solid ' + catalog.icon; iconEl.style.color = catalog.color; }
 }
 
@@ -479,7 +484,11 @@ export function bindGoalEvents() {
     if (e.target === document.getElementById('goal-modal-overlay'))
       document.getElementById('goal-modal-overlay')?.classList.add('hidden');
   });
-  document.getElementById('goal-modal-name')?.addEventListener('input', _updateModalPreview);
+  var previewTimeout;
+  document.getElementById('goal-modal-name')?.addEventListener('input', function() {
+    clearTimeout(previewTimeout);
+    previewTimeout = setTimeout(_updateModalPreview, 800);
+  });
   document.getElementById('goal-modal-theme')?.addEventListener('change', _updateModalPreview);
   document.getElementById('goal-delete-cancel')?.addEventListener('click', function() {
     document.getElementById('goal-delete-overlay')?.classList.add('hidden');
