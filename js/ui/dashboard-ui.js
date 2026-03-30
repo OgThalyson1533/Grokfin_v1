@@ -626,11 +626,13 @@ export function renderHomeLineChart() {
 
   const ctx = canvas.getContext('2d');
 
-  const gradIncome = ctx.createLinearGradient(0, 0, 0, 180);
+  const gradientHeight = Math.max(300, canvas.height || 300);
+  
+  const gradIncome = ctx.createLinearGradient(0, 0, 0, gradientHeight);
   gradIncome.addColorStop(0, 'rgba(52,211,153,.30)');
   gradIncome.addColorStop(1, 'rgba(52,211,153,0)');
 
-  const gradExpense = ctx.createLinearGradient(0, 0, 0, 180);
+  const gradExpense = ctx.createLinearGradient(0, 0, 0, gradientHeight);
   gradExpense.addColorStop(0, 'rgba(251,113,133,.25)');
   gradExpense.addColorStop(1, 'rgba(251,113,133,0)');
 

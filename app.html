@@ -214,8 +214,48 @@
     
     <!-- Saldo -->
     <div class="w-full lg:w-auto text-left relative z-10 flex-1">
-      <p class="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-1">SALDO ATUAL</p>
-      <p class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none" id="saldo-total">R$ 0,00</p>
+      <div class="flex items-center gap-3 mb-1">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-white/35">SALDO ATUAL</p>
+        <button id="btnOlho" aria-label="Ocultar/Mostrar saldo" class="flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-white/40 hover:text-white pb-0.5">
+          <!-- Olho Aberto -->
+          <svg id="olhoAberto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+
+          <!-- Olho Fechado -->
+          <svg id="olhoFechado" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none transition-all duration-300" id="saldo-total">R$ 0,00</p>
+      
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          let visivel = true;
+          const btn = document.getElementById('btnOlho');
+          const aberto = document.getElementById('olhoAberto');
+          const fechado = document.getElementById('olhoFechado');
+          const saldo = document.getElementById('saldo-total');
+
+          btn.addEventListener('click', () => {
+            visivel = !visivel;
+            if (visivel) {
+              aberto.classList.remove('hidden');
+              fechado.classList.add('hidden');
+              saldo.style.filter = 'none';
+              saldo.style.opacity = '1';
+            } else {
+              aberto.classList.add('hidden');
+              fechado.classList.remove('hidden');
+              saldo.style.filter = 'blur(8px)';
+              saldo.style.opacity = '0.5';
+            }
+          });
+        });
+      </script>
       <div class="flex items-center gap-3 mt-3">
         <p class="text-xs text-white/40">Média: <span class="text-white/65 font-semibold" id="home-burn-daily">R$ 0,00</span>/dia</p>
         <span id="home-net-chip" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border border-emerald-400/20 bg-emerald-400/8 text-emerald-300">
