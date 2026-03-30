@@ -127,6 +127,10 @@
             <span class="nav-rail-icon"><i class="fa-solid fa-globe"></i></span>
             <span class="nav-rail-tooltip">Mercado</span>
           </button>
+          <button data-tab="10" class="nav-rail-button" aria-label="Relatórios">
+            <span class="nav-rail-icon"><i class="fa-solid fa-chart-pie"></i></span>
+            <span class="nav-rail-tooltip">Relatórios</span>
+          </button>
         </nav>
       </div>
 
@@ -1008,6 +1012,468 @@
               </div>
             </div>
           </div>
+        <!-- ═══════════════════════════ TAB 10: RELATÓRIOS ═══════════════════════════ -->
+        <div id="tab-10" class="tab-panel space-y-6">
+          <!-- 1. Cabeçalho -->
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Centro de Análises</p>
+              <h3 class="mt-2 font-serif text-3xl sm:text-4xl font-black tracking-tight text-white">Relatórios</h3>
+              <p class="mt-2 max-w-2xl text-white/55">Análises detalhadas e demonstrativos financeiros para tomada de decisão.</p>
+            </div>
+            
+            <div class="flex items-center">
+              <button onclick="window.showToast?.('Gerando PDF...', 'info')" class="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors shadow-sm">
+                <i class="fa-solid fa-file-pdf text-rose-400"></i> Exportar PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Barra de Filtros Globais -->
+          <div class="glass-panel rounded-2xl p-4 border border-white/10 bg-black/40">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+              <!-- Período -->
+              <div class="relative w-full">
+                <select class="w-full appearance-none rounded-xl border border-white/10 bg-white/5 pl-4 pr-10 py-2.5 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors cursor-pointer">
+                  <option value="this_month">Este Mês</option>
+                  <option value="last_month">Mês Anterior</option>
+                  <option value="this_year">Este Ano</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-[10px] pointer-events-none"></i>
+              </div>
+              
+              <!-- Range Input -->
+              <div class="relative w-full lg:col-span-2">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                  <i class="fa-regular fa-calendar text-white/40 text-sm"></i>
+                </div>
+                <input type="text" value="01/01/2026 - 31/12/2026" readonly class="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-sm text-white/80 outline-none focus:border-cyan-400/50 transition-colors cursor-pointer text-center" placeholder="Data personalizada">
+              </div>
+
+              <!-- Centro de Custo -->
+              <div class="relative w-full">
+                <select class="w-full appearance-none rounded-xl border border-white/10 bg-white/5 pl-4 pr-10 py-2.5 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors cursor-pointer">
+                  <option value="all">Todas Categorias</option>
+                  <option value="essential">Essenciais</option>
+                  <option value="leisure">Lazer</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-[10px] pointer-events-none"></i>
+              </div>
+
+              <!-- Contato / Conta -->
+              <div class="relative w-full">
+                <select class="w-full appearance-none rounded-xl border border-white/10 bg-white/5 pl-4 pr-10 py-2.5 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors cursor-pointer">
+                  <option value="all">Todas as Contas</option>
+                  <option value="checking">Conta Corrente</option>
+                  <option value="credit">Cartões C. Crédito</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-[10px] pointer-events-none"></i>
+              </div>
+
+              <!-- Visão -->
+              <div class="relative w-full">
+                <select class="w-full appearance-none rounded-xl border border-white/10 bg-white/5 pl-4 pr-10 py-2.5 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors cursor-pointer">
+                  <option value="competency">Por Competência</option>
+                  <option value="cash">Por Caixa</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-[10px] pointer-events-none"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Navegação por Abas Internas -->
+          <div class="overflow-x-auto no-scrollbar border-b border-white/10">
+            <nav class="flex space-x-6 min-w-max" aria-label="Tabs Relatorios" id="rep-nav-tabs">
+              <button onclick="switchRepTab('dre')" id="rep-tab-dre" class="rep-tab-item active whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm transition-colors border-cyan-400 text-cyan-400">
+                DRE
+              </button>
+              <button onclick="switchRepTab('rxv')" id="rep-tab-rxv" class="rep-tab-item whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-white/50 hover:text-white/80 hover:border-white/20">
+                Receitas x Despesas
+              </button>
+              <button onclick="switchRepTab('cashflow')" id="rep-tab-cashflow" class="rep-tab-item whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-white/50 hover:text-white/80 hover:border-white/20">
+                Fluxo de Caixa
+              </button>
+              <button onclick="switchRepTab('comparison')" id="rep-tab-comparison" class="rep-tab-item whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-white/50 hover:text-white/80 hover:border-white/20">
+                Comparativo
+              </button>
+            </nav>
+          </div>
+
+          <!-- 4. Conteúdo das Abas Internas -->
+          <div id="rep-content-dre" class="rep-panel space-y-6 block">
+            <div class="glass-panel rounded-3xl p-6 border border-white/10 overflow-hidden flex flex-col">
+              <div class="flex items-center justify-between mb-6">
+                <div>
+                  <h4 class="text-xl font-bold text-white tracking-tight">DRE</h4>
+                  <p class="text-sm text-white/50">Demonstrativo de Resultado do Exercício</p>
+                </div>
+                <button class="w-8 h-8 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 transition-colors">
+                   <i class="fa-solid fa-expand text-xs"></i>
+                </button>
+              </div>
+
+              <!-- Tabela Expansível DRE -->
+              <div class="overflow-x-auto w-full pb-4" style="scrollbar-color: rgba(255,255,255,0.1) transparent; scrollbar-width: thin;">
+                <table class="w-full text-left whitespace-nowrap min-w-[800px]">
+                  <thead class="border-b border-white/5 text-xs font-semibold text-white/40">
+                    <tr>
+                      <th class="px-5 py-4 w-64 uppercase tracking-widest sticky bg-black border-r border-white/5 left-0 z-10">Conta</th>
+                      <th class="px-5 py-4 text-right">JAN 2026</th>
+                      <th class="px-5 py-4 text-right">FEV 2026</th>
+                      <th class="px-5 py-4 text-right">MAR 2026</th>
+                      <th class="px-5 py-4 text-right font-bold text-cyan-300">TOTAL</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-sm divide-y divide-white/[0.03]">
+                    <!-- Linha Agrupadora (Nível 1) -->
+                    <tr class="bg-white/[0.02]">
+                      <td class="px-5 py-3 font-bold text-emerald-400 sticky bg-[#131a20] border-r border-white/5 left-0 z-10 flex items-center gap-2">
+                        <button class="w-5 h-5 rounded hover:bg-white/10 flex items-center justify-center text-white/50"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        RECEITA BRUTA
+                      </td>
+                      <td class="px-5 py-3 text-right text-emerald-300">R$ 45.000</td>
+                      <td class="px-5 py-3 text-right text-emerald-300">R$ 52.000</td>
+                      <td class="px-5 py-3 text-right text-emerald-300">R$ 48.000</td>
+                      <td class="px-5 py-3 text-right font-bold text-emerald-400 bg-emerald-400/5">R$ 145.000</td>
+                    </tr>
+                    <!-- Sublinha (Nível 2) -->
+                    <tr class="text-white/70">
+                      <td class="px-5 py-3 pl-12 sticky bg-black border-r border-white/5 left-0 z-10">Venda de Produtos</td>
+                      <td class="px-5 py-3 text-right">R$ 30.000</td>
+                      <td class="px-5 py-3 text-right">R$ 35.000</td>
+                      <td class="px-5 py-3 text-right">R$ 32.000</td>
+                      <td class="px-5 py-3 text-right font-semibold text-white bg-white/5">R$ 97.000</td>
+                    </tr>
+                    <tr class="text-white/70">
+                      <td class="px-5 py-3 pl-12 sticky bg-black border-r border-white/5 left-0 z-10">Consultoria e Serviços</td>
+                      <td class="px-5 py-3 text-right">R$ 15.000</td>
+                      <td class="px-5 py-3 text-right">R$ 17.000</td>
+                      <td class="px-5 py-3 text-right">R$ 16.000</td>
+                      <td class="px-5 py-3 text-right font-semibold text-white bg-white/5">R$ 48.000</td>
+                    </tr>
+
+                    <!-- Despesas DRE Nível 1 -->
+                    <tr class="bg-white/[0.02]">
+                      <td class="px-5 py-3 font-bold text-rose-400 sticky bg-[#1a141a] border-r border-white/5 left-0 z-10 flex items-center gap-2">
+                        <button class="w-5 h-5 rounded hover:bg-white/10 flex items-center justify-center text-white/50"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                        DESPESAS OPERACIONAIS
+                      </td>
+                      <td class="px-5 py-3 text-right text-rose-300">-R$ 18.000</td>
+                      <td class="px-5 py-3 text-right text-rose-300">-R$ 21.000</td>
+                      <td class="px-5 py-3 text-right text-rose-300">-R$ 19.500</td>
+                      <td class="px-5 py-3 text-right font-bold text-rose-400 bg-rose-400/5">-R$ 58.500</td>
+                    </tr>
+
+                    <!-- Resultado Operacional -->
+                    <tr>
+                      <td class="px-5 py-4 font-black text-cyan-400 sticky bg-black border-t border-r border-cyan-400/20 left-0 z-10">RESULTADO LÍQUIDO</td>
+                      <td class="px-5 py-4 text-right font-bold text-white border-t border-cyan-400/20">R$ 27.000</td>
+                      <td class="px-5 py-4 text-right font-bold text-white border-t border-cyan-400/20">R$ 31.000</td>
+                      <td class="px-5 py-4 text-right font-bold text-white border-t border-cyan-400/20">R$ 28.500</td>
+                      <td class="px-5 py-4 text-right font-black text-cyan-400 bg-cyan-400/10 border-t border-cyan-400/20">R$ 86.500</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="rep-content-rxv" class="rep-panel space-y-6 hidden">
+            <!-- 1. Cards Superiores -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-2 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none"></div>
+                <div class="flex items-center justify-between">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-300">Receitas</p>
+                  <i class="fa-solid fa-arrow-trend-up text-emerald-400"></i>
+                </div>
+                <p class="text-3xl font-black text-white mt-1">R$ 145.000</p>
+                <p class="text-xs text-white/40"><span class="text-emerald-400">+12%</span> em relação ao período ant.</p>
+              </div>
+              <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-2 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-rose-400/10 blur-3xl pointer-events-none"></div>
+                <div class="flex items-center justify-between">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-rose-300">Despesas</p>
+                  <i class="fa-solid fa-arrow-trend-down text-rose-400"></i>
+                </div>
+                <p class="text-3xl font-black text-white mt-1">R$ 58.500</p>
+                <p class="text-xs text-white/40"><span class="text-rose-400">+5%</span> em relação ao período ant.</p>
+              </div>
+              <div class="glass-panel rounded-3xl p-6 border border-cyan-400/20 bg-cyan-400/5 flex flex-col gap-2 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none"></div>
+                <div class="flex items-center justify-between">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-300">Resultado Líquido</p>
+                  <i class="fa-solid fa-scale-balanced text-cyan-400"></i>
+                </div>
+                <p class="text-3xl font-black text-cyan-400 mt-1">R$ 86.500</p>
+                <p class="text-xs text-cyan-300/50">Margem de lucro atual: <span class="font-bold text-white/80">60%</span></p>
+              </div>
+            </div>
+
+            <!-- 2. Gráfico Principal -->
+            <div class="glass-panel rounded-3xl p-6 border border-white/10">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h4 class="text-lg font-bold text-white tracking-tight">Evolução Mensal</h4>
+                  <p class="text-xs text-white/40">Visão consolidada do período selecionado</p>
+                </div>
+                <div class="flex gap-2">
+                  <button class="w-8 h-8 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 transition-colors"><i class="fa-solid fa-download text-[10px]"></i></button>
+                </div>
+              </div>
+              <div class="w-full h-64 flex items-center justify-center border border-dashed border-white/10 rounded-2xl bg-white/5" id="chart-receitas-despesas">
+                 <p class="text-sm text-white/30 italic">Área reservada para o Gráfico de Barras/Linha</p>
+              </div>
+            </div>
+
+            <!-- 3. Widgets Modulares -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+              <!-- Resumo Rápido -->
+              <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-4">
+                 <p class="text-sm font-semibold text-white">Resumo Executivo</p>
+                 <div class="space-y-3">
+                   <div class="flex justify-between items-center pb-2 border-b border-white/5">
+                     <span class="text-xs text-white/50">Lançamentos</span>
+                     <span class="text-sm font-bold text-white">142</span>
+                   </div>
+                   <div class="flex justify-between items-center pb-2 border-b border-white/5">
+                     <span class="text-xs text-white/50">Ticket Médio (Entradas)</span>
+                     <span class="text-sm font-bold text-emerald-300">R$ 1.021,12</span>
+                   </div>
+                   <div class="flex justify-between items-center pb-2 border-b border-white/5">
+                     <span class="text-xs text-white/50">Ticket Médio (Saídas)</span>
+                     <span class="text-sm font-bold text-rose-300">R$ 411,97</span>
+                   </div>
+                   <div class="flex justify-between items-center">
+                     <span class="text-xs text-white/50">Maior Despesa</span>
+                     <span class="text-sm font-bold text-rose-400 shrink-0">R$ 12.000</span>
+                   </div>
+                 </div>
+              </div>
+
+              <!-- Status -->
+              <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-4">
+                 <p class="text-sm font-semibold text-white">Status</p>
+                 <div class="flex-1 flex flex-col items-center justify-center relative">
+                   <!-- Simulações de anéis de donut -->
+                   <div class="w-28 h-28 rounded-full border-[10px] border-emerald-400 absolute flex items-center justify-center">
+                   </div>
+                   <div class="w-28 h-28 rounded-full border-[10px] border-rose-500/20 border-l-rose-500 border-t-rose-500 absolute rotate-45"></div>
+                   <div class="flex flex-col items-center z-10 relative mt-1">
+                     <p class="text-[9px] text-white/40 uppercase tracking-widest">Quitado</p>
+                     <p class="text-xl font-black text-white">85%</p>
+                   </div>
+                 </div>
+                 <div class="flex gap-2 justify-center mt-2">
+                   <span class="text-[9px] px-2 py-1 rounded bg-white/5 text-white/60"><span class="text-emerald-400 font-bold mr-1">■</span> Concluído</span>
+                   <span class="text-[9px] px-2 py-1 rounded bg-white/5 text-white/60"><span class="text-rose-500 font-bold mr-1">■</span> Pendente</span>
+                 </div>
+              </div>
+
+              <!-- Top Categorias -->
+              <div class="glass-panel rounded-3xl p-6 border border-white/10 xl:col-span-2">
+                 <p class="text-sm font-semibold text-white mb-4">Top Categorias (Saídas)</p>
+                 <div class="space-y-4">
+                   <!-- Categoria 1 -->
+                   <div>
+                     <div class="flex justify-between text-xs mb-1">
+                       <span class="text-white/70">Folha de Pagamento</span>
+                       <span class="text-white font-bold">R$ 22.000</span>
+                     </div>
+                     <div class="w-full bg-white/5 rounded-full h-2">
+                       <div class="bg-gradient-to-r from-violet-500 to-fuchsia-500 h-2 rounded-full" style="width: 45%"></div>
+                     </div>
+                   </div>
+                   <!-- Categoria 2 -->
+                   <div>
+                     <div class="flex justify-between text-xs mb-1">
+                       <span class="text-white/70">Impostos</span>
+                       <span class="text-white font-bold">R$ 15.500</span>
+                     </div>
+                     <div class="w-full bg-white/5 rounded-full h-2">
+                       <div class="bg-gradient-to-r from-rose-500 to-orange-500 h-2 rounded-full" style="width: 30%"></div>
+                     </div>
+                   </div>
+                   <!-- Categoria 3 -->
+                   <div>
+                     <div class="flex justify-between text-xs mb-1">
+                       <span class="text-white/70">Infraestrutura</span>
+                       <span class="text-white font-bold">R$ 8.000</span>
+                     </div>
+                     <div class="w-full bg-white/5 rounded-full h-2">
+                       <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full" style="width: 15%"></div>
+                     </div>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+          <div id="rep-content-cashflow" class="rep-panel space-y-6 hidden">
+            <!-- 1. Sub-abas Internas (Saldo / Resultado) -->
+            <div class="flex items-center gap-2 border-b border-white/5 pb-2">
+               <button class="px-4 py-2 rounded-xl bg-white/10 text-white text-sm font-semibold transition-colors">Saldo</button>
+               <button class="px-4 py-2 rounded-xl text-white/50 hover:bg-white/5 text-sm transition-colors">Resultado</button>
+            </div>
+
+            <!-- 2. Cards de Totais -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div class="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col justify-center">
+                 <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Entradas</p>
+                 <p class="text-2xl font-black text-emerald-400">R$ 145.000</p>
+              </div>
+              <div class="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col justify-center">
+                 <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Saídas</p>
+                 <p class="text-2xl font-black text-rose-400">R$ 58.500</p>
+              </div>
+              <div class="glass-panel rounded-3xl p-5 border border-cyan-400/20 bg-cyan-400/5 flex flex-col justify-center relative overflow-hidden">
+                 <div class="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-cyan-400/10 blur-2xl pointer-events-none"></div>
+                 <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-300/70 mb-1">Saldo Final</p>
+                 <p class="text-2xl font-black text-white">R$ 86.500</p>
+              </div>
+            </div>
+
+            <!-- 3. Timeline de Fluxo de Caixa -->
+            <div class="glass-panel rounded-3xl p-6 border border-white/10">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h4 class="text-lg font-bold text-white tracking-tight">Timeline do Fluxo</h4>
+                  <p class="text-xs text-white/40">Acumulado diário</p>
+                </div>
+              </div>
+              <div class="w-full h-80 flex items-center justify-center border border-dashed border-white/10 rounded-2xl bg-white/5" id="chart-cashflow">
+                 <p class="text-sm text-white/30 italic">Área reservada para o Gráfico de Linha (Timeline)</p>
+              </div>
+            </div>
+          </div>
+          <div id="rep-content-comparison" class="rep-panel space-y-6 hidden">
+            <!-- 1. Filtros Pareados -->
+            <div class="glass-panel items-center justify-between rounded-3xl p-4 border border-white/10 flex flex-col md:flex-row gap-4">
+              <div class="flex items-center gap-3 w-full md:w-auto">
+                <span class="text-xs font-bold uppercase tracking-widest text-white/50 w-20">Período A</span>
+                <select class="w-full md:w-48 appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none focus:border-cyan-400/50 cursor-pointer">
+                  <option>Março 2026</option>
+                </select>
+              </div>
+              <div class="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+                <i class="fa-solid fa-right-left text-white/30 text-[10px]"></i>
+              </div>
+              <div class="flex items-center gap-3 w-full md:w-auto">
+                <span class="text-xs font-bold uppercase tracking-widest text-white/50 w-20">Período B</span>
+                <select class="w-full md:w-48 appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none focus:border-cyan-400/50 cursor-pointer">
+                  <option>Fevereiro 2026</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 2. Cards de Variação -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-3">
+                 <p class="text-[10px] font-bold uppercase tracking-widest text-white/40">Variação de Receitas</p>
+                 <div class="flex items-end justify-between">
+                   <div>
+                     <p class="text-xs text-white/50 mb-1">Período A</p>
+                     <p class="text-lg font-bold text-white">R$ 48.000</p>
+                   </div>
+                   <div class="text-right">
+                     <p class="text-xs text-white/50 mb-1">Período B</p>
+                     <p class="text-lg font-bold text-white">R$ 52.000</p>
+                   </div>
+                 </div>
+                 <div class="border-t border-white/5 pt-3 mt-1 flex justify-between items-center">
+                   <span class="text-xs text-white/50">Diferença</span>
+                   <span class="text-sm font-bold text-rose-400">-R$ 4.000 <span class="bg-rose-500/10 text-[10px] px-1.5 py-0.5 rounded ml-1">-7.6%</span></span>
+                 </div>
+              </div>
+
+              <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-3">
+                 <p class="text-[10px] font-bold uppercase tracking-widest text-white/40">Variação de Despesas</p>
+                 <div class="flex items-end justify-between">
+                   <div>
+                     <p class="text-xs text-white/50 mb-1">Período A</p>
+                     <p class="text-lg font-bold text-white">R$ 19.500</p>
+                   </div>
+                   <div class="text-right">
+                     <p class="text-xs text-white/50 mb-1">Período B</p>
+                     <p class="text-lg font-bold text-white">R$ 21.000</p>
+                   </div>
+                 </div>
+                 <div class="border-t border-white/5 pt-3 mt-1 flex justify-between items-center">
+                   <span class="text-xs text-white/50">Diferença</span>
+                   <!-- Despesa menor no período A (redução de gastos = positivo) -->
+                   <span class="text-sm font-bold text-emerald-400">-R$ 1.500 <span class="bg-emerald-500/10 text-[10px] px-1.5 py-0.5 rounded ml-1">-7.1%</span></span>
+                 </div>
+              </div>
+
+              <div class="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col gap-3">
+                 <p class="text-[10px] font-bold uppercase tracking-widest text-white/40">Variação do Resultado</p>
+                 <div class="flex items-end justify-between">
+                   <div>
+                     <p class="text-xs text-white/50 mb-1">Período A</p>
+                     <p class="text-lg font-bold text-cyan-300">R$ 28.500</p>
+                   </div>
+                   <div class="text-right">
+                     <p class="text-xs text-white/50 mb-1">Período B</p>
+                     <p class="text-lg font-bold text-cyan-300">R$ 31.000</p>
+                   </div>
+                 </div>
+                 <div class="border-t border-white/5 pt-3 mt-1 flex justify-between items-center">
+                   <span class="text-xs text-white/50">Diferença</span>
+                   <span class="text-sm font-bold text-rose-400">-R$ 2.500 <span class="bg-rose-500/10 text-[10px] px-1.5 py-0.5 rounded ml-1">-8.0%</span></span>
+                 </div>
+              </div>
+            </div>
+
+            <!-- 3. Tabela de Detalhamento -->
+            <div class="glass-panel rounded-3xl p-6 border border-white/10 overflow-hidden">
+               <h4 class="text-lg font-bold text-white tracking-tight mb-4">Detalhamento por Categoria</h4>
+               <div class="overflow-x-auto" style="scrollbar-color: rgba(255,255,255,0.1) transparent; scrollbar-width: thin;">
+                 <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                   <thead class="border-b border-white/5 text-xs font-semibold text-white/40">
+                     <tr>
+                       <th class="px-4 py-3">Categoria</th>
+                       <th class="px-4 py-3 text-right">Período A</th>
+                       <th class="px-4 py-3 text-right">Período B</th>
+                       <th class="px-4 py-3 text-right">Variação (R$)</th>
+                       <th class="px-4 py-3 text-right">Variação (%)</th>
+                     </tr>
+                   </thead>
+                   <tbody class="text-sm divide-y divide-white/[0.03]">
+                     <tr>
+                       <td class="px-4 py-3 text-white">Folha de Pagamento</td>
+                       <td class="px-4 py-3 text-right text-rose-300">R$ 22.000</td>
+                       <td class="px-4 py-3 text-right text-rose-300">R$ 22.000</td>
+                       <td class="px-4 py-3 text-right text-white/50">R$ 0</td>
+                       <td class="px-4 py-3 text-right"><span class="bg-white/5 text-white/50 text-[10px] px-2 py-1 rounded">0%</span></td>
+                     </tr>
+                     <tr>
+                       <td class="px-4 py-3 text-white">Vendas de Produtos</td>
+                       <td class="px-4 py-3 text-right text-emerald-300">R$ 32.000</td>
+                       <td class="px-4 py-3 text-right text-emerald-300">R$ 35.000</td>
+                       <td class="px-4 py-3 text-right text-rose-400 font-bold">-R$ 3.000</td>
+                       <td class="px-4 py-3 text-right"><span class="bg-rose-500/10 text-rose-400 text-[10px] px-2 py-1 rounded">-8.5%</span></td>
+                     </tr>
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+          </div>
+          
+          <!-- FAB: Próximos Passos -->
+          <div class="fixed bottom-24 right-6 lg:bottom-10 lg:right-10 z-[45]">
+             <button class="glass-panel flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl hover:bg-white/10 transition-colors border border-cyan-400/30">
+               <div class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
+                 <i class="fa-solid fa-list-check"></i>
+                 <svg class="absolute inset-0 h-10 w-10 -rotate-90 transform" viewBox="0 0 36 36">
+                   <circle cx="18" cy="18" r="16" fill="none" class="stroke-current text-cyan-400/20" stroke-width="2"></circle>
+                   <circle cx="18" cy="18" r="16" fill="none" class="stroke-current text-cyan-400" stroke-width="2" stroke-dasharray="100" stroke-dashoffset="65" stroke-linecap="round"></circle>
+                 </svg>
+               </div>
+               <div class="text-left hidden sm:block">
+                 <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-300">Próximos Passos</p>
+                 <p class="text-xs text-white/70">3 de 8 concluídos</p>
+               </div>
+             </button>
+          </div>
         </div>
 
       </section>
@@ -1028,7 +1494,7 @@
           <i class="fa-solid fa-xmark text-xs"></i>
         </button>
       </div>
-      <div class="grid grid-cols-5 gap-2.5 px-5 pb-8">
+      <div class="grid grid-cols-3 sm:grid-cols-6 gap-2.5 px-5 pb-8">
         <button data-tab="5" onclick="event.stopPropagation();closeMaisSheet();switchTab(5)" class="mais-tab-btn flex flex-col items-center gap-2.5 rounded-[20px] border border-white/8 bg-white/5 py-4 transition-all active:scale-95" style="backdrop-filter:blur(12px)">
           <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
             <i class="fa-solid fa-user text-violet-300"></i>
@@ -1058,6 +1524,12 @@
             <i class="fa-solid fa-globe text-fuchsia-300"></i>
           </span>
           <span class="text-[10px] font-bold text-white/80 tracking-wide uppercase">Mercado</span>
+        </button>
+        <button data-tab="10" onclick="event.stopPropagation();closeMaisSheet();switchTab(10)" class="mais-tab-btn flex flex-col items-center gap-2.5 rounded-[20px] border border-white/8 bg-white/5 py-4 transition-all active:scale-95" style="backdrop-filter:blur(12px)">
+          <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8">
+            <i class="fa-solid fa-chart-pie text-cyan-300"></i>
+          </span>
+          <span class="text-[10px] font-bold text-white/80 tracking-wide uppercase">Relatórios</span>
         </button>
       </div>
     </div>
@@ -1968,6 +2440,37 @@
     }
 
   })();
+  </script>
+
+  <!-- Script Navigation Relatorios -->
+  <script>
+    function switchRepTab(tabId) {
+      const tabs = ['dre', 'rxv', 'cashflow', 'comparison'];
+      
+      tabs.forEach(id => {
+        const btn = document.getElementById(`rep-tab-${id}`);
+        if(btn) {
+          if (id === tabId) {
+            btn.className = "rep-tab-item active whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm transition-colors border-cyan-400 text-cyan-400";
+          } else {
+            btn.className = "rep-tab-item whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-white/50 hover:text-white/80 hover:border-white/20";
+          }
+        }
+      });
+
+      tabs.forEach(id => {
+        const panel = document.getElementById(`rep-content-${id}`);
+        if(panel) {
+          if (id === tabId) {
+            panel.classList.remove('hidden');
+            panel.classList.add('block');
+          } else {
+            panel.classList.remove('block');
+            panel.classList.add('hidden');
+          }
+        }
+      });
+    }
   </script>
 
   <!-- Fingu AI Side Panel Overlay -->
