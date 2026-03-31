@@ -29,13 +29,18 @@ export function renderBanks() {
   
   grid.innerHTML = state.accounts.map(account => {
     const color = account.color || '#00f5ff';
-    const icon = BANK_ICONS[account.type] || 'fa-building-columns';
+    const icon = BANK_ICONS[account.accountType] || 'fa-building-columns';
     const typeLabelMap = {
       corrente: 'Conta Corrente',
       poupanca: 'Poupança',
       investimento: 'Investimento',
       caixa: 'Caixa / Dinheiro'
     };
+    
+    // Cálculo do saldo real com base nas transações da conta
+    const txs = (state.transactions || []).filter(t => t.accountId === account.id);
+    const currentBalance = (account.initialBalance || 0) + txs.reduce((sum, t) => sum + (t.value || 0), 0);
+
     
     return `
       <div class="glass-panel card-hover rounded-[28px] p-6 relative overflow-hidden" style="border: 1px solid ${color}33">
@@ -49,7 +54,7 @@ export function renderBanks() {
               <div>
                 <p class="font-bold text-white text-sm">${escapeHtml(account.name)}</p>
                 <p class="text-[10px] uppercase tracking-wider font-semibold text-white/40 mt-0.5">
-                  ${typeLabelMap[account.type] || 'Conta'}
+                  ${typeLabelMap[account.accountType] || 'Conta'}
                 </p>
               </div>
             </div>
@@ -60,11 +65,50 @@ export function renderBanks() {
           </div>
           <div class="space-y-1 mt-6">
             <span class="text-xs uppercase tracking-widest font-bold text-white/30">Saldo</span>
-            <div class="text-2xl font-black text-white tracking-tight">${formatMoney(account.balance)}</div>
+            <div class="text-2xl font-black text-white tracking-tight">${formatMoney(currentBalance)}</div>
+          </div>
+          <!-- Sparkline Chart -->
+          <div class="mt-4 h-12 w-full opacity-60">
+            <canvas id="sparkline-acc-${account.id}"></canvas>
           </div>
         </div>
       </div>`;
   }).join('');
+
+  // Renderizar os minigráficos (Sparklines) após montar o HTML
+  setTimeout(() => {
+    if (typeof window.Chart === 'undefined') return;
+    state.accounts.forEach(account => {
+      const el = document.getElementById(`sparkline-acc-${account.id}`);
+      if (!el) return;
+      const color = account.color || '#00f5ff';
+      // Mock dinâmico simulando histórico de 5 meses (assim como Fingu: Nov, Dez, Jan, Fev, Mar)
+      const baseVal = account.initialBalance || 1000;
+      const dataPoints = [baseVal*0.8, baseVal*0.9, baseVal*1.1, baseVal*0.95, baseVal];
+      
+      new window.Chart(el, {
+        type: 'line',
+        data: {
+          labels: ['Nov', 'Dez', 'Jan', 'Fev', 'Mar'],
+          datasets: [{
+            data: dataPoints,
+            borderColor: color,
+            borderWidth: 2,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: { x: { display: false }, y: { display: false } },
+          interaction: { mode: 'none' }
+        }
+      });
+    });
+  }, 100);
 }
 
 export function openEditBank(id) {
@@ -74,9 +118,9 @@ export function openEditBank(id) {
   
   document.getElementById('bank-modal-title').textContent = 'Editar Conta';
   document.getElementById('bank-modal-name').value = account.name;
-  document.getElementById('bank-modal-type').value = account.type || 'corrente';
+  document.getElementById('bank-modal-type').value = account.accountType || 'corrente';
   document.getElementById('bank-modal-color').value = account.color || '#00f5ff';
-  document.getElementById('bank-modal-balance').value = (account.balance || 0).toFixed(2).replace('.', ',');
+  document.getElementById('bank-modal-balance').value = (account.initialBalance || 0).toFixed(2).replace('.', ',');
   document.getElementById('bank-modal-error').classList.add('hidden');
   
   document.getElementById('bank-modal-overlay').classList.remove('hidden');
@@ -108,12 +152,12 @@ export function saveBankModal() {
   if (_editingBankId) {
     const idx = state.accounts.findIndex(a => a.id === _editingBankId);
     if (idx >= 0) {
-      state.accounts[idx] = { ...state.accounts[idx], name, type, color, balance: balance || 0 };
+      state.accounts[idx] = { ...state.accounts[idx], name, accountType: type, color, initialBalance: balance || 0 };
     }
     showToast('Conta atualizada.', 'success');
   } else {
     if (!state.accounts) state.accounts = [];
-    state.accounts.push({ id: uid('acc'), name, type, color, balance: balance || 0 });
+    state.accounts.push({ id: uid('acc'), name, accountType: type, color, initialBalance: balance || 0 });
     showToast('Nova conta adicionada.', 'success');
   }
   
