@@ -192,7 +192,8 @@ export function saveCardModal() {
   const errEl = document.getElementById('card-modal-error');
 
   if (!name) { errEl.textContent = 'Informe o nome do cartão.'; errEl.classList.remove('hidden'); return; }
-  if (!limit) { errEl.textContent = 'Limite / saldo inválido.'; errEl.classList.remove('hidden'); return; }
+  const limitRaw = document.getElementById('card-modal-limit').value.trim();
+  if (limitRaw === '' || isNaN(limit)) { errEl.textContent = 'Limite / saldo inválido.'; errEl.classList.remove('hidden'); return; }
   
   if (_editingCardId) {
     const idx = state.cards.findIndex(c => c.id === _editingCardId);

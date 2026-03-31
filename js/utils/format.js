@@ -59,16 +59,21 @@ export function richText(text) {
     .replace(/_(.+?)_/g, '<em class="text-white/75 not-italic">$1</em>');
 }
 
-/**
- * Parseia entrada de moeda do usuário: "1.250,90" ou "1250.90" → 1250.90
- * Retorna 0 se inválido.
- */
 export function parseCurrencyInput(raw) {
-  if (!raw) return 0;
-  const clean = String(raw).trim()
-    .replace(/[^\d.,]/g, '')
-    .replace(/\.(?=.*\.)/g, '')  // remove pontos extras (exceto o último)
-    .replace(',', '.');
+  if (raw === undefined || raw === null || raw === '') return 0;
+  let clean = String(raw).trim().replace(/[^\d.,-]/g, '');
+  
+  if (clean.includes(',')) {
+    clean = clean.replace(/\./g, '').replace(',', '.');
+  } else {
+    const parts = clean.split('.');
+    if (parts.length > 2) {
+      clean = clean.replace(/\./g, '');
+    } else if (parts.length === 2 && parts[1].length === 3) {
+      clean = clean.replace(/\./g, '');
+    }
+  }
+  
   const n = parseFloat(clean);
   return isNaN(n) ? 0 : n;
 }

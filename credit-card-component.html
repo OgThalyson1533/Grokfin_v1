@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrokFin - Credit Card Component</title>
+  <style>
+    /* Reset & Base fonts setting context for GrokFin Dashboard */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body {
+      background-color: #0f172a; /* GrokFin Dark Mode Base */
+      font-family: 'Inter', sans-serif;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    /* CSS Variables for Premium SaaS UI */
+    :root {
+      --bg-dark: #0f172a;
+      --card-surface: #1e293b;
+      --border-color: #334155;
+      
+      /* Accents */
+      --accent-green: #10b981;
+      --accent-green-glow: rgba(16, 185, 129, 0.2);
+      --accent-green-bg: rgba(16, 185, 129, 0.1);
+      
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      
+      /* Text */
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    /* ═════════════════════════════════════════════
+       Credit Card Component Container
+       ═════════════════════════════════════════════ */
+    .credit-card-widget {
+      background: var(--card-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Hover State with Glow Effect */
+    .credit-card-widget:hover {
+      box-shadow: 0 10px 25px -5px var(--accent-green-glow);
+      border-color: rgba(16, 185, 129, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* ═════════════════════════════════════════════
+       Header: Name and Flag 
+       ═════════════════════════════════════════════ */
+    .cc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .cc-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cc-icon {
+      background: var(--accent-green-bg);
+      color: var(--accent-green);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cc-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .cc-flag {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    /* ═════════════════════════════════════════════
+       Balances Section
+       ═════════════════════════════════════════════ */
+    .cc-balances {
+      margin-bottom: 24px;
+    }
+
+    .balance-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .balance-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .balance-val {
+      font-size: 0.95rem;
+    }
+
+    .balance-val.available { 
+      color: var(--accent-green); 
+      font-weight: 600; 
+      font-size: 1.15rem;
+    }
+    .balance-val.current-invoice { 
+      color: var(--accent-red); 
+      font-weight: 600; 
+    }
+    .balance-val.future { 
+      color: var(--accent-yellow); 
+      font-weight: 600; 
+    }
+
+    /* Separator for Available Limit */
+    .balance-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 16px 0;
+      opacity: 0.5;
+    }
+
+    /* ═════════════════════════════════════════════
+       Multi-Progress Bar (Três estados do Limite)
+       ═════════════════════════════════════════════ */
+    .limit-progress-wrapper {
+      margin-bottom: 24px;
+    }
+
+    .limit-bar-container {
+      height: 6px;
+      background: #0f172a; /* Empty/Background portion */
+      border-radius: 4px;
+      display: flex;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .bar-segment {
+      height: 100%;
+      border-right: 1px solid var(--bg-dark); /* Separation between segments */
+      transition: width 0.5s ease-in-out;
+    }
+    .bar-segment:last-child {
+      border-right: none;
+    }
+
+    .bar-segment.invoice { background: var(--accent-red); width: 25%; } /* Limite usado p/ Fatura Atual */
+    .bar-segment.future { background: var(--accent-yellow); width: 35%; } /* Limite usado p/ Parcelas Futuras */
+    .bar-segment.available { background: var(--accent-green); width: 40%; } /* Limite ainda Livre */
+
+    /* Legend */
+    .limit-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .dot.red { background: var(--accent-red); }
+    .dot.yellow { background: var(--accent-yellow); }
+    .dot.green { background: var(--accent-green); }
+
+    /* ═════════════════════════════════════════════
+       Footer: Dates 
+       ═════════════════════════════════════════════ */
+    .cc-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+      font-size: 0.85rem;
+    }
+
+    .due-date { 
+      color: var(--text-secondary); 
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .due-date.align-right {
+      text-align: right;
+    }
+
+    .due-date strong { 
+      color: var(--text-primary); 
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    /* Lucide Icon SVG simulation */
+    svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GROKFIN CREDIT CARD WIDGET -->
+  <div class="credit-card-widget">
+    
+    <!-- Top Header -->
+    <div class="cc-header">
+      <div class="cc-title-wrapper">
+        <div class="cc-icon">
+          <!-- Credit Card Icon (Lucide) -->
+          <svg viewBox="0 0 24 24">
+            <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+          </svg>
+        </div>
+        <div class="cc-title">Nubank Ultravioleta</div>
+      </div>
+      <div class="cc-flag">MasterCard</div>
+    </div>
+
+    <!-- Balances List -->
+    <div class="cc-balances">
+      <div class="balance-item">
+        <span class="balance-label">Fatura Atual (Consumido)</span>
+        <span class="balance-val current-invoice">R$ 1.250,00</span>
+      </div>
+      <div class="balance-item">
+        <span class="balance-label">Parcelas Futuras (Comprometido)</span>
+        <span class="balance-val future">R$ 1.750,00</span>
+      </div>
+      
+      <div class="balance-divider"></div>
+      
+      <div class="balance-item">
+        <span class="balance-label">Limite Disponível</span>
+        <span class="balance-val available">R$ 2.000,00</span>
+      </div>
+    </div>
+
+    <!-- Limit Visualizer -->
+    <div class="limit-progress-wrapper">
+      <div class="limit-bar-container">
+        <!-- Width variables calculate dynamically from Supabase `card_status_view` -->
+        <div class="bar-segment invoice" title="Fatura Atual" style="width: 25%;"></div>
+        <div class="bar-segment future" title="Parcelas Futuras" style="width: 35%;"></div>
+        <div class="bar-segment available" title="Disponível" style="width: 40%;"></div>
+      </div>
+      
+      <div class="limit-legend">
+        <div class="legend-item"><span class="dot red"></span> Atual</div>
+        <div class="legend-item"><span class="dot yellow"></span> Futuras</div>
+        <div class="legend-item"><span class="dot green"></span> Livre</div>
+      </div>
+    </div>
+
+    <!-- Info Footer -->
+    <div class="cc-footer">
+      <div class="due-date">
+        <span>Fecha em</span>
+        <strong>08 Nov</strong>
+      </div>
+      <div class="due-date align-right">
+        <span>Vence em</span>
+        <strong>15 Nov</strong>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
