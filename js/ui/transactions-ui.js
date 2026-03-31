@@ -650,7 +650,9 @@ export function openEditTx(id) {
   document.getElementById('tx-modal-split').value = tx.installments > 1 ? tx.installments : '';
   
   const accountSelect = document.getElementById('tx-modal-account');
-  populateAccountSelect(accountSelect, tx.accountId || 'principal');
+  // [FIX] Se a transação é de cartão, seleciona o cartão no dropdown unificado
+  const selectValue = tx.cardId || tx.accountId || 'principal';
+  populateAccountSelect(accountSelect, selectValue);
 
   const payment = document.getElementById('tx-modal-payment');
   if (payment) payment.value = tx.payment || 'conta';
@@ -825,11 +827,16 @@ export function saveTxModal() {
   const cat = document.getElementById('tx-modal-cat').value;
   const dateStr = document.getElementById('tx-modal-date').value.trim();
   const rawValue = parseCurrencyInput(document.getElementById('tx-modal-value').value);
-  const accountId = document.getElementById('tx-modal-account').value;
+  // [FIX] Detecta automaticamente se o item selecionado é cartão de crédito ou conta bancária
+  const selectedId = document.getElementById('tx-modal-account').value;
   const typeSelect = document.getElementById('tx-modal-type');
   const isIncome = typeSelect ? typeSelect.value === 'entrada' : false;
-  const payment = document.getElementById('tx-modal-payment').value;
-  const cardId = document.getElementById('tx-modal-card')?.value;
+  const isCardSelected = !!(selectedId && state.cards?.some(c => c.id === selectedId));
+  const accountId = isCardSelected ? null : (selectedId || null);
+  const cardId = isCardSelected ? selectedId : (document.getElementById('tx-modal-card')?.value || null);
+  const payment = isCardSelected
+    ? 'cartao_credito'
+    : (document.getElementById('tx-modal-payment')?.value || 'conta');
   const isRecurring = document.getElementById('tx-modal-recurring')?.checked;
   const splitInput = document.getElementById('tx-modal-split').value;
   const installments = parseInt(splitInput) || 1;
@@ -841,13 +848,9 @@ export function saveTxModal() {
   const errEl = document.getElementById('tx-modal-error');
 
   if (!desc) { errEl.textContent = 'A descrição é obrigatória.'; errEl.classList.remove('hidden'); return; }
-  if (!accountId) { errEl.textContent = 'A conta origem é obrigatória.'; errEl.classList.remove('hidden'); return; }
+  if (!selectedId) { errEl.textContent = 'Selecione uma conta ou cartão.'; errEl.classList.remove('hidden'); return; }
   if (!dateStr || dateStr.length < 8) { errEl.textContent = 'Use o formato DD/MM/AAAA.'; errEl.classList.remove('hidden'); return; }
   if (!rawValue) { errEl.textContent = 'O valor informado é inválido.'; errEl.classList.remove('hidden'); return; }
-  
-  if ((payment === 'cartao_credito' || payment === 'cartao_debito') && (!cardId || cardId === '')) {
-    errEl.textContent = 'Selecione em qual cartão foi lançado.'; errEl.classList.remove('hidden'); return;
-  }
 
   const finalValue = isIncome ? rawValue : -rawValue;
   const installValue = Number((finalValue / installments).toFixed(2));

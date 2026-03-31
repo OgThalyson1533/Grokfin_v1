@@ -188,6 +188,12 @@ export function saveState() {
        state.isNewUser = false;
     }
 
+    // [FIX] Recalcula o saldo sempre a partir das transações para evitar deriva incremental
+    // Garante que state.balance seja a fonte de verdade real independente de +/- manuais
+    if (Array.isArray(state.transactions)) {
+      state.balance = Number(state.transactions.reduce((acc, t) => acc + (t.value || 0), 0).toFixed(2));
+    }
+
     const toSave = { ...state, chatHistory: (state.chatHistory || []).slice(-40) };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     

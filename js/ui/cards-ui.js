@@ -123,7 +123,14 @@ export function deleteCardTx(cardId, txId) {
   const card = state.cards.find(c => c.id === cardId);
   if (!card) return;
   const tx = card.invoices.find(t => t.id === txId);
-  if (tx) card.used = Math.max(0, Number((card.used - tx.value).toFixed(2)));
+  if (tx) {
+    card.used = Math.max(0, Number((card.used - tx.value).toFixed(2)));
+    // [FIX] Remove também a transação vinculada do extrato geral e restaura o saldo
+    if (tx.txRefId) {
+      state.transactions = state.transactions.filter(t => t.id !== tx.txRefId);
+      state.balance = Number((state.balance + tx.value).toFixed(2));
+    }
+  }
   card.invoices = card.invoices.filter(t => t.id !== txId);
   saveState();
   if (window.appRenderAll) window.appRenderAll(); else renderCards(); // [FIX] Reatividade sistêmica
@@ -223,18 +230,41 @@ export function saveCardTx() {
   if (!amount) { errEl.textContent = 'Valor inválido.'; errEl.classList.remove('hidden'); return; }
   
   const installValue = Number((amount / installments).toFixed(2));
+  const _cardTxDate = new Intl.DateTimeFormat('pt-BR').format(new Date());
+
   for (let i = 0; i < installments; i++) {
     if (!card.invoices) card.invoices = [];
-    card.invoices.unshift({ 
-      id: uid('ctx'), 
-      desc: installments > 1 ? `${desc} (${i+1}/${installments})` : desc, 
-      cat, 
-      value: installValue, 
-      installments, 
-      installmentCurrent: i + 1 
+    const _txId = uid('tx');
+    const _iDesc = installments > 1 ? `${desc} (${i + 1}/${installments})` : desc;
+
+    card.invoices.unshift({
+      id: uid('ctx'),
+      txRefId: _txId, // [FIX] referência para remoção sincronizada com o extrato
+      desc: _iDesc,
+      cat,
+      value: installValue,
+      installments,
+      installmentCurrent: i + 1
+    });
+
+    // [FIX] Cria transação real no extrato geral → aparece no histórico e sincroniza com Supabase
+    state.transactions.unshift({
+      id: _txId,
+      date: _cardTxDate,
+      desc: _iDesc,
+      cat,
+      value: -installValue,
+      cardId: card.id,
+      accountId: null,
+      payment: 'cartao_credito',
+      installments: installments > 1 ? installments : undefined,
+      installmentCurrent: installments > 1 ? i + 1 : undefined,
+      notes: null,
+      attachmentUrl: null
     });
   }
   card.used = Number((card.used + amount).toFixed(2));
+  state.balance = Number((state.balance - amount).toFixed(2));
   saveState();
   document.getElementById('card-tx-modal-overlay').classList.add('hidden');
   if (window.appRenderAll) window.appRenderAll(); else renderCards(); // [FIX] Reatividade sistêmica

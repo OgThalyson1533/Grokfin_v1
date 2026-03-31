@@ -105,23 +105,35 @@ export async function syncToSupabase(state) {
 
   // 2. Transações
   if (state.transactions?.length && hasChanged('transactions', state.transactions)) {
-    const txRows = state.transactions.map(t => ({
-      id: cleanUUID(t.id),
-      user_id: uid,
-      date: toSqlDate(t.date),
-      description: t.desc,
-      category: t.cat,
-      amount: t.value,
-      payment: t.payment || null,
-      card_id: t.cardId ? cleanUUID(t.cardId) : null,
-      account_id: t.accountId ? cleanUUID(t.accountId) : null,
-      recurring_template: t.recurringTemplate || false,
-      installments: t.installments || 1,
-      installment_current: t.installmentCurrent || 1,
-      // [FIX TX] Campos de observação e URL do anexo
-      notes: t.notes || null,
-      attachment_url: t.attachmentUrl || null
-    }));
+    // [FIX] Conjuntos de IDs válidos para validação de FK
+    const validAccountIds = new Set((state.accounts || []).map(a => cleanUUID(a.id)));
+    const validCardIds    = new Set((state.cards    || []).map(c => cleanUUID(c.id)));
+
+    const txRows = state.transactions.map(t => {
+      const rawAccountId = t.accountId ? cleanUUID(t.accountId) : null;
+      const rawCardId    = t.cardId    ? cleanUUID(t.cardId)    : null;
+      // [FIX] Evita FK violation: account_id só é enviado se for uma conta real (não cartão)
+      const safeAccountId = (rawAccountId && validAccountIds.has(rawAccountId)) ? rawAccountId : null;
+      // [FIX] card_id só é enviado se for um cartão real cadastrado
+      const safeCardId    = (rawCardId    && validCardIds.has(rawCardId))       ? rawCardId    : null;
+      return {
+        id: cleanUUID(t.id),
+        user_id: uid,
+        date: toSqlDate(t.date),
+        description: t.desc,
+        category: t.cat,
+        amount: t.value,
+        payment: t.payment || null,
+        card_id: safeCardId,
+        account_id: safeAccountId,
+        recurring_template: t.recurringTemplate || false,
+        installments: t.installments || 1,
+        installment_current: t.installmentCurrent || 1,
+        // [FIX TX] Campos de observação e URL do anexo
+        notes: t.notes || null,
+        attachment_url: t.attachmentUrl || null
+      };
+    });
     tasks.push(upsertWithRetry('transactions', txRows));
   }
 
