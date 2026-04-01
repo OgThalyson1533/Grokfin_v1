@@ -26,7 +26,7 @@ class ModernFloxSelect {
     this.comboInput = element.querySelector('.combo-input');
     this.searchInput = element.querySelector('.search-input-field');
     this.isOpen = false;
-    this.onSelect = null; // Callback opcional
+    this.onSelect = null;
     this.bindEvents();
   }
 
@@ -35,13 +35,14 @@ class ModernFloxSelect {
   bindEvents() {
     if (!this.trigger) return;
     this.trigger.addEventListener('click', (e) => {
+      // Se clicar no input de texto e já estiver aberto, não fecha
       if (e.target === this.comboInput && this.isOpen) return;
       this.toggle();
     });
 
     if (this.dropdown) {
       this.dropdown.addEventListener('click', (e) => {
-        // Lógica de exclusão de categoria (cat-specific)
+        // Lógica de deleção (cat-only)
         const deleteBtn = e.target.closest('.delete-cat-btn');
         if (deleteBtn) {
           e.stopPropagation();
@@ -66,22 +67,22 @@ class ModernFloxSelect {
       this.comboInput.addEventListener('input', (e) => {
         this.open();
         this.filterOptions(e.target.value);
-        // Se limpar o input, resetar o ícone se for categoria
+        // Ao apagar tudo, resetar o ícone
         if (e.target.value === '') {
           const icon = this.element.querySelector('#cat-trigger-icon');
           if (icon) {
             icon.className = 'cat-icon';
-            icon.style.backgroundColor = 'var(--bg-input)';
+            icon.style.backgroundColor = 'var(--bg-hover)';
             icon.innerHTML = '<i data-lucide="tag"></i>';
             if (window.lucide) window.lucide.createIcons();
           }
+          this.hiddenInput.value = '';
         }
       });
     }
 
     document.addEventListener('click', (e) => {
       if (!this.element.contains(e.target) && this.isOpen) {
-        // Evitar fechar se clicar no modal de confirmação de deleção
         const confirmModal = document.getElementById('delete-cat-confirm-modal');
         if (confirmModal && confirmModal.contains(e.target)) return;
         this.close();
@@ -99,28 +100,25 @@ class ModernFloxSelect {
   }
 
   toggle() { this.isOpen ? this.close() : this.open(); }
+  
   open() {
-    this.isOpen = true;
-    this.element.classList.add('open');
-    this.element.querySelector('.select-trigger').setAttribute('aria-expanded', 'true');
-    if (this.searchInput) {
-      setTimeout(() => this.searchInput.focus(), 50);
-    }
+    this.isOpen = true; this.element.classList.add('open');
+    this.trigger?.setAttribute('aria-expanded', 'true');
+    if (this.searchInput) setTimeout(() => this.searchInput.focus(), 50);
   }
 
   close() {
-    this.isOpen = false;
-    this.element.classList.remove('open');
-    this.element.querySelector('.select-trigger').setAttribute('aria-expanded', 'false');
+    this.isOpen = false; this.element.classList.remove('open');
+    this.trigger?.setAttribute('aria-expanded', 'false');
     
-    // Resetar UI de criação de categoria se existir
+    // Reset do form de criação se fechado
     const builder = document.getElementById('builder-form');
-    const btnOpen = document.getElementById('btn-open-builder');
     const list = document.getElementById('tx-cat-options-list');
+    const btnOpen = document.getElementById('btn-open-builder');
     if (builder && list) {
-      builder.style.display = 'none';
-      list.style.display = 'block';
-      if (btnOpen) btnOpen.style.display = 'flex';
+       builder.style.display = 'none';
+       list.style.display = 'block';
+       if (btnOpen) btnOpen.style.display = 'flex';
     }
   }
 
@@ -141,15 +139,14 @@ class ModernFloxSelect {
         triggerIcon.innerHTML = optionIcon.innerHTML;
       }
     } else {
-      // Para seletor de conta
+      // Seletor de Conta (estilo rico original)
       const content = option.innerHTML;
-      // Remove o botão de delete se houver no HTML da opção (não deve haver em conta, mas por segurança)
-      const tempWrapper = document.createElement('div');
-      tempWrapper.innerHTML = content;
-      const delBtn = tempWrapper.querySelector('.delete-cat-btn');
-      if (delBtn) delBtn.remove();
-      this.triggerContent.innerHTML = tempWrapper.innerHTML;
-      this.triggerContent.querySelectorAll('.option-subtitle').forEach(s => s.remove()); // Remove saldo do trigger
+      const temp = document.createElement('div');
+      temp.innerHTML = content;
+      // Remove subtitulo/saldo ao exibir no trigger
+      temp.querySelectorAll('.option-subtitle').forEach(s => s.remove());
+      temp.querySelectorAll('.delete-cat-btn').forEach(b => b.remove());
+      this.triggerContent.innerHTML = temp.innerHTML;
     }
 
     this.hiddenInput.value = val;
@@ -159,15 +156,18 @@ class ModernFloxSelect {
   }
 
   setValue(val) {
-    const option = this.getOptions().find(opt => opt.dataset.value === val);
+    const options = this.getOptions();
+    const option = options.find(opt => opt.dataset.value === val);
     if (option) {
       this.selectOption(option);
     } else {
-      // Resetar
       this.hiddenInput.value = val || '';
-      if (this.comboInput) this.comboInput.value = '';
-      if (this.triggerContent && !this.comboInput) {
-         this.triggerContent.innerHTML = '<span class="placeholder-text" style="color: var(--text-placeholder); font-size: 14px;">Selecione...</span>';
+      if (this.comboInput) {
+        this.comboInput.value = val || '';
+        const icon = this.element.querySelector('#cat-trigger-icon');
+        if (icon) { icon.className = 'cat-icon'; icon.style.backgroundColor = 'var(--bg-hover)'; icon.innerHTML = '<i data-lucide="tag"></i>'; if (window.lucide) window.lucide.createIcons(); }
+      } else if (this.triggerContent) {
+        this.triggerContent.innerHTML = '<span class="placeholder-text" style="color: var(--text-placeholder); font-size: 14px;">Selecione...</span>';
       }
     }
   }
@@ -1340,12 +1340,26 @@ export function bindTxEvents() {
     btnSaida.addEventListener('click', () => { btnSaida.classList.add('active'); btnEntrada.classList.remove('active'); if (txModalType) txModalType.value = 'saida'; _syncTypeTabs('saida'); });
   }
 
-  // Accordion Mais detalhes
-  const btnMore = el('tx-more-details-btn'), areaMore = el('tx-more-details-area');
+  // Accordion Mais detalhes (PRECISO)
+  const btnMore = el('tx-more-details-btn');
+  const areaMore = el('tx-more-details-area');
+  const modalBody = el('modal-body-scroll');
   if (btnMore && areaMore) {
     btnMore.addEventListener('click', () => {
-      const open = areaMore.classList.toggle('open');
-      btnMore.innerHTML = open ? 'Menos detalhes <i data-lucide="chevron-up"></i>' : 'Mais detalhes <i data-lucide="chevron-down"></i>';
+      const isOpen = areaMore.classList.contains('open');
+      if (isOpen) {
+        areaMore.classList.remove('open');
+        btnMore.classList.remove('active');
+        btnMore.innerHTML = 'Mais detalhes <i data-lucide="chevron-down"></i>';
+      } else {
+        areaMore.classList.add('open');
+        btnMore.classList.add('active');
+        btnMore.innerHTML = 'Menos detalhes <i data-lucide="chevron-up"></i>';
+        // Scroll suave para revelar o conteúdo
+        setTimeout(() => {
+          if (modalBody) modalBody.scrollTo({ top: modalBody.scrollHeight, behavior: 'smooth' });
+        }, 50);
+      }
       if (window.lucide) window.lucide.createIcons();
     });
   }
@@ -1358,13 +1372,46 @@ export function bindTxEvents() {
   el('tx-ocr-btn')?.addEventListener('click', () => el('tx-ocr-input')?.click());
   el('tx-ocr-input')?.addEventListener('change', handleOcrImageInput);
 
-  // Criador de Categoria Inline
-  el('btn-open-builder')?.addEventListener('click', (e) => { e.stopPropagation(); el('btn-open-builder').style.display = 'none'; el('tx-cat-options-list').style.display = 'none'; el('builder-form').style.display = 'flex'; el('new-cat-name')?.focus(); });
-  el('btn-cancel-cat')?.addEventListener('click', (e) => { e.stopPropagation(); el('builder-form').style.display = 'none'; el('tx-cat-options-list').style.display = 'block'; el('btn-open-builder').style.display = 'flex'; });
+  // Criador de Categoria Inline (Sincronizado)
+  el('btn-open-builder')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const btnOpen = el('btn-open-builder');
+    const optionsList = el('tx-cat-options-list');
+    const builderForm = el('builder-form');
+    if (btnOpen) btnOpen.style.display = 'none';
+    if (optionsList) optionsList.style.display = 'none';
+    if (builderForm) builderForm.style.display = 'flex';
+    el('new-cat-name')?.focus();
+  });
+
+  el('btn-cancel-cat')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const builderForm = el('builder-form');
+    const optionsList = el('tx-cat-options-list');
+    const btnOpen = el('btn-open-builder');
+    if (builderForm) builderForm.style.display = 'none';
+    if (optionsList) optionsList.style.display = 'block';
+    if (btnOpen) btnOpen.style.display = 'flex';
+  });
+
   el('btn-save-cat')?.addEventListener('click', (e) => {
-    e.stopPropagation(); const name = el('new-cat-name')?.value.trim();
-    if (name && addCustomCategory(name)) { populateCategorySelect(null, name); el('builder-form').style.display = 'none'; el('tx-cat-options-list').style.display = 'block'; el('btn-open-builder').style.display = 'flex'; showToast(`Categoria "${name}" criada!`, "success"); }
-    else showToast("Nome inválido ou categoria já existe.", "warning");
+    e.stopPropagation();
+    const nameInput = el('new-cat-name');
+    const name = nameInput?.value.trim();
+    if (name && addCustomCategory(name)) {
+      populateCategorySelect(null, name);
+      // O populateCategorySelect já deve disparar a seleção no ModernFloxSelect
+      const builderForm = el('builder-form');
+      const optionsList = el('tx-cat-options-list');
+      const btnOpen = el('btn-open-builder');
+      if (builderForm) builderForm.style.display = 'none';
+      if (optionsList) optionsList.style.display = 'block';
+      if (btnOpen) btnOpen.style.display = 'flex';
+      if (nameInput) nameInput.value = '';
+      showToast(`Categoria "${name}" criada!`, "success");
+    } else {
+      showToast("Nome inválido ou categoria já existe.", "warning");
+    }
   });
 
   // Exportação e outros

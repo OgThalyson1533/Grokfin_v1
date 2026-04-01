@@ -1616,6 +1616,7 @@
   </div>
 
   <!-- ─── Transaction Modal (Add / Edit) ─── -->
+  <!-- ── 1. MODAL NOVA TRANSAÇÃO (LIQUID GLASS PRECISO) ── -->
   <div id="tx-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="glass-modal">
       <div class="modal-header">
@@ -1633,7 +1634,7 @@
           <div class="type-selector">
             <div class="type-btn active entrada" id="btn-entrada"><i data-lucide="plus-circle"></i> Entrada</div>
             <div class="type-btn saida" id="btn-saida"><i data-lucide="minus-circle"></i> Saída</div>
-            <input type="hidden" id="tx-modal-type" value="entrada"> <!-- Oculto para manipulação via JS -->
+            <input type="hidden" id="tx-modal-type" value="entrada">
             <button type="button" class="hidden" id="tx-tab-entrada" data-type="entrada"></button>
             <button type="button" class="hidden" id="tx-tab-saida" data-type="saida"></button>
           </div>
@@ -1653,7 +1654,7 @@
               <div class="select-dropdown" role="listbox">
                 <div class="select-search"><i data-lucide="search"></i><input type="text" placeholder="Busque a conta..." class="search-input-field"></div>
                 <div class="select-options" id="tx-account-options-list">
-                  <!-- Populado pelo JS transactions-ui.js -->
+                  <!-- Populado via JS -->
                 </div>
               </div>
             </div>
@@ -1673,22 +1674,24 @@
           <div class="form-group">
             <div style="display: flex; justify-content: space-between;">
               <label>Categoria *</label>
-              <span style="color: var(--accent-cyan); font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px;">Auto <i data-lucide="wand-2" style="width:10px; height:10px;"></i></span>
+              <span style="color: var(--accent-cyan); font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px;">IA <i data-lucide="wand-2" style="width:10px; height:10px;"></i></span>
             </div>
             
             <div class="custom-select" id="tx-categoria-select">
               <input type="hidden" name="categoria" id="tx-modal-cat" required>
               <div class="select-trigger" style="padding: 10px 16px 10px 10px;" tabindex="0" role="combobox" aria-expanded="false">
                 <div class="select-trigger-content">
-                  <div class="cat-icon" id="cat-trigger-icon" style="background-color: var(--bg-input);"><i data-lucide="tag"></i></div>
-                  <input type="text" class="combo-input" id="cat-combo-input" placeholder="Selecione ou digite..." autocomplete="off">
+                   <div class="cat-icon" id="cat-trigger-icon" style="background-color: var(--bg-hover);">
+                     <i data-lucide="tag"></i>
+                   </div>
+                   <input type="text" class="combo-input" id="cat-combo-input" placeholder="Selecione ou digite..." autocomplete="off">
                 </div>
                 <div class="select-icon"><i data-lucide="chevron-down"></i></div>
               </div>
               
               <div class="select-dropdown" role="listbox">
                 <div class="select-options" id="tx-cat-options-list">
-                  <!-- Populado por JS -->
+                  <!-- Populado via JS -->
                 </div>
                 
                 <div class="select-action-btn" id="btn-open-builder"><i data-lucide="plus"></i> Nova Categoria</div>
@@ -1722,14 +1725,11 @@
           <div class="form-group"><label>Data de Vencimento</label><div class="input-wrapper"><input type="text" class="form-control" id="tx-modal-due-date" placeholder="DD/MM/AAAA"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
         </div>
 
-        <!-- Hidden payment selects to trick legacy js temporarily -->
-        <select id="tx-modal-payment" class="hidden">
-           <option value="conta" selected>Conta</option>
-        </select>
-        <select id="tx-modal-card" class="hidden">
-        </select>
+        <!-- Hidden inputs para compatibilidade legacy -->
+        <select id="tx-modal-payment" class="hidden"><option value="conta" selected>Conta</option></select>
+        <select id="tx-modal-card" class="hidden"></select>
 
-        <div class="toggle-wrapper active flex" id="toggle-pagamento-realizado">
+        <div class="toggle-wrapper active" id="toggle-pagamento-realizado">
           <div class="toggle-switch"></div>
           <span class="toggle-label" id="tx-realized-label">Pagamento Realizado</span>
           <input type="checkbox" id="tx-modal-realized" class="hidden" checked>
@@ -1741,7 +1741,7 @@
           <div style="background-color: var(--bg-input); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; gap: 12px; align-items: center;">
               <i data-lucide="repeat" style="color: var(--accent-purple);"></i>
-              <div><span class="toggle-label text-white">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
+              <div><span class="toggle-label">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
             </div>
             <div class="toggle-wrapper" id="toggle-recorrente-wrap">
                <div class="toggle-switch"></div>
@@ -1749,8 +1749,15 @@
             </div>
           </div>
           
-          <div class="form-group"><label>Parcelas (Opcional)</label><input type="number" class="form-control" id="tx-modal-split" placeholder="1 = à vista" min="1" max="24"></div>
-          <div class="form-group"><label>Observações</label><textarea class="form-control" id="tx-modal-notes" rows="3" placeholder="Informações adicionais sobre esta transação..."></textarea></div>
+          <div class="form-group">
+            <label>Parcelas (Opcional)</label>
+            <input type="number" class="form-control" id="tx-modal-split" placeholder="1 = à vista" min="1" max="24">
+          </div>
+          
+          <div class="form-group">
+            <label>Observações</label>
+            <textarea class="form-control" id="tx-modal-notes" rows="3" placeholder="Informações adicionais sobre esta transação..."></textarea>
+          </div>
           
           <div class="form-group">
             <label>Anexos</label>
@@ -1762,7 +1769,7 @@
           </div>
         </div>
         
-        <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-1"></p>
+        <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-2 pb-2"></p>
       </div>
 
       <div class="modal-footer">
@@ -1772,8 +1779,8 @@
     </div>
   </div>
 
-  <!-- ─── Delete Confirm Dialog (para as categories) ─── -->
-  <div class="confirm-overlay z-[60]" id="delete-cat-confirm-modal">
+  <!-- ── 2. MODAL DE CONFIRMAÇÃO DE EXCLUSÃO (CATEGORIA) ── -->
+  <div class="confirm-overlay z-[9999]" id="delete-cat-confirm-modal">
     <div class="confirm-modal">
       <div class="confirm-title"><i data-lucide="alert-triangle"></i> Excluir Categoria</div>
       <div class="confirm-text">
