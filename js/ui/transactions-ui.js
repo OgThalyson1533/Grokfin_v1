@@ -221,25 +221,32 @@ function populateCategorySelect(container, selected) {
     const isSelected = selected === c;
     const color = toneForCategory(c);
     const icon = iconForCategory(c);
-    
     // Mapeamento FA -> Lucide para os principais ícones do sistema
     const faToLucide = {
+      'fa-bowl-food': 'utensils',
       'fa-utensils': 'utensils',
-      'fa-bolt': 'zap',
+      'fa-car-side': 'car',
       'fa-car': 'car',
+      'fa-film': 'clapperboard',
+      'fa-clapperboard': 'clapperboard',
       'fa-house': 'home',
-      'fa-cart-shopping': 'shopping-cart',
+      'fa-chart-line': 'trending-up',
+      'fa-arrow-trend-up': 'trending-up',
+      'fa-repeat': 'repeat',
       'fa-heart-pulse': 'heart',
+      'fa-bullseye': 'target',
+      'fa-bag-shopping': 'shopping-bag',
+      'fa-cart-shopping': 'shopping-cart',
+      'fa-bolt': 'zap',
       'fa-graduation-cap': 'graduation-cap',
       'fa-briefcase': 'briefcase',
       'fa-piggy-bank': 'landmark',
-      'fa-clapperboard': 'clapperboard',
       'fa-plane': 'plane',
       'fa-pills': 'pill',
       'fa-gift': 'gift',
       'fa-mobile-screen': 'smartphone',
       'fa-leaf': 'leaf',
-      'fa-cannabis': 'leaf' // Fallback se não tiver cannabis no lucide free
+      'fa-cannabis': 'leaf'
     };
 
     let lucideIcon = 'tag';
@@ -249,10 +256,21 @@ function populateCategorySelect(container, selected) {
       lucideIcon = icon;
     }
 
+    // Mapeamento de tons para variáveis CSS do Liquid Glass
+    const toneToColor = {
+      'tone-success': 'var(--tx-accent-green)',
+      'tone-cyan': 'var(--tx-accent-cyan)',
+      'tone-amber': 'var(--tx-accent-orange)',
+      'tone-violet': 'var(--tx-accent-purple)',
+      'tone-slate': 'rgba(255,255,255,0.1)',
+      'tone-danger': 'var(--tx-accent-red)'
+    };
+    const bgColor = toneToColor[color] || 'var(--tx-bg-hover)';
+
     return `
       <div class="select-option ${isSelected ? 'is-selected' : ''}" role="option" data-value="${escapeHtml(c)}">
-        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-          <div class="cat-icon" style="background-color: ${color};"><i data-lucide="${lucideIcon}"></i></div>
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+          <div class="cat-icon" style="background-color: ${bgColor};"><i data-lucide="${lucideIcon}"></i></div>
           <span class="option-title">${escapeHtml(c)}</span>
         </div>
         ${!CATEGORIES_LIST.includes(c) ? `<button type="button" class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>` : ''}
