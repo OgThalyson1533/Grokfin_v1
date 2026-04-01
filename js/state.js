@@ -188,10 +188,20 @@ export function saveState() {
        state.isNewUser = false;
     }
 
-    // [FIX] Recalcula o saldo sempre a partir das transações para evitar deriva incremental
-    // Garante que state.balance seja a fonte de verdade real independente de +/- manuais
+    // [FIX] Modelo de passivo para cartão de crédito:
+    // Despesas CC não reduzem saldo disponível (cash) — só reduzem quando a fatura é paga.
+    // state.balance = soma de tudo EXCETO despesas de cartão de crédito.
     if (Array.isArray(state.transactions)) {
-      state.balance = Number(state.transactions.reduce((acc, t) => acc + (t.value || 0), 0).toFixed(2));
+      const isCcExpense = t => t.value < 0 && (
+        t.payment === 'cartao_credito' ||
+        (t.cardId && !t.accountId)   // transações vinculadas a cartão sem conta bancária
+      );
+      state.balance = Number(
+        state.transactions
+          .filter(t => !isCcExpense(t))
+          .reduce((acc, t) => acc + (t.value || 0), 0)
+          .toFixed(2)
+      );
     }
 
     const toSave = { ...state, chatHistory: (state.chatHistory || []).slice(-40) };

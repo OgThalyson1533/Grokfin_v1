@@ -303,12 +303,8 @@ export function getFilteredTransactions() {
 
   if (state.ui.txStatus && state.ui.txStatus !== 'all') {
     list = list.filter(item => {
-      let stat = 'concluido';
-      if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
-         stat = 'pendente';
-      } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
-         stat = 'vencido';
-      }
+      // [FIX] Usa o campo status armazenado, não heurística por descrição
+      const stat = item.status === 'pendente' ? 'pendente' : 'concluido';
       return stat === state.ui.txStatus;
     });
   }
@@ -496,14 +492,8 @@ export function renderTransactions() {
   body.innerHTML = list.map(item => {
     const positive = item.value > 0;
     
-    // Mock status logic to match the Image 2 variants securely
-    let stat = 'concluido';
-    if (item.desc === 'Pendência' || item.desc.toLowerCase().includes('pendent')) {
-       stat = 'pendente';
-    } else if (item.value < 0 && item.desc.toLowerCase() === 'teste') {
-       // If dummy 1 logic
-       stat = 'vencido';
-    }
+    // [FIX] Usa campo status armazenado na transação — elimina heurística por descrição
+    const stat = item.status === 'pendente' ? 'pendente' : 'concluido';
 
     let statClass = '';
     let statLabel = '';
@@ -665,6 +655,10 @@ export function openEditTx(id) {
   if (recCheck) recCheck.checked = !!tx.recurringTemplate;
 
   document.getElementById('tx-modal-error')?.classList.add('hidden');
+
+  // [FIX] Restaura toggle "Realizado" conforme status armazenado na transação
+  const realEditEl = document.getElementById('tx-modal-realized');
+  if (realEditEl) realEditEl.checked = (tx.status !== 'pendente'); // pendente → desmarcado
 
   // [FIX TX] Preenche campos de observação e anexo ao editar
   const notesEl = document.getElementById('tx-modal-notes');
@@ -845,6 +839,10 @@ export function saveTxModal() {
   // [FIX TX] Captura o arquivo de anexo (se selecionado)
   const attachFile = document.getElementById('tx-modal-attachment')?.files?.[0] || null;
 
+  // [FIX STATUS] Lê toggle "Realizado" para definir status da transação
+  const realizedEl = document.getElementById('tx-modal-realized');
+  const txStatus = (realizedEl && realizedEl.checked) ? 'efetivado' : 'pendente';
+
   const errEl = document.getElementById('tx-modal-error');
 
   if (!desc) { errEl.textContent = 'A descrição é obrigatória.'; errEl.classList.remove('hidden'); return; }
@@ -884,10 +882,11 @@ export function saveTxModal() {
       state.transactions[idx] = { 
         ...state.transactions[idx], 
         desc, cat, date: dateStr, value: finalValue, accountId,
-        payment, cardId: (payment.includes('cartao') ? cardId : null),
+        payment, cardId: (isCardSelected ? cardId : null),
+        status: txStatus, // [FIX] persiste status real
         recurringTemplate: isRecurring,
         notes,
-        attachmentUrl: existingUrl // atualizado após upload assíncrono abaixo
+        attachmentUrl: existingUrl
       };
       const txId = state.transactions[idx].id;
       saveState();
@@ -910,26 +909,45 @@ export function saveTxModal() {
       if (!d) d = new Date();
       d.setMonth(d.getMonth() + i);
       const mDate = new Intl.DateTimeFormat('pt-BR').format(d);
-      const isPast = d < new Date(); 
       const txId = uid('tx');
       newIds.push(txId);
+      const iDesc = installments > 1 ? `${desc} (${i + 1}/${installments})` : desc;
+
       state.transactions.unshift({
         id: txId,
         date: mDate,
-        desc: installments > 1 ? `${desc} (${i + 1}/${installments})` : desc,
+        desc: iDesc,
         cat,
         value: installValue,
         accountId,
         payment,
-        cardId: (payment.includes('cartao') ? cardId : null),
+        cardId: (isCardSelected ? cardId : null),
+        status: txStatus, // [FIX] persiste status real do lançamento
         recurringTemplate: (i === 0 && isRecurring) ? true : undefined,
         installments: installments > 1 ? installments : undefined,
         installmentCurrent: installments > 1 ? i + 1 : undefined,
-        // [FIX TX] Persiste observação; attachmentUrl vira null e é preenchido após upload
         notes: (i === 0) ? notes : null,
         attachmentUrl: null
       });
-      if (isPast || installments === 1) state.balance += installValue;
+
+      // [FIX] Cartão de crédito: adiciona à fatura do cartão para aparecer no painel de faturas
+      // O saldo total NÃO é afetado aqui — CC é passivo; balance é recalculado em saveState()
+      if (isCardSelected && !isIncome) {
+        const linkedCard = state.cards?.find(c => c.id === cardId);
+        if (linkedCard) {
+          if (!linkedCard.invoices) linkedCard.invoices = [];
+          linkedCard.invoices.unshift({
+            id: uid('ctx'),
+            txRefId: txId,
+            desc: iDesc,
+            cat,
+            value: Math.abs(installValue),
+            installments: installments > 1 ? installments : undefined,
+            installmentCurrent: installments > 1 ? i + 1 : undefined
+          });
+          linkedCard.used = Number((linkedCard.used + Math.abs(installValue)).toFixed(2));
+        }
+      }
     }
     saveState();
     showToast(installments > 1 ? `Criada em ${installments} parcelas.` : (isRecurring ? 'Transação e recorrência criadas.' : 'Transação criada com sucesso.'), 'success');
