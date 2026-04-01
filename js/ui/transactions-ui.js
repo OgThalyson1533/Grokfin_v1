@@ -143,7 +143,7 @@ class ModernFloxSelect {
       const content = option.innerHTML;
       const temp = document.createElement('div');
       temp.innerHTML = content;
-      // Remove subtitulo/saldo ao exibir no trigger
+      // Remove subtitulo/saldo ao exibir no trigger (mantém no dropdown)
       temp.querySelectorAll('.option-subtitle').forEach(s => s.remove());
       temp.querySelectorAll('.delete-cat-btn').forEach(b => b.remove());
       this.triggerContent.innerHTML = temp.innerHTML;
@@ -221,8 +221,33 @@ function populateCategorySelect(container, selected) {
     const isSelected = selected === c;
     const color = toneForCategory(c);
     const icon = iconForCategory(c);
-    // Para lucide, iconForCategory pode precisar de mapeamento. Se for font-awesome, convertemos pro nome lucide se possível.
-    const lucideIcon = icon?.includes('fa-') ? 'tag' : (icon || 'tag');
+    
+    // Mapeamento FA -> Lucide para os principais ícones do sistema
+    const faToLucide = {
+      'fa-utensils': 'utensils',
+      'fa-bolt': 'zap',
+      'fa-car': 'car',
+      'fa-house': 'home',
+      'fa-cart-shopping': 'shopping-cart',
+      'fa-heart-pulse': 'heart',
+      'fa-graduation-cap': 'graduation-cap',
+      'fa-briefcase': 'briefcase',
+      'fa-piggy-bank': 'landmark',
+      'fa-clapperboard': 'clapperboard',
+      'fa-plane': 'plane',
+      'fa-pills': 'pill',
+      'fa-gift': 'gift',
+      'fa-mobile-screen': 'smartphone',
+      'fa-leaf': 'leaf',
+      'fa-cannabis': 'leaf' // Fallback se não tiver cannabis no lucide free
+    };
+
+    let lucideIcon = 'tag';
+    if (icon && icon.includes('fa-')) {
+      lucideIcon = faToLucide[icon] || 'tag';
+    } else if (icon) {
+      lucideIcon = icon;
+    }
 
     return `
       <div class="select-option ${isSelected ? 'is-selected' : ''}" role="option" data-value="${escapeHtml(c)}">
@@ -1483,7 +1508,10 @@ export function bindTxEvents() {
     };
 
     const onCancel = () => { confirmModal.classList.remove('open'); cleanup(); };
-    const cleanup = () => { btnConfirm.removeEventListener('click', onConfirm); btnCancel.removeEventListener('click', onCancel); };
+    const cleanup = () => { 
+      btnConfirm.replaceWith(btnConfirm.cloneNode(true));
+      btnCancel.replaceWith(btnCancel.cloneNode(true));
+    };
 
     btnConfirm.addEventListener('click', onConfirm);
     btnCancel.addEventListener('click', onCancel);
