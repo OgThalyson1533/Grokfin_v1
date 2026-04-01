@@ -12,18 +12,181 @@ import { showToast, normalizeText } from '../utils/dom.js';
 import { deleteRemoteTransaction } from '../services/transactions.js';
 import { SUPABASE_URL } from '../services/supabase.js';
 
+/**
+ * Classe para gerenciar os dropdowns customizados com busca e estados visuais
+ */
+class ModernFloxSelect {
+  constructor(element) {
+    if (!element) return;
+    this.element = element;
+    this.trigger = element.querySelector('.select-trigger');
+    this.triggerContent = element.querySelector('.select-trigger-content');
+    this.dropdown = element.querySelector('.select-dropdown');
+    this.hiddenInput = element.querySelector('input[type="hidden"]');
+    this.comboInput = element.querySelector('.combo-input');
+    this.searchInput = element.querySelector('.search-input-field');
+    this.isOpen = false;
+    this.onSelect = null; // Callback opcional
+    this.bindEvents();
+  }
+
+  getOptions() { return Array.from(this.element.querySelectorAll('.select-option')); }
+
+  bindEvents() {
+    if (!this.trigger) return;
+    this.trigger.addEventListener('click', (e) => {
+      if (e.target === this.comboInput && this.isOpen) return;
+      this.toggle();
+    });
+
+    if (this.dropdown) {
+      this.dropdown.addEventListener('click', (e) => {
+        // Lógica de exclusão de categoria (cat-specific)
+        const deleteBtn = e.target.closest('.delete-cat-btn');
+        if (deleteBtn) {
+          e.stopPropagation();
+          const option = deleteBtn.closest('.select-option');
+          if (window.confirmDeleteCategory) window.confirmDeleteCategory(option, this);
+          return;
+        }
+
+        const option = e.target.closest('.select-option');
+        if (option) {
+          e.stopPropagation();
+          this.selectOption(option);
+        }
+      });
+    }
+
+    if (this.searchInput) {
+      this.searchInput.addEventListener('input', (e) => this.filterOptions(e.target.value));
+    }
+
+    if (this.comboInput) {
+      this.comboInput.addEventListener('input', (e) => {
+        this.open();
+        this.filterOptions(e.target.value);
+        // Se limpar o input, resetar o ícone se for categoria
+        if (e.target.value === '') {
+          const icon = this.element.querySelector('#cat-trigger-icon');
+          if (icon) {
+            icon.className = 'cat-icon';
+            icon.style.backgroundColor = 'var(--bg-input)';
+            icon.innerHTML = '<i data-lucide="tag"></i>';
+            if (window.lucide) window.lucide.createIcons();
+          }
+        }
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!this.element.contains(e.target) && this.isOpen) {
+        // Evitar fechar se clicar no modal de confirmação de deleção
+        const confirmModal = document.getElementById('delete-cat-confirm-modal');
+        if (confirmModal && confirmModal.contains(e.target)) return;
+        this.close();
+      }
+    });
+  }
+
+  filterOptions(term) {
+    term = term.toLowerCase();
+    this.getOptions().forEach(opt => {
+      const title = opt.querySelector('.option-title')?.textContent.toLowerCase() || '';
+      const subtitle = opt.querySelector('.option-subtitle')?.textContent.toLowerCase() || '';
+      opt.style.display = (title.includes(term) || subtitle.includes(term)) ? 'flex' : 'none';
+    });
+  }
+
+  toggle() { this.isOpen ? this.close() : this.open(); }
+  open() {
+    this.isOpen = true;
+    this.element.classList.add('open');
+    this.element.querySelector('.select-trigger').setAttribute('aria-expanded', 'true');
+    if (this.searchInput) {
+      setTimeout(() => this.searchInput.focus(), 50);
+    }
+  }
+
+  close() {
+    this.isOpen = false;
+    this.element.classList.remove('open');
+    this.element.querySelector('.select-trigger').setAttribute('aria-expanded', 'false');
+    
+    // Resetar UI de criação de categoria se existir
+    const builder = document.getElementById('builder-form');
+    const btnOpen = document.getElementById('btn-open-builder');
+    const list = document.getElementById('tx-cat-options-list');
+    if (builder && list) {
+      builder.style.display = 'none';
+      list.style.display = 'block';
+      if (btnOpen) btnOpen.style.display = 'flex';
+    }
+  }
+
+  selectOption(option) {
+    this.getOptions().forEach(opt => opt.classList.remove('is-selected'));
+    option.classList.add('is-selected');
+
+    const val = option.dataset.value;
+    const title = option.querySelector('.option-title')?.textContent || '';
+
+    if (this.comboInput) {
+      this.comboInput.value = title;
+      const triggerIcon = this.element.querySelector('#cat-trigger-icon');
+      const optionIcon = option.querySelector('.cat-icon');
+      if (triggerIcon && optionIcon) {
+        triggerIcon.className = optionIcon.className;
+        triggerIcon.style.backgroundColor = optionIcon.style.backgroundColor;
+        triggerIcon.innerHTML = optionIcon.innerHTML;
+      }
+    } else {
+      // Para seletor de conta
+      const content = option.innerHTML;
+      // Remove o botão de delete se houver no HTML da opção (não deve haver em conta, mas por segurança)
+      const tempWrapper = document.createElement('div');
+      tempWrapper.innerHTML = content;
+      const delBtn = tempWrapper.querySelector('.delete-cat-btn');
+      if (delBtn) delBtn.remove();
+      this.triggerContent.innerHTML = tempWrapper.innerHTML;
+      this.triggerContent.querySelectorAll('.option-subtitle').forEach(s => s.remove()); // Remove saldo do trigger
+    }
+
+    this.hiddenInput.value = val;
+    if (this.onSelect) this.onSelect(val, option);
+    this.close();
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  setValue(val) {
+    const option = this.getOptions().find(opt => opt.dataset.value === val);
+    if (option) {
+      this.selectOption(option);
+    } else {
+      // Resetar
+      this.hiddenInput.value = val || '';
+      if (this.comboInput) this.comboInput.value = '';
+      if (this.triggerContent && !this.comboInput) {
+         this.triggerContent.innerHTML = '<span class="placeholder-text" style="color: var(--text-placeholder); font-size: 14px;">Selecione...</span>';
+      }
+    }
+  }
+}
+
 let _editingTxId = null;
 
 /** Sincroniza as abas visuais Entrada/Saída e atualiza o label do toggle "Realizado" */
 function _syncTypeTabs(type) {
+  const btnEntrada = document.getElementById('btn-entrada');
+  const btnSaida = document.getElementById('btn-saida');
   const tabEntrada = document.getElementById('tx-tab-entrada');
-  const tabSaida   = document.getElementById('tx-tab-saida');
-  if (tabEntrada) {
-    tabEntrada.classList.toggle('active', type === 'entrada');
-  }
-  if (tabSaida) {
-    tabSaida.classList.toggle('active', type === 'saida');
-  }
+  const tabSaida = document.getElementById('tx-tab-saida');
+
+  if (btnEntrada) btnEntrada.classList.toggle('active', type === 'entrada');
+  if (btnSaida) btnSaida.classList.toggle('active', type === 'saida');
+  if (tabEntrada) tabEntrada.classList.toggle('active', type === 'entrada');
+  if (tabSaida) tabSaida.classList.toggle('active', type === 'saida');
+
   const labelEl = document.getElementById('tx-realized-label');
   if (labelEl) {
     labelEl.textContent = type === 'entrada' ? 'Recebimento Realizado' : 'Pagamento Realizado';
@@ -48,45 +211,107 @@ function addCustomCategory(name) {
   return true;
 }
 
-/** Popula o <select> de categoria com as opções base + custom + opção "Nova categoria" */
-function populateCategorySelect(selectEl, selected) {
-  if (!selectEl) return;
+/** Popula o dropdown rico de categoria */
+function populateCategorySelect(container, selected) {
+  const optionsList = document.getElementById('tx-cat-options-list');
+  if (!optionsList) return;
+
   const all = getAllCategories();
-  selectEl.innerHTML = all.map(c =>
-    `<option value="${escapeHtml(c)}"${selected === c ? ' selected' : ''}>${escapeHtml(c)}</option>`
-  ).join('') + `<option value="__new__">➕ Nova categoria...</option>`;
-  if (selected && all.includes(selected)) selectEl.value = selected;
+  optionsList.innerHTML = all.map(c => {
+    const isSelected = selected === c;
+    const color = toneForCategory(c);
+    const icon = iconForCategory(c);
+    // Para lucide, iconForCategory pode precisar de mapeamento. Se for font-awesome, convertemos pro nome lucide se possível.
+    const lucideIcon = icon?.includes('fa-') ? 'tag' : (icon || 'tag');
+
+    return `
+      <div class="select-option ${isSelected ? 'is-selected' : ''}" role="option" data-value="${escapeHtml(c)}">
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+          <div class="cat-icon" style="background-color: ${color};"><i data-lucide="${lucideIcon}"></i></div>
+          <span class="option-title">${escapeHtml(c)}</span>
+        </div>
+        ${!CATEGORIES_LIST.includes(c) ? `<button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+
+  // Atualizar o trigger se houver seleção
+  if (selected) {
+    const option = optionsList.querySelector(`[data-value="${CSS.escape(selected)}"]`);
+    if (option && window.txCategoryInstance) {
+      window.txCategoryInstance.selectOption(option);
+    }
+  }
 }
 
-/** Popula o select de conta (modal) dividindo entre Contas e Cartões */
-export function populateAccountSelect(selectEl, selectedValue) {
-  if (!selectEl) return;
+/** Popula o seletor rico de conta/cartão */
+export function populateAccountSelect(container, selectedValue) {
+  const optionsList = document.getElementById('tx-account-options-list');
+  if (!optionsList) return;
+
   const accounts = state.accounts || [];
   const cards = state.cards || [];
   
-  let html = `<option value="" disabled selected>Selecione uma conta ou cartão</option>`;
+  let html = '';
   
   if (accounts.length > 0) {
-    html += `<optgroup label="Contas Bancárias">`;
+    html += `<div class="select-group-label">Contas Bancárias</div>`;
     accounts.forEach(acc => {
-      html += `<option value="${acc.id}"${selectedValue === acc.id ? ' selected' : ''}>${escapeHtml(acc.name)}</option>`;
+      const initial = acc.name.substring(0, 2).toLowerCase();
+      const isSelected = selectedValue === acc.id;
+      html += `
+        <div class="select-option ${isSelected ? 'is-selected' : ''}" role="option" data-value="${acc.id}">
+          <div class="bank-icon" style="background: rgba(255,255,255,0.1); color: white;">${initial}</div>
+          <div class="option-text">
+            <span class="option-title">${escapeHtml(acc.name)}</span>
+            <span class="option-subtitle">Saldo: ${formatMoney(acc.balance || 0)}</span>
+          </div>
+        </div>
+      `;
     });
-    html += `</optgroup>`;
   } else {
-    html += `<optgroup label="Contas Bancárias">
-               <option value="principal"${selectedValue === 'principal' ? ' selected' : ''}>Conta Principal</option>
-             </optgroup>`;
+    // Fallback Conta Principal
+    const isSelected = selectedValue === 'principal';
+    html += `
+      <div class="select-group-label">Contas Bancárias</div>
+      <div class="select-option ${isSelected ? 'is-selected' : ''}" role="option" data-value="principal">
+        <div class="bank-icon" style="background: rgba(255,255,255,0.1); color: white;">cp</div>
+        <div class="option-text">
+          <span class="option-title">Conta Principal</span>
+          <span class="option-subtitle">Saldo: ${formatMoney(state.balance || 0)}</span>
+        </div>
+      </div>
+    `;
   }
   
   if (cards.length > 0) {
-    html += `<optgroup label="Cartões de Crédito">`;
+    html += `<div class="select-group-label">Cartões de Crédito</div>`;
     cards.forEach(card => {
-      html += `<option value="${card.id}"${selectedValue === card.id ? ' selected' : ''}>${escapeHtml(card.name)}</option>`;
+      const initial = card.name.substring(0, 2).toLowerCase();
+      const isSelected = selectedValue === card.id;
+      html += `
+        <div class="select-option ${isSelected ? 'is-selected' : ''}" role="option" data-value="${card.id}">
+          <div class="bank-icon" style="background: rgba(255,255,255,0.1); color: white;">${initial}</div>
+          <div class="option-text">
+            <span class="option-title">${escapeHtml(card.name)}</span>
+            <span class="option-subtitle">Limite disp: ${formatMoney((card.limit || 0) - (card.used || 0))}</span>
+          </div>
+        </div>
+      `;
     });
-    html += `</optgroup>`;
   }
   
-  selectEl.innerHTML = html;
+  optionsList.innerHTML = html;
+  if (window.lucide) window.lucide.createIcons();
+
+  if (selectedValue) {
+    const option = optionsList.querySelector(`[data-value="${CSS.escape(selectedValue)}"]`);
+    if (option && window.txAccountInstance) {
+      window.txAccountInstance.selectOption(option);
+    }
+  }
 }
 
 let _txToDelete = null;
@@ -574,8 +799,9 @@ export function renderTransactions() {
 export function openTxModal() {
   _editingTxId = null;
   document.getElementById('tx-modal-title').textContent = 'Nova Transação';
-  const fields = ['desc', 'value', 'date', 'split'];
-  fields.forEach(f => {
+  
+  // Limpa campos básicos
+  ['desc', 'value', 'split', 'notes'].forEach(f => {
     const el = document.getElementById(`tx-modal-${f}`);
     if (el) el.value = '';
   });
@@ -583,46 +809,57 @@ export function openTxModal() {
   const bdDate = document.getElementById('tx-modal-date');
   if (bdDate) bdDate.value = new Date().toLocaleDateString('pt-BR');
   
-  const typeSelect = document.getElementById('tx-modal-type');
-  if (typeSelect) typeSelect.value = 'saida';
+  const typeValue = 'saida';
+  const typeInput = document.getElementById('tx-modal-type');
+  if (typeInput) typeInput.value = typeValue;
+
+  // Sincroniza abas visuais do novo design
+  const btnEntrada = document.getElementById('btn-entrada');
+  const btnSaida = document.getElementById('btn-saida');
+  if (btnEntrada && btnSaida) {
+    btnEntrada.classList.remove('active');
+    btnSaida.classList.add('active');
+  }
+  _syncTypeTabs(typeValue);
   
-  const recCheck = document.getElementById('tx-modal-recurring');
-  if (recCheck) recCheck.checked = false;
+  // Reseta toggles customizados
+  const realizedWrap = document.getElementById('toggle-pagamento-realizado');
+  if (realizedWrap) realizedWrap.classList.remove('active');
+  const realizedChk = document.getElementById('tx-modal-realized');
+  if (realizedChk) realizedChk.checked = false;
 
-  const catSelect = document.getElementById('tx-modal-cat');
-  populateCategorySelect(catSelect, 'Alimentação');
+  const recurringWrap = document.getElementById('toggle-recorrente-wrap');
+  if (recurringWrap) recurringWrap.classList.remove('active');
+  const recurringChk = document.getElementById('tx-modal-recurring');
+  if (recurringChk) recurringChk.checked = false;
 
-  const accountSelect = document.getElementById('tx-modal-account');
-  populateAccountSelect(accountSelect, '');
+  // Inicializa seletores ricos
+  populateCategorySelect(null, 'Alimentação'); // O populateCategorySelect já limpa e insere
+  if (window.txCategoryInstance) window.txCategoryInstance.setValue('Alimentação');
 
-  const payment = document.getElementById('tx-modal-payment');
-  if (payment) payment.value = '';
-  
-  const cardRow = document.getElementById('tx-card-selector-row');
-  if (cardRow) cardRow.classList.add('hidden');
+  populateAccountSelect(null, '');
+  if (window.txAccountInstance) window.txAccountInstance.setValue('');
 
-  const errEl = document.getElementById('tx-modal-error');
-  if (errEl) errEl.classList.add('hidden');
-
-  // [FIX TX] Limpa campos de observação e anexo
-  const notesEl = document.getElementById('tx-modal-notes');
-  if (notesEl) notesEl.value = '';
+  // Limpa anexos
   const attachNameEl = document.getElementById('tx-attachment-name');
   if (attachNameEl) attachNameEl.textContent = 'Clique para anexar imagem ou PDF';
   const attachInput = document.getElementById('tx-modal-attachment');
   if (attachInput) attachInput.value = '';
 
-  // Limpa campos extras do novo layout
-  const dueDateEl = document.getElementById('tx-modal-due-date');
-  if (dueDateEl) dueDateEl.value = '';
-  const realizedEl = document.getElementById('tx-modal-realized');
-  if (realizedEl) realizedEl.checked = false;
+  const errEl = document.getElementById('tx-modal-error');
+  if (errEl) errEl.classList.add('hidden');
 
-  // Sincroniza abas visuais para "saida" (default)
-  _syncTypeTabs('saida');
+  // Reseta accordion
+  const areaMore = document.getElementById('tx-more-details-area');
+  const btnMore = document.getElementById('tx-more-details-btn');
+  if (areaMore) areaMore.classList.remove('open');
+  if (btnMore) {
+    btnMore.innerHTML = 'Mais detalhes <i data-lucide="chevron-down"></i>';
+    if (window.lucide) window.lucide.createIcons();
+  }
 
   document.getElementById('tx-modal-overlay')?.classList.remove('hidden');
-  setTimeout(() => document.getElementById('tx-modal-desc')?.focus(), 60);
+  setTimeout(() => document.getElementById('tx-modal-desc')?.focus(), 150);
 }
 
 export function openEditTx(id) {
@@ -632,58 +869,66 @@ export function openEditTx(id) {
 
   document.getElementById('tx-modal-title').textContent = 'Editar Transação';
   document.getElementById('tx-modal-desc').value = tx.desc;
-  // Popular categorias dinamicamente e selecionar a da transação
-  const catSel = document.getElementById('tx-modal-cat');
-  populateCategorySelect(catSel, tx.cat);
-  document.getElementById('tx-modal-date').value = tx.date;
-  document.getElementById('tx-modal-value').value = Math.abs(tx.value).toFixed(2).replace('.', ',');
+  
+  // Popular e selecionar Categoria
+  populateCategorySelect(null, tx.cat);
+  if (window.txCategoryInstance) window.txCategoryInstance.setValue(tx.cat);
+
+  const dateInput = document.getElementById('tx-modal-date');
+  if (dateInput) dateInput.value = tx.date;
+  
+  document.getElementById('tx-modal-value').value = "R$ " + formatMoney(Math.abs(tx.value)).replace('R$ ', '');
   document.getElementById('tx-modal-split').value = tx.installments > 1 ? tx.installments : '';
   
-  const accountSelect = document.getElementById('tx-modal-account');
-  // [FIX] Se a transação é de cartão, seleciona o cartão no dropdown unificado
+  // Popular e selecionar Conta/Cartão
   const selectValue = tx.cardId || tx.accountId || 'principal';
-  populateAccountSelect(accountSelect, selectValue);
+  populateAccountSelect(null, selectValue);
+  if (window.txAccountInstance) window.txAccountInstance.setValue(selectValue);
 
-  const payment = document.getElementById('tx-modal-payment');
-  if (payment) payment.value = tx.payment || 'conta';
-  
   const isIncome = tx.value > 0;
-  const typeSelect = document.getElementById('tx-modal-type');
-  if (typeSelect) typeSelect.value = isIncome ? 'entrada' : 'saida';
+  const typeValue = isIncome ? 'entrada' : 'saida';
+  const typeInput = document.getElementById('tx-modal-type');
+  if (typeInput) typeInput.value = typeValue;
 
-  const recCheck = document.getElementById('tx-modal-recurring');
-  if (recCheck) recCheck.checked = !!tx.recurringTemplate;
+  // Sincroniza abas visuais
+  const btnEntrada = document.getElementById('btn-entrada');
+  const btnSaida = document.getElementById('btn-saida');
+  if (btnEntrada && btnSaida) {
+    if (isIncome) {
+      btnEntrada.classList.add('active');
+      btnSaida.classList.remove('active');
+    } else {
+      btnSaida.classList.add('active');
+      btnEntrada.classList.remove('active');
+    }
+  }
+  _syncTypeTabs(typeValue);
 
-  document.getElementById('tx-modal-error')?.classList.add('hidden');
+  // Toggles customizados
+  const realized = (tx.status !== 'pendente');
+  const realizedWrap = document.getElementById('toggle-pagamento-realizado');
+  const realizedChk = document.getElementById('tx-modal-realized');
+  if (realizedWrap) realizedWrap.classList.toggle('active', realized);
+  if (realizedChk) realizedChk.checked = realized;
 
-  // [FIX] Restaura toggle "Realizado" conforme status armazenado na transação
-  const realEditEl = document.getElementById('tx-modal-realized');
-  if (realEditEl) realEditEl.checked = (tx.status !== 'pendente'); // pendente → desmarcado
+  const recurring = !!tx.recurringTemplate;
+  const recurringWrap = document.getElementById('toggle-recorrente-wrap');
+  const recurringChk = document.getElementById('tx-modal-recurring');
+  if (recurringWrap) recurringWrap.classList.toggle('active', recurring);
+  if (recurringChk) recurringChk.checked = recurring;
 
-  // [FIX TX] Preenche campos de observação e anexo ao editar
+  // Observações e Anexo
   const notesEl = document.getElementById('tx-modal-notes');
   if (notesEl) notesEl.value = tx.notes || '';
   const attachNameEl = document.getElementById('tx-attachment-name');
-  const attachInput  = document.getElementById('tx-modal-attachment');
-  if (attachInput) attachInput.value = '';
   if (attachNameEl) {
-    attachNameEl.textContent = tx.attachmentUrl
-      ? tx.attachmentUrl.split('/').pop()
+    attachNameEl.textContent = tx.attachmentUrl 
+      ? tx.attachmentUrl.split('/').pop() 
       : 'Clique para anexar imagem ou PDF';
   }
 
-  // Sincroniza abas visuais
-  _syncTypeTabs(isIncome ? 'entrada' : 'saida');
-
+  document.getElementById('tx-modal-error')?.classList.add('hidden');
   document.getElementById('tx-modal-overlay')?.classList.remove('hidden');
-
-  if (tx.cardId && (payment.value === 'cartao_credito' || payment.value === 'cartao_debito')) {
-    const cardModal = document.getElementById('tx-modal-card');
-    if (cardModal) cardModal.value = tx.cardId;
-    document.getElementById('tx-card-selector-row')?.classList.remove('hidden');
-  } else {
-    document.getElementById('tx-card-selector-row')?.classList.add('hidden');
-  }
 }
 
 export async function handleOcrImageInput(e) {
@@ -821,27 +1066,21 @@ export function saveTxModal() {
   const cat = document.getElementById('tx-modal-cat').value;
   const dateStr = document.getElementById('tx-modal-date').value.trim();
   const rawValue = parseCurrencyInput(document.getElementById('tx-modal-value').value);
-  // [FIX] Detecta automaticamente se o item selecionado é cartão de crédito ou conta bancária
+  
   const selectedId = document.getElementById('tx-modal-account').value;
-  const typeSelect = document.getElementById('tx-modal-type');
-  const isIncome = typeSelect ? typeSelect.value === 'entrada' : false;
+  const typeValue = document.getElementById('tx-modal-type').value;
+  const isIncome = typeValue === 'entrada';
+  
   const isCardSelected = !!(selectedId && state.cards?.some(c => c.id === selectedId));
-  const accountId = isCardSelected ? null : (selectedId || null);
-  const cardId = isCardSelected ? selectedId : (document.getElementById('tx-modal-card')?.value || null);
-  const payment = isCardSelected
-    ? 'cartao_credito'
-    : (document.getElementById('tx-modal-payment')?.value || 'conta');
+  const accountId = isCardSelected ? null : (selectedId || 'principal');
+  const cardId = isCardSelected ? selectedId : null;
+  const payment = isCardSelected ? 'cartao_credito' : 'conta';
+  
   const isRecurring = document.getElementById('tx-modal-recurring')?.checked;
-  const splitInput = document.getElementById('tx-modal-split').value;
-  const installments = parseInt(splitInput) || 1;
-  // [FIX TX] Lê campo de observações
+  const installments = parseInt(document.getElementById('tx-modal-split').value) || 1;
   const notes = document.getElementById('tx-modal-notes')?.value.trim() || null;
-  // [FIX TX] Captura o arquivo de anexo (se selecionado)
   const attachFile = document.getElementById('tx-modal-attachment')?.files?.[0] || null;
-
-  // [FIX STATUS] Lê toggle "Realizado" para definir status da transação
-  const realizedEl = document.getElementById('tx-modal-realized');
-  const txStatus = (realizedEl && realizedEl.checked) ? 'efetivado' : 'pendente';
+  const txStatus = document.getElementById('tx-modal-realized')?.checked ? 'efetivado' : 'pendente';
 
   const errEl = document.getElementById('tx-modal-error');
 
@@ -971,10 +1210,10 @@ export function saveTxModal() {
 export function bindTxEvents() {
   const el = id => document.getElementById(id);
 
+  // --- Filtros do Topo (Dashboard) ---
   el('tx-filter-btn')?.addEventListener('click', () => { el('tx-filter-menu')?.classList.toggle('hidden'); });
   el('tx-filter-close')?.addEventListener('click', () => { el('tx-filter-menu')?.classList.add('hidden'); });
   
-  // Mapeamento correto de ID do input -> propriedade no state.ui
   const filterIdToStateKey = {
     'tx-search': 'txSearch',
     'tx-category': 'txCategory',
@@ -989,7 +1228,6 @@ export function bindTxEvents() {
     });
   });
 
-  // [FIX #9] tx-reset não tinha listener, clicar não limpava os filtros
   el('tx-reset')?.addEventListener('click', () => {
     state.ui.txSearch = '';
     state.ui.txCategory = 'all';
@@ -999,295 +1237,181 @@ export function bindTxEvents() {
     state.ui.txOrigin = 'all';
     state.ui.txPage = 0;
     renderTransactions();
-    // Limpa label do filtro de período
     const periodLabel = document.getElementById('tx-period-label');
     if (periodLabel) periodLabel.textContent = 'Filtrar por período';
   });
 
-  // Filtro de Calendário Visual Dinâmico
+  // --- Filtro de Calendário ---
   const periodBtn = el('tx-period-btn');
-  const periodWrapper = el('tx-period-wrapper');
-
-  if (periodBtn && periodWrapper) {
+  if (periodBtn) {
     const CAL_MONTH_NAMES = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
-    let calState = {
-      current: new Date(),
-      start: null,
-      end: null,
-      savedStart: null,
-      savedEnd: null
-    };
+    let calState = { current: new Date(), start: null, end: null, savedStart: null, savedEnd: null };
 
-    function calIsSame(a, b) {
-      if (!a || !b) return false;
-      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-    }
-    function calInRange(d) {
-      if (!calState.start || !calState.end) return false;
-      return d > calState.start && d < calState.end;
-    }
+    function calIsSame(a, b) { if (!a || !b) return false; return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+    function calInRange(d) { if (!calState.start || !calState.end) return false; return d > calState.start && d < calState.end; }
     
-    function updateCalFooter() {
-      const ft = document.getElementById('cal-footer-label');
-      if (!ft) return;
-      if (calState.start && calState.end) {
-        ft.innerHTML = `<span style="color:rgba(255,255,255,.55)">De</span> ${calState.start.toLocaleDateString('pt-BR')} <span style="color:rgba(255,255,255,.55)">até</span> ${calState.end.toLocaleDateString('pt-BR')}`;
-      } else if (calState.start) {
-        ft.textContent = `Início: ${calState.start.toLocaleDateString('pt-BR')} — selecione o fim`;
-      } else {
-        ft.textContent = 'Selecione o período';
-      }
-    }
-
     function renderCalendar() {
       const grid = document.getElementById('cal-grid');
       const display = document.getElementById('cal-month-display');
       if (!grid || !display) return;
-
       display.textContent = `${CAL_MONTH_NAMES[calState.current.getMonth()]} ${calState.current.getFullYear()}`;
       grid.innerHTML = '';
-      ['DOM','SEG','TER','QUA','QUI','SEX','SAB'].forEach(d => {
-        grid.innerHTML += `<div class="text-center text-[10px] font-bold tracking-widest pb-2" style="color:rgba(255,255,255,.35)">${d}</div>`;
-      });
-
-      const year = calState.current.getFullYear();
-      const month = calState.current.getMonth();
-      const firstDay = new Date(year, month, 1).getDay();
-      const totalDays = new Date(year, month + 1, 0).getDate();
-
+      ['DOM','SEG','TER','QUA','QUI','SEX','SAB'].forEach(d => { grid.innerHTML += `<div class="text-center text-[10px] font-bold tracking-widest pb-2" style="color:rgba(255,255,255,.35)">${d}</div>`; });
+      const year = calState.current.getFullYear(), month = calState.current.getMonth();
+      const firstDay = new Date(year, month, 1).getDay(), totalDays = new Date(year, month + 1, 0).getDate();
       for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
-
       for (let i = 1; i <= totalDays; i++) {
         const thisDate = new Date(year, month, i, 12);
-        const isStart = calIsSame(thisDate, calState.start);
-        const isEnd = calIsSame(thisDate, calState.end);
-        const inRange = calInRange(thisDate);
+        const isStart = calIsSame(thisDate, calState.start), isEnd = calIsSame(thisDate, calState.end), inRange = calInRange(thisDate);
         let cls = 'aspect-square flex items-center justify-center text-sm font-medium rounded-xl cursor-pointer transition-all ';
         let style = '';
-        if (isStart || isEnd) {
-          cls += 'font-bold text-black ';
-          style = 'background:linear-gradient(135deg,#00f5ff,#00ff85);box-shadow:0 0 12px rgba(0,245,255,.3)';
-        } else if (inRange) {
-          cls += 'text-cyan-300 ';
-          style = 'background:rgba(0,245,255,.1)';
-        } else {
-          cls += 'text-white/80 hover:bg-white/10 ';
-        }
+        if (isStart || isEnd) { cls += 'font-bold text-black '; style = 'background:linear-gradient(135deg,#00f5ff,#00ff85);box-shadow:0 0 12px rgba(0,245,255,.3)'; }
+        else if (inRange) { cls += 'text-cyan-300 '; style = 'background:rgba(0,245,255,.1)'; }
+        else { cls += 'text-white/80 hover:bg-white/10 '; }
         grid.innerHTML += `<div class="${cls}" style="${style}" data-cal-day="${i}">${i}</div>`;
       }
-      grid.dataset.calYear = year;
-      grid.dataset.calMonth = month;
-      updateCalFooter();
-    }
-
-    function updatePeriodLabel() {
-      const btn = document.getElementById('tx-period-label');
-      if (!btn) return;
-      if (calState.savedStart && calState.savedEnd) {
-        btn.textContent = `${calState.savedStart.toLocaleDateString('pt-BR')} → ${calState.savedEnd.toLocaleDateString('pt-BR')}`;
-        btn.style.color = '#00f5ff';
-      } else {
-        btn.textContent = 'Filtrar por período';
-        btn.style.color = '';
-      }
+      grid.dataset.calYear = year; grid.dataset.calMonth = month;
     }
 
     if (!document.getElementById('tx-calendar-dropdown')) {
       const drop = document.createElement('div');
       drop.id = 'tx-calendar-dropdown';
       drop.className = 'hidden absolute top-[115%] right-0 z-[60] w-[340px] overflow-hidden rounded-[20px] border border-cyan-400/20 bg-[#0f1829] shadow-[0_32px_72px_rgba(0,0,0,.95),inset_0_0_0_1px_rgba(255,255,255,.05)]';
-      drop.innerHTML = `
-        <div class="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <div id="cal-month-display" class="text-xs font-bold uppercase tracking-widest text-white/80">—</div>
-          <div class="flex gap-2">
-            <button id="cal-prev" class="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xs text-white transition-colors hover:bg-white/10"><i class="fa-solid fa-chevron-left"></i></button>
-            <button id="cal-next" class="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xs text-white transition-colors hover:bg-white/10"><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
-        </div>
-        <div class="p-3">
-          <div id="cal-grid" class="grid grid-cols-7 gap-y-0.5 gap-x-0"></div>
-        </div>
-        <div id="cal-footer-label" class="border-t border-white/10 px-5 py-2.5 text-center text-xs font-semibold tracking-wide text-cyan-400/80">Selecione o período</div>
-        <div class="flex gap-2 p-4 pt-0">
-          <button id="cal-clear-btn" class="flex-1 rounded-xl border border-white/10 bg-white/5 p-2.5 text-xs font-semibold text-white/60 transition-colors hover:bg-white/10">Limpar</button>
-          <button id="cal-apply-btn" class="flex-1 rounded-xl border-none p-2.5 text-xs font-bold text-black transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Aplicar</button>
-        </div>
-      `;
+      drop.innerHTML = `<div class="flex items-center justify-between border-b border-white/10 px-5 py-4"><div id="cal-month-display" class="text-xs font-bold uppercase tracking-widest text-white/80">—</div><div class="flex gap-2"><button id="cal-prev" class="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xs text-white hover:bg-white/10"><i class="fa-solid fa-chevron-left"></i></button><button id="cal-next" class="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xs text-white hover:bg-white/10"><i class="fa-solid fa-chevron-right"></i></button></div></div><div class="p-3"><div id="cal-grid" class="grid grid-cols-7 gap-y-0.5 gap-x-0"></div></div><div id="cal-footer-label" class="border-t border-white/10 px-5 py-2.5 text-center text-xs font-semibold tracking-wide text-cyan-400/80">Selecione o período</div><div class="flex gap-2 p-4 pt-0"><button id="cal-clear-btn" class="flex-1 rounded-xl border border-white/10 bg-white/5 p-2.5 text-xs font-semibold text-white/60 hover:bg-white/10">Limpar</button><button id="cal-apply-btn" class="flex-1 rounded-xl border-none p-2.5 text-xs font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Aplicar</button></div>`;
       document.body.appendChild(drop);
 
-      // Função auxiliar para reposicionar
-      function positionDropdown() {
-        const btn = document.getElementById('tx-period-btn');
-        const drp = document.getElementById('tx-calendar-dropdown');
-        if (!btn || !drp) return;
+      const pos = () => {
+        const btn = el('tx-period-btn'); if (!btn || drop.classList.contains('hidden')) return;
         const rect = btn.getBoundingClientRect();
-        drp.style.top = (rect.bottom + window.scrollY + 8) + 'px';
-        drp.style.right = (document.body.clientWidth - rect.right) + 'px'; // alinha à direita do botão
-      }
-
-      window.addEventListener('resize', positionDropdown);
-      window.addEventListener('scroll', positionDropdown, true);
+        drop.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+        drop.style.left = (rect.left + 340 > window.innerWidth) ? 'auto' : rect.left + 'px';
+        drop.style.right = (rect.left + 340 > window.innerWidth) ? (document.body.clientWidth - rect.right) + 'px' : 'auto';
+      };
+      window.addEventListener('resize', pos); window.addEventListener('scroll', pos, true);
 
       drop.addEventListener('click', e => {
         const dayEl = e.target.closest('[data-cal-day]');
         if (dayEl) {
-          e.stopPropagation();
-          const grid = document.getElementById('cal-grid');
+          const grid = el('cal-grid');
           const clicked = new Date(parseInt(grid.dataset.calYear), parseInt(grid.dataset.calMonth), parseInt(dayEl.dataset.calDay), 12);
-          if (!calState.start || (calState.start && calState.end)) {
-            calState.start = clicked; calState.end = null;
-          } else if (clicked < calState.start) {
-            calState.start = clicked;
-          } else {
-            calState.end = clicked;
+          if (!calState.start || (calState.start && calState.end)) { calState.start = clicked; calState.end = null; }
+          else if (clicked < calState.start) { calState.start = clicked; }
+          else { calState.end = clicked; }
+          renderCalendar(); return;
+        }
+        if (e.target.closest('#cal-prev')) { calState.current.setMonth(calState.current.getMonth() - 1); renderCalendar(); return; }
+        if (e.target.closest('#cal-next')) { calState.current.setMonth(calState.current.getMonth() + 1); renderCalendar(); return; }
+        if (e.target.closest('#cal-apply-btn')) {
+          if (calState.start) {
+            calState.savedStart = calState.start; calState.savedEnd = calState.end || calState.start;
+            state.ui.txDateStart = calState.savedStart.toISOString().split('T')[0];
+            state.ui.txDateEnd = calState.savedEnd.toISOString().split('T')[0];
+            updatePeriodLabel(); drop.classList.add('hidden'); renderTransactions();
           }
-          renderCalendar();
           return;
         }
-
-        if (e.target.closest('#cal-prev')) { e.stopPropagation(); calState.current.setMonth(calState.current.getMonth() - 1); renderCalendar(); return; }
-        if (e.target.closest('#cal-next')) { e.stopPropagation(); calState.current.setMonth(calState.current.getMonth() + 1); renderCalendar(); return; }
-        
-        if (e.target.closest('#cal-clear-btn')) {
-          e.stopPropagation();
-          calState.start = null; calState.end = null; calState.savedStart = null; calState.savedEnd = null;
-          state.ui.txDateStart = null; state.ui.txDateEnd = null;
-          updatePeriodLabel(); renderCalendar(); drop.classList.add('hidden');
-          state.ui.txPage = 0; renderTransactions(); return;
-        }
-
-        if (e.target.closest('#cal-apply-btn')) {
-          e.stopPropagation();
-          if (!calState.start) return;
-          calState.savedStart = calState.start;
-          calState.savedEnd = calState.end || calState.start;
-          updatePeriodLabel(); drop.classList.add('hidden');
-          state.ui.txDateStart = calState.savedStart.toISOString().split('T')[0];
-          state.ui.txDateEnd = calState.savedEnd.toISOString().split('T')[0];
-          state.ui.txPage = 0; renderTransactions(); return;
-        }
-        e.stopPropagation();
+        if (e.target.closest('#cal-clear-btn')) { calState.start = calState.end = calState.savedStart = calState.savedEnd = null; state.ui.txDateStart = state.ui.txDateEnd = null; updatePeriodLabel(); renderTransactions(); drop.classList.add('hidden'); return; }
       });
-
-      document.body.addEventListener('click', e => {
-        if (!e.target.closest('#tx-period-wrapper') && !e.target.closest('#tx-calendar-dropdown')) {
-          document.getElementById('tx-calendar-dropdown').classList.add('hidden');
-        }
-      });
+      document.addEventListener('click', e => { if (!drop.contains(e.target) && !periodBtn.contains(e.target)) drop.classList.add('hidden'); });
     }
 
-    periodBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const drop = document.getElementById('tx-calendar-dropdown');
-      
-      const btn = document.getElementById('tx-period-btn');
-      const rect = btn.getBoundingClientRect();
-      drop.style.top = (rect.bottom + window.scrollY + 8) + 'px';
-      // Tentativa de alinhar a direita ou esquerda dependendo do espaço (simplificada para manter à direita do botão)
-      drop.style.right = 'auto';
-      drop.style.left = rect.left + 'px';
+    const updatePeriodLabel = () => {
+      const lbl = el('tx-period-label'); if (!lbl) return;
+      lbl.textContent = (calState.savedStart) ? `${calState.savedStart.toLocaleDateString('pt-BR')} → ${calState.savedEnd.toLocaleDateString('pt-BR')}` : 'Filtrar por período';
+      lbl.style.color = (calState.savedStart) ? '#00f5ff' : '';
+    };
 
-      // Se a tela for pequena ou vazar, ajusta
-      if (rect.left + 340 > window.innerWidth) {
-        drop.style.left = 'auto';
-        drop.style.right = (document.body.clientWidth - rect.right) + 'px';
-      }
-
-      if (drop.classList.contains('hidden')) {
-        calState.current = calState.savedStart ? new Date(calState.savedStart) : new Date();
-        calState.start = calState.savedStart ? new Date(calState.savedStart) : null;
-        calState.end = calState.savedEnd ? new Date(calState.savedEnd) : null;
-        renderCalendar();
-        drop.classList.remove('hidden');
-      } else {
-        drop.classList.add('hidden');
-      }
-    });
-
-    if (state.ui.txDateStart && state.ui.txDateEnd) {
-      calState.savedStart = new Date(state.ui.txDateStart + 'T12:00:00');
-      calState.savedEnd = new Date(state.ui.txDateEnd + 'T12:00:00');
-      updatePeriodLabel();
-    }
+    periodBtn.addEventListener('click', () => { if (drop.classList.contains('hidden')) { pos(); renderCalendar(); drop.classList.remove('hidden'); } else drop.classList.add('hidden'); });
   }
 
-  const ocrBtn = el('tx-ocr-btn');
-  const ocrInput = el('tx-ocr-input');
-  if (ocrBtn && ocrInput) {
-    ocrBtn.addEventListener('click', () => ocrInput.click());
-    ocrInput.addEventListener('change', handleOcrImageInput);
-  }
-
-  el('tx-export-csv')?.addEventListener('click', exportTransactionsCSV);
-  el('tx-export-pdf')?.addEventListener('click', exportTransactionsPDF);
+  // --- Funcionalidades do Modal "Nova Transação" ---
+  if (el('tx-conta-select')) window.txAccountInstance = new ModernFloxSelect(el('tx-conta-select'));
+  if (el('tx-categoria-select')) window.txCategoryInstance = new ModernFloxSelect(el('tx-categoria-select'));
 
   el('tx-add-btn')?.addEventListener('click', openTxModal);
-  el('tx-modal-cancel')?.addEventListener('click', () => { el('tx-modal-overlay')?.classList.add('hidden'); });
-  el('tx-modal-close')?.addEventListener('click', () => { el('tx-modal-overlay')?.classList.add('hidden'); });
+  el('tx-modal-close')?.addEventListener('click', () => el('tx-modal-overlay')?.classList.add('hidden'));
+  el('tx-modal-cancel')?.addEventListener('click', () => el('tx-modal-overlay')?.classList.add('hidden'));
   el('tx-modal-save')?.addEventListener('click', saveTxModal);
 
-  // ── Type tabs (Entrada / Saída) ──
-  document.querySelectorAll('.tx-type-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const type = btn.dataset.type;
-      _syncTypeTabs(type);
-      const typeSelect = document.getElementById('tx-modal-type');
-      if (typeSelect) typeSelect.value = type;
+  // Tabs de Entrada/Saída
+  const btnEntrada = el('btn-entrada'), btnSaida = el('btn-saida'), txModalType = el('tx-modal-type');
+  if (btnEntrada && btnSaida) {
+    btnEntrada.addEventListener('click', () => { btnEntrada.classList.add('active'); btnSaida.classList.remove('active'); if (txModalType) txModalType.value = 'entrada'; _syncTypeTabs('entrada'); });
+    btnSaida.addEventListener('click', () => { btnSaida.classList.add('active'); btnEntrada.classList.remove('active'); if (txModalType) txModalType.value = 'saida'; _syncTypeTabs('saida'); });
+  }
+
+  // Accordion Mais detalhes
+  const btnMore = el('tx-more-details-btn'), areaMore = el('tx-more-details-area');
+  if (btnMore && areaMore) {
+    btnMore.addEventListener('click', () => {
+      const open = areaMore.classList.toggle('open');
+      btnMore.innerHTML = open ? 'Menos detalhes <i data-lucide="chevron-up"></i>' : 'Mais detalhes <i data-lucide="chevron-down"></i>';
+      if (window.lucide) window.lucide.createIcons();
     });
+  }
+
+  // Toggles de status/recorrência
+  el('toggle-pagamento-realizado')?.addEventListener('click', function() { this.classList.toggle('active'); const chk = el('tx-modal-realized'); if (chk) chk.checked = this.classList.contains('active'); });
+  el('toggle-recorrente-wrap')?.addEventListener('click', function() { this.classList.toggle('active'); const chk = el('tx-modal-recurring'); if (chk) chk.checked = this.classList.contains('active'); });
+
+  // OCR
+  el('tx-ocr-btn')?.addEventListener('click', () => el('tx-ocr-input')?.click());
+  el('tx-ocr-input')?.addEventListener('change', handleOcrImageInput);
+
+  // Criador de Categoria Inline
+  el('btn-open-builder')?.addEventListener('click', (e) => { e.stopPropagation(); el('btn-open-builder').style.display = 'none'; el('tx-cat-options-list').style.display = 'none'; el('builder-form').style.display = 'flex'; el('new-cat-name')?.focus(); });
+  el('btn-cancel-cat')?.addEventListener('click', (e) => { e.stopPropagation(); el('builder-form').style.display = 'none'; el('tx-cat-options-list').style.display = 'block'; el('btn-open-builder').style.display = 'flex'; });
+  el('btn-save-cat')?.addEventListener('click', (e) => {
+    e.stopPropagation(); const name = el('new-cat-name')?.value.trim();
+    if (name && addCustomCategory(name)) { populateCategorySelect(null, name); el('builder-form').style.display = 'none'; el('tx-cat-options-list').style.display = 'block'; el('btn-open-builder').style.display = 'flex'; showToast(`Categoria "${name}" criada!`, "success"); }
+    else showToast("Nome inválido ou categoria já existe.", "warning");
   });
 
-  el('tx-delete-cancel')?.addEventListener('click', () => { el('tx-delete-overlay')?.classList.add('hidden'); });
+  // Exportação e outros
+  el('tx-export-csv')?.addEventListener('click', exportTransactionsCSV);
+  el('tx-export-pdf')?.addEventListener('click', exportTransactionsPDF);
+  el('tx-delete-cancel')?.addEventListener('click', () => el('tx-delete-overlay')?.classList.add('hidden'));
   el('tx-delete-confirm')?.addEventListener('click', deleteTx);
-
-  // Modal de exclusão em massa
-  el('tx-bulk-delete-cancel')?.addEventListener('click', () => { el('tx-bulk-delete-overlay')?.classList.add('hidden'); });
+  el('tx-bulk-delete-cancel')?.addEventListener('click', () => el('tx-bulk-delete-overlay')?.classList.add('hidden'));
   el('tx-bulk-delete-confirm')?.addEventListener('click', _executeBulkDelete);
 
-  // Fechar modais clicando no backdrop
-  el('tx-bulk-delete-overlay')?.addEventListener('click', e => {
-    if (e.target === e.currentTarget) el('tx-bulk-delete-overlay')?.classList.add('hidden');
+  // Mascara e Dates
+  el('tx-modal-value')?.addEventListener('input', (e) => {
+    let v = e.target.value.replace(/\D/g, "");
+    if (v) { v = (v / 100).toFixed(2).replace(".", ","); e.target.value = "R$ " + v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1."); }
   });
-  el('tx-delete-overlay')?.addEventListener('click', e => {
-    if (e.target === e.currentTarget) el('tx-delete-overlay')?.classList.add('hidden');
-  });
+  if (window.flatpickr) {
+    flatpickr("#tx-modal-date", { dateFormat: "d/m/Y", locale: "pt", allowInput: true, disableMobile: true });
+    flatpickr("#tx-modal-due-date", { dateFormat: "d/m/Y", locale: "pt", allowInput: true, disableMobile: true });
+  }
 
-  el('tx-modal-payment')?.addEventListener('change', e => {
-    const isCard = e.target.value.includes('cartao');
-    const row = document.getElementById('tx-card-selector-row');
-    const select = document.getElementById('tx-modal-card');
-    const hint = document.getElementById('tx-card-hint');
-    if (isCard) {
-      if (row) row.classList.remove('hidden');
-      if (select) {
-        select.innerHTML = '<option value="">Selecione...</option>' + state.cards.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
-      }
-      if (hint && e.target.value === 'cartao_credito') {
-        hint.innerHTML = '<i class="fa-solid fa-circle-info mr-1"></i>O lançamento será somado à fatura e adiado no caixa.';
-      } else if (hint) {
-        hint.innerHTML = '<i class="fa-solid fa-bolt mr-1"></i>Lançado como débito: sai na hora do caixa.';
-      }
-    } else {
-      if (row) row.classList.add('hidden');
-      if (select) select.value = '';
-    }
-  });
+  window.confirmDeleteCategory = (option, selectInstance) => {
+    const name = option.dataset.value;
+    const confirmModal = document.getElementById('delete-cat-confirm-modal');
+    const nameSpan = document.getElementById('cat-to-delete-name');
+    if (!confirmModal || !nameSpan) return;
 
-  // Handler "Nova categoria..." no select do modal
-  el('tx-modal-cat')?.addEventListener('change', e => {
-    if (e.target.value !== '__new__') return;
-    const name = prompt('Nome da nova categoria:')?.trim();
-    if (!name) { e.target.value = 'Alimentação'; return; }
-    const added = addCustomCategory(name);
-    if (added) {
-      populateCategorySelect(e.target, name);
-      showToast(`Categoria "${name}" criada com sucesso.`, 'success');
-    } else {
-      showToast('Essa categoria já existe.', 'danger');
-      e.target.value = 'Alimentação';
-    }
-  });
+    nameSpan.textContent = name;
+    confirmModal.classList.add('open');
 
-  window.openEditTx = openEditTx;
-  window.confirmDeleteTx = confirmDeleteTx;
-  window.loadMoreTransactions = loadMoreTransactions;
+    const btnConfirm = document.getElementById('btn-confirm-cat-delete');
+    const btnCancel = document.getElementById('btn-cancel-cat-delete');
+
+    const onConfirm = () => {
+      state.customCategories = (state.customCategories || []).filter(c => c !== name);
+      saveState();
+      populateCategorySelect(null, '');
+      confirmModal.classList.remove('open');
+      showToast(`Categoria "${name}" removida.`, "info");
+      cleanup();
+    };
+
+    const onCancel = () => { confirmModal.classList.remove('open'); cleanup(); };
+    const cleanup = () => { btnConfirm.removeEventListener('click', onConfirm); btnCancel.removeEventListener('click', onCancel); };
+
+    btnConfirm.addEventListener('click', onConfirm);
+    btnCancel.addEventListener('click', onCancel);
+  };
+
+  window.openEditTx = openEditTx; window.confirmDeleteTx = confirmDeleteTx; window.loadMoreTransactions = loadMoreTransactions;
 }

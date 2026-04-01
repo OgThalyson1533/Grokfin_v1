@@ -1616,231 +1616,172 @@
   </div>
 
   <!-- ─── Transaction Modal (Add / Edit) ─── -->
-  <div id="tx-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
-       style="background:rgba(0,0,0,.65);backdrop-filter:blur(6px)">
-    <div class="w-full max-w-md rounded-[24px] border border-white/10 p-0 overflow-hidden shadow-2xl"
-         style="background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))">
-      <!-- Modal header -->
-      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
-        <div class="flex items-center gap-3">
-          <h3 class="text-lg font-bold text-white tracking-tight" id="tx-modal-title">Nova Transação</h3>
-          <!-- Botão Smart OCR -->
-          <button id="tx-ocr-btn" title="Ler Comprovante (Inteligência Offline)" class="flex h-8 px-3 items-center gap-2 rounded-lg bg-emerald-400/10 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-400/20">
-            <i class="fa-solid fa-camera"></i> <span class="hidden sm:inline">Scanner Inteligente</span>
-          </button>
+  <div id="tx-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="glass-modal">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 class="modal-title" id="tx-modal-title">Nova Transação</h2>
+          <button class="btn-scanner" id="tx-ocr-btn"><i data-lucide="camera"></i> <span class="hidden sm:inline">Scanner Inteligente</span></button>
           <input type="file" id="tx-ocr-input" accept="image/*" class="hidden" />
         </div>
-        <button id="tx-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <button class="btn-close" id="tx-modal-close"><i data-lucide="x"></i></button>
       </div>
 
-      <!-- ── Tipo: Abas Entrada / Saída ── -->
-      <div class="px-6 pt-5 pb-0">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Tipo *</p>
-        <div class="tx-type-tabs" id="tx-type-tabs">
-          <button type="button" class="tx-type-tab tx-type-tab--entrada" data-type="entrada" id="tx-tab-entrada">
-            <i class="fa-solid fa-circle-plus text-[11px]"></i> Entrada
-          </button>
-          <button type="button" class="tx-type-tab tx-type-tab--saida active" data-type="saida" id="tx-tab-saida">
-            <i class="fa-solid fa-circle-minus text-[11px]"></i> Saída
-          </button>
-        </div>
-        <!-- Hidden select mantido para compatibilidade com JS existente -->
-        <select id="tx-modal-type" class="hidden">
-          <option value="saida" selected>Saída</option>
-          <option value="entrada">Entrada</option>
-        </select>
-      </div>
-
-      <!-- ── Corpo do formulário ── -->
-      <div class="px-6 py-5 flex flex-col gap-4" style="max-height:68vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent">
-
-        <!-- Linha 1: Conta + Valor (2 colunas) -->
-        <div class="grid grid-cols-2 gap-3">
-          <!-- Conta -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Conta *</label>
-            <select id="tx-modal-account"
-                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors appearance-none"
-                    style="background-color:rgba(255,255,255,.05)">
-              <option value="" disabled selected>Selecione uma conta</option>
-              <option value="principal">Conta Principal</option>
-            </select>
-          </div>
-          <!-- Valor -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Valor *</label>
-            <div class="relative">
-              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-white/40 pointer-events-none select-none">R$</span>
-              <input id="tx-modal-value" type="text" placeholder="0,00" inputmode="decimal"
-                     class="w-full rounded-2xl border border-white/10 bg-white/5 pl-9 pr-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
-            </div>
+      <div class="modal-body" id="modal-body-scroll">
+        <div class="form-group">
+          <label>Tipo *</label>
+          <div class="type-selector">
+            <div class="type-btn active entrada" id="btn-entrada"><i data-lucide="plus-circle"></i> Entrada</div>
+            <div class="type-btn saida" id="btn-saida"><i data-lucide="minus-circle"></i> Saída</div>
+            <input type="hidden" id="tx-modal-type" value="entrada"> <!-- Oculto para manipulação via JS -->
+            <button type="button" class="hidden" id="tx-tab-entrada" data-type="entrada"></button>
+            <button type="button" class="hidden" id="tx-tab-saida" data-type="saida"></button>
           </div>
         </div>
 
-        <!-- Linha 2: Descrição + Categoria (2 colunas) -->
-        <div class="grid grid-cols-2 gap-3">
-          <!-- Descrição -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Descrição *</label>
-            <input id="tx-modal-desc" type="text" placeholder="Ex: Pagamento fornecedor"
-                   class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
-          </div>
-          <!-- Categoria -->
-          <div class="flex flex-col gap-1.5">
-            <div class="flex items-center justify-between">
-              <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Categoria *</label>
-              <span class="text-[9px] font-bold text-cyan-400/60 flex items-center gap-1">Auto <i class="fa-solid fa-wand-magic-sparkles text-[8px]"></i></span>
-            </div>
-            <select id="tx-modal-cat"
-                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors appearance-none"
-                    style="background-color:rgba(255,255,255,.05)">
-              <option value="Alimentação">Alimentação</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Linha 3: Contato (full width) -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Contato</label>
-          <div class="relative">
-            <input id="tx-modal-contact" type="text" placeholder="Contato (opcional)"
-                   class="w-full rounded-2xl border border-white/10 bg-white/5 pl-4 pr-10 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
-            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
-              <i class="fa-solid fa-code-compare rotate-90 text-xs"></i>
-            </span>
-          </div>
-        </div>
-
-        <!-- Linha 4: Datas (2 colunas) — Data de Competência + Data de Vencimento -->
-        <div class="grid grid-cols-2 gap-3">
-          <!-- Data de Competência (campo principal) -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Data de Competência</label>
-            <div class="tx-date-wrapper relative">
-              <input id="tx-modal-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric"
-                     autocomplete="off"
-                     class="rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 pr-10 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 w-full"/>
-              <button type="button" id="tx-date-picker-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors" title="Abrir calendário">
-                <i class="fa-regular fa-calendar"></i>
-              </button>
-              <input type="date" id="tx-modal-date-native" class="tx-date-native hidden" />
-            </div>
-          </div>
-          <!-- Data de Vencimento -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Data de Vencimento</label>
-            <div class="relative">
-              <input id="tx-modal-due-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" inputmode="numeric"
-                     autocomplete="off"
-                     class="rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 pr-10 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 w-full"/>
-              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
-                <i class="fa-regular fa-calendar text-[13px]"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Linha 5: Toggle "Recebimento/Pagamento Realizado" -->
-        <div class="flex items-center gap-3 py-1">
-          <label class="relative cursor-pointer shrink-0 inline-flex items-center">
-            <input type="checkbox" id="tx-modal-realized" class="sr-only peer" checked>
-            <div class="w-10 h-[22px] rounded-full border border-white/15 bg-white/10 peer-checked:border-emerald-500 peer-checked:bg-emerald-500 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-[18px] after:h-[18px] after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-[18px]"></div>
-          </label>
-          <div>
-            <p class="text-sm font-semibold text-white" id="tx-realized-label">Pagamento Realizado</p>
-          </div>
-        </div>
-
-        <!-- Linha 6: Mais detalhes (expansível) -->
-        <div>
-          <button type="button" id="tx-more-details-btn" class="w-28 h-8 flex items-center justify-between px-3 rounded-lg border border-white/10 bg-white/5 text-[11px] font-bold text-white transition-colors hover:bg-white/10">
-             Mais detalhes <span id="tx-more-details-arrow" class="transition-transform duration-300">›</span>
-          </button>
-          
-          <!-- Área expansível (campos escondidos por padrão, ex: Forma de Pagamento) -->
-          <div id="tx-more-details-area" class="tx-more-details-area pt-3">
-            
-            <!-- Forma de Pagamento movido para Mais Detalhes (já que não estava na tela principal da ref) -->
-            <div id="tx-payment-section" class="flex flex-col gap-3">
-              <div class="flex flex-col gap-1.5">
-                <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Forma de Pagamento</label>
-                <select id="tx-modal-payment"
-                        class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors appearance-none"
-                        style="background-color:rgba(255,255,255,.05)">
-                  <option value="" disabled selected>Selecione a forma de pagamento</option>
-                  <option value="pix">Pix</option>
-                  <option value="dinheiro">Dinheiro / Espécie</option>
-                  <option value="cartao_credito">Cartão de crédito</option>
-                  <option value="cartao_debito">Cartão de débito</option>
-                  <option value="conta">Transferência / TED</option>
-                  <option value="boleto">Boleto bancário</option>
-                </select>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Conta ou Cartão *</label>
+            <div class="custom-select" id="tx-conta-select">
+              <input type="hidden" name="conta" id="tx-modal-account" required>
+              <div class="select-trigger" tabindex="0" role="combobox" aria-expanded="false">
+                <div class="select-trigger-content">
+                  <span class="placeholder-text" style="color: var(--text-placeholder); font-size: 14px;">Selecione a origem...</span>
+                </div>
+                <div class="select-icon"><i data-lucide="chevron-down"></i></div>
               </div>
-              <!-- Card selector -->
-              <div id="tx-card-selector-row" class="hidden flex-col gap-1.5">
-                <label id="tx-card-selector-label" class="text-[10px] font-bold uppercase tracking-widest text-white/40">Cartão</label>
-                <select id="tx-modal-card"
-                        class="rounded-2xl border border-cyan-400/25 bg-cyan-400/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors"
-                        style="background-color:rgba(0,245,255,.05)">
-                  <option value="">Selecione um cartão...</option>
-                </select>
-                <p id="tx-card-hint" class="text-xs text-cyan-300/60 px-1"><i class="fa-solid fa-circle-info mr-1"></i>O lançamento será adicionado à fatura do cartão.</p>
-              </div>
-            </div>
-
-            <!-- Transação recorrente -->
-            <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 mt-4">
-              <div class="flex items-center gap-3">
-                <i class="fa-solid fa-rotate text-violet-400/70"></i>
-                <div>
-                  <p class="text-sm font-semibold text-white/80">Transação recorrente</p>
-                  <p class="text-[10px] text-white/40">Lançada automaticamente todo mês</p>
+              <div class="select-dropdown" role="listbox">
+                <div class="select-search"><i data-lucide="search"></i><input type="text" placeholder="Busque a conta..." class="search-input-field"></div>
+                <div class="select-options" id="tx-account-options-list">
+                  <!-- Populado pelo JS transactions-ui.js -->
                 </div>
               </div>
-              <label class="relative cursor-pointer">
-                <input type="checkbox" id="tx-modal-recurring" class="sr-only peer">
-                <div class="w-10 h-[22px] rounded-full border border-white/15 bg-white/10 peer-checked:bg-gradient-to-r peer-checked:from-violet-500 peer-checked:to-cyan-500 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-[18px] after:h-[18px] after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-[18px]"></div>
-              </label>
             </div>
-
-            <!-- Parcelas -->
-            <div class="flex flex-col gap-1.5 mt-3" id="tx-split-section">
-              <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Parcelas (opcional)</label>
-              <input id="tx-modal-split" type="number" min="1" max="24" placeholder="1 = à vista"
-                     class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25"/>
-            </div>
-
-            <!-- Observações -->
-            <div class="flex flex-col gap-1.5 mt-3">
-              <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Observações</label>
-              <textarea id="tx-modal-notes" rows="3" placeholder="Informações adicionais sobre esta transação..."
-                        class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 focus:bg-white/8 transition-colors placeholder:text-white/25 resize-none"></textarea>
-            </div>
-
-            <!-- Anexos -->
-            <div class="flex flex-col gap-2 mt-3 mb-2">
-              <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Anexos</label>
-              <label class="tx-file-upload-label" for="tx-modal-attachment">
-                <i class="fa-solid fa-paperclip text-cyan-400/70"></i>
-                <span id="tx-attachment-name" class="text-white/50 text-sm">Clique para anexar imagem ou PDF</span>
-              </label>
-              <input type="file" id="tx-modal-attachment" accept="image/*,.pdf" class="hidden"
-                     onchange="document.getElementById('tx-attachment-name').textContent = this.files[0]?.name || 'Clique para anexar imagem ou PDF'" />
-            </div>
-
+          </div>
+          <div class="form-group">
+            <label>Valor *</label>
+            <input type="text" class="form-control" placeholder="R$ 0,00" id="tx-modal-value" inputmode="decimal">
           </div>
         </div>
 
-        <!-- Error message -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Descrição *</label>
+            <input type="text" class="form-control" placeholder="Ex: Pagamento fornecedor" id="tx-modal-desc">
+          </div>
+          
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between;">
+              <label>Categoria *</label>
+              <span style="color: var(--accent-cyan); font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px;">Auto <i data-lucide="wand-2" style="width:10px; height:10px;"></i></span>
+            </div>
+            
+            <div class="custom-select" id="tx-categoria-select">
+              <input type="hidden" name="categoria" id="tx-modal-cat" required>
+              <div class="select-trigger" style="padding: 10px 16px 10px 10px;" tabindex="0" role="combobox" aria-expanded="false">
+                <div class="select-trigger-content">
+                  <div class="cat-icon" id="cat-trigger-icon" style="background-color: var(--bg-input);"><i data-lucide="tag"></i></div>
+                  <input type="text" class="combo-input" id="cat-combo-input" placeholder="Selecione ou digite..." autocomplete="off">
+                </div>
+                <div class="select-icon"><i data-lucide="chevron-down"></i></div>
+              </div>
+              
+              <div class="select-dropdown" role="listbox">
+                <div class="select-options" id="tx-cat-options-list">
+                  <!-- Populado por JS -->
+                </div>
+                
+                <div class="select-action-btn" id="btn-open-builder"><i data-lucide="plus"></i> Nova Categoria</div>
+
+                <div class="category-builder-form" id="builder-form">
+                  <label style="margin: 0; font-size: 10px;">Criar Nova Categoria</label>
+                  <input type="text" class="form-control builder-input" id="new-cat-name" placeholder="Ex: Internet">
+                  <div class="builder-row">
+                    <input type="text" class="form-control builder-input" id="new-cat-icon" placeholder="Ícone (ex: wifi)">
+                    <input type="color" class="color-picker-btn" id="new-cat-color" value="#3b82f6" title="Cor de fundo">
+                  </div>
+                  <div class="builder-row" style="margin-top: 4px;">
+                    <button class="btn btn-cancel" style="padding: 10px; font-size: 12px;" id="btn-cancel-cat" type="button">Cancelar</button>
+                    <button class="btn btn-save" style="padding: 10px; font-size: 12px;" id="btn-save-cat" type="button">Salvar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Contato</label>
+          <div class="input-wrapper">
+            <input type="text" class="form-control" id="tx-modal-contact" placeholder="Contato (opcional)"><i data-lucide="refresh-cw" class="input-icon-right"></i>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group"><label>Data de Competência</label><div class="input-wrapper"><input type="text" class="form-control" id="tx-modal-date" placeholder="DD/MM/AAAA"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
+          <div class="form-group"><label>Data de Vencimento</label><div class="input-wrapper"><input type="text" class="form-control" id="tx-modal-due-date" placeholder="DD/MM/AAAA"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
+        </div>
+
+        <!-- Hidden payment selects to trick legacy js temporarily -->
+        <select id="tx-modal-payment" class="hidden">
+           <option value="conta" selected>Conta</option>
+        </select>
+        <select id="tx-modal-card" class="hidden">
+        </select>
+
+        <div class="toggle-wrapper active flex" id="toggle-pagamento-realizado">
+          <div class="toggle-switch"></div>
+          <span class="toggle-label" id="tx-realized-label">Pagamento Realizado</span>
+          <input type="checkbox" id="tx-modal-realized" class="hidden" checked>
+        </div>
+
+        <button type="button" class="btn-accordion" id="tx-more-details-btn">Mais detalhes <i data-lucide="chevron-down"></i></button>
+
+        <div class="accordion-content" id="tx-more-details-area">
+          <div style="background-color: var(--bg-input); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <i data-lucide="repeat" style="color: var(--accent-purple);"></i>
+              <div><span class="toggle-label text-white">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
+            </div>
+            <div class="toggle-wrapper" id="toggle-recorrente-wrap">
+               <div class="toggle-switch"></div>
+               <input type="checkbox" id="tx-modal-recurring" class="hidden">
+            </div>
+          </div>
+          
+          <div class="form-group"><label>Parcelas (Opcional)</label><input type="number" class="form-control" id="tx-modal-split" placeholder="1 = à vista" min="1" max="24"></div>
+          <div class="form-group"><label>Observações</label><textarea class="form-control" id="tx-modal-notes" rows="3" placeholder="Informações adicionais sobre esta transação..."></textarea></div>
+          
+          <div class="form-group">
+            <label>Anexos</label>
+            <input type="file" id="tx-modal-attachment" accept="image/*,.pdf" style="display: none;">
+            <div class="upload-area" id="upload-box" onclick="document.getElementById('tx-modal-attachment').click()">
+              <i data-lucide="paperclip"></i>
+              <span id="tx-attachment-name">Clique para anexar imagem ou PDF</span>
+            </div>
+          </div>
+        </div>
+        
         <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-1"></p>
       </div>
 
-      <div class="px-6 pb-6 flex gap-3">
-        <button id="tx-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="tx-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90"
-                style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" id="tx-modal-cancel">Cancelar</button>
+        <button type="button" class="btn btn-save" id="tx-modal-save">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Delete Confirm Dialog (para as categories) ─── -->
+  <div class="confirm-overlay z-[60]" id="delete-cat-confirm-modal">
+    <div class="confirm-modal">
+      <div class="confirm-title"><i data-lucide="alert-triangle"></i> Excluir Categoria</div>
+      <div class="confirm-text">
+        Tem certeza que deseja excluir a categoria "<strong id="cat-to-delete-name"></strong>"? Esta ação removerá a categoria da sua lista.
+      </div>
+      <div class="confirm-actions">
+        <button class="btn-confirm-cancel" id="btn-cancel-cat-delete">Cancelar</button>
+        <button class="btn-confirm-delete" id="btn-confirm-cat-delete">Sim, excluir</button>
       </div>
     </div>
   </div>
