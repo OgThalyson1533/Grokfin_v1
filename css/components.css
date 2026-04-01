@@ -1482,4 +1482,17 @@ span.flatpickr-weekday { color: var(--text-muted) !important; font-size: 10px !i
 .flatpickr-day.today { border-color: var(--border-focus) !important; color: var(--accent-cyan) !important; font-weight: 800 !important; }
 .flatpickr-day.selected, .flatpickr-day.selected:hover, .flatpickr-day.selected:focus { background: var(--accent-cyan) !important; border-color: var(--accent-cyan) !important; color: #000 !important; font-weight: 800 !important; box-shadow: 0 0 15px rgba(0, 242, 195, 0.4) !important; }
 .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: #334155 !important; }
-.flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-current-month .custom-year-select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-color: var(--bg-input) !important; border: 1px solid var(--border-color) !important; color: var(--text-main) !important; border-radius: var(--radius-sm) !important; padding: 6px 12px !important; font-weight: 600 !important; font-size: 14px !important; outline: none !important; cursor: pointer !important; transition: var(--transition) !important; margin: 0 !important; }
+.flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-current-month .custom-year-select { 
+  appearance: none; -webkit-appearance: none; -moz-appearance: none; 
+  background-color: var(--bg-input) !important; border: 1px solid var(--border-color) !important; 
+  color: var(--text-main) !important; border-radius: var(--radius-sm) !important; 
+  padding: 6px 12px !important; font-weight: 600 !important; font-size: 14px !important; 
+  outline: none !important; cursor: pointer !important; transition: var(--transition) !important; margin: 0 !important; 
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover, .flatpickr-current-month .flatpickr-monthDropdown-months:focus, .flatpickr-current-month .custom-year-select:hover, .flatpickr-current-month .custom-year-select:focus { 
+  border-color: var(--border-focus) !important; box-shadow: 0 0 0 1px var(--border-focus), var(--shadow-glow) !important; 
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month, .flatpickr-current-month .custom-year-select option { 
+  background-color: var(--bg-surface) !important; color: var(--text-main) !important; 
+  font-weight: 500 !important; padding: 10px !important; 
+}

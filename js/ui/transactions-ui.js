@@ -230,7 +230,7 @@ function populateCategorySelect(container, selected) {
           <div class="cat-icon" style="background-color: ${color};"><i data-lucide="${lucideIcon}"></i></div>
           <span class="option-title">${escapeHtml(c)}</span>
         </div>
-        ${!CATEGORIES_LIST.includes(c) ? `<button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>` : ''}
+        ${!CATEGORIES_LIST.includes(c) ? `<button type="button" class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>` : ''}
       </div>
     `;
   }).join('');
@@ -266,7 +266,7 @@ export function populateAccountSelect(container, selectedValue) {
           <div class="bank-icon" style="background: rgba(255,255,255,0.1); color: white;">${initial}</div>
           <div class="option-text">
             <span class="option-title">${escapeHtml(acc.name)}</span>
-            <span class="option-subtitle">Saldo: ${formatMoney(acc.balance || 0)}</span>
+            <span class="option-subtitle">Saldo disponível: ${formatMoney(acc.balance || 0)}</span>
           </div>
         </div>
       `;
@@ -280,7 +280,7 @@ export function populateAccountSelect(container, selectedValue) {
         <div class="bank-icon" style="background: rgba(255,255,255,0.1); color: white;">cp</div>
         <div class="option-text">
           <span class="option-title">Conta Principal</span>
-          <span class="option-subtitle">Saldo: ${formatMoney(state.balance || 0)}</span>
+          <span class="option-subtitle">Saldo disponível: ${formatMoney(state.balance || 0)}</span>
         </div>
       </div>
     `;
@@ -859,6 +859,7 @@ export function openTxModal() {
   }
 
   document.getElementById('tx-modal-overlay')?.classList.remove('hidden');
+  if (window.lucide) window.lucide.createIcons();
   setTimeout(() => document.getElementById('tx-modal-desc')?.focus(), 150);
 }
 
@@ -929,6 +930,7 @@ export function openEditTx(id) {
 
   document.getElementById('tx-modal-error')?.classList.add('hidden');
   document.getElementById('tx-modal-overlay')?.classList.remove('hidden');
+  if (window.lucide) window.lucide.createIcons();
 }
 
 export async function handleOcrImageInput(e) {
@@ -1428,8 +1430,32 @@ export function bindTxEvents() {
     if (v) { v = (v / 100).toFixed(2).replace(".", ","); e.target.value = "R$ " + v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1."); }
   });
   if (window.flatpickr) {
-    flatpickr("#tx-modal-date", { dateFormat: "d/m/Y", locale: "pt", allowInput: true, disableMobile: true });
-    flatpickr("#tx-modal-due-date", { dateFormat: "d/m/Y", locale: "pt", allowInput: true, disableMobile: true });
+    const commonDateCfg = { 
+      dateFormat: "d/m/Y", locale: "pt", allowInput: true, disableMobile: true, static: false, position: "auto",
+      nextArrow: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+      prevArrow: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+      onReady: function(selectedDates, dateStr, instance) {
+        const yearWrapper = instance.currentYearElement.parentNode;
+        const yearSelect = document.createElement('select');
+        yearSelect.className = 'custom-year-select';
+        const currentYear = new Date().getFullYear();
+        for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+          const option = document.createElement('option');
+          option.value = i; option.text = i;
+          yearSelect.appendChild(option);
+        }
+        yearSelect.value = instance.currentYear;
+        yearSelect.addEventListener('change', function(e) { instance.changeYear(Number(e.target.value)); });
+        yearWrapper.style.display = 'none';
+        yearWrapper.parentNode.insertBefore(yearSelect, yearWrapper.nextSibling);
+      },
+      onYearChange: function(selectedDates, dateStr, instance) {
+        const customSelect = instance.monthNav.querySelector('.custom-year-select');
+        if (customSelect) customSelect.value = instance.currentYear;
+      }
+    };
+    flatpickr("#tx-modal-date", commonDateCfg);
+    flatpickr("#tx-modal-due-date", commonDateCfg);
   }
 
   window.confirmDeleteCategory = (option, selectInstance) => {
