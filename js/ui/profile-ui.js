@@ -397,3 +397,30 @@ export function bindProfileEvents() {
   document.getElementById('profile-avatar-input')?.addEventListener('change', event => handleProfileImageUpload(event, 'avatar'));
   document.getElementById('profile-banner-input')?.addEventListener('change', event => handleProfileImageUpload(event, 'banner'));
 }
+
+
+// Inline script moved from app.html
+window.resizeImageFile = function(file, options = {}) {
+      return new Promise((resolve, reject) => {
+        const { width = 512, height = 512, quality = 0.88 } = options;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            // Calcular dimensões mantendo proporção
+            let sw = img.width, sh = img.height;
+            const ratio = Math.min(width / sw, height / sh);
+            canvas.width  = Math.round(sw * ratio);
+            canvas.height = Math.round(sh * ratio);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = () => reject(new Error('Falha ao carregar imagem'));
+          img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+        reader.readAsDataURL(file);
+      });
+    };

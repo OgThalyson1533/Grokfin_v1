@@ -18,71 +18,7 @@
   <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="./Icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            serif: ['Georgia', 'serif'],
-          },
-          boxShadow: {
-            glow: '0 0 0 1px rgba(0,245,255,.08), 0 18px 40px rgba(0,0,0,.28)',
-            brand: '0 0 24px rgba(0,245,255,.24)',
-            success: '0 0 24px rgba(0,255,133,.20)'
-          }
-        }
-      }
-    };
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- [NEW] OCR Client-Side nativo para recibos -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <!-- [NEW] Ícones Lucide para visual premium -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- [NEW] Flatpickr para seletores de data premium -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
-
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
-  <!-- CSS Modular (extraído do Fin.html sem alterar nenhum estilo) -->
-  <link rel="stylesheet" href="./css/base.css">
-  <link rel="stylesheet" href="./css/glass.css">
-  <link rel="stylesheet" href="./css/nav.css">
-  <link rel="stylesheet" href="./css/components.css">
-  <link rel="stylesheet" href="./css/transactions.css">
-  <script>
-    // ══════════════════════════════════════════════════════
-    // Utilitário global: redimensiona imagem via Canvas
-    // Usado pelo profile-ui.js para upload de avatar e capa
-    // ══════════════════════════════════════════════════════
-    window.resizeImageFile = function(file, options = {}) {
-      return new Promise((resolve, reject) => {
-        const { width = 512, height = 512, quality = 0.88 } = options;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const img = new Image();
-          img.onload = function() {
-            const canvas = document.createElement('canvas');
-            // Calcular dimensões mantendo proporção
-            let sw = img.width, sh = img.height;
-            const ratio = Math.min(width / sw, height / sh);
-            canvas.width  = Math.round(sw * ratio);
-            canvas.height = Math.round(sh * ratio);
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/jpeg', quality));
-          };
-          img.onerror = () => reject(new Error('Falha ao carregar imagem'));
-          img.src = e.target.result;
-        };
-        reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
-        reader.readAsDataURL(file);
-      });
-    };
-  </script>
+  
 </head>
 <body class="selection:bg-cyan-300 selection:text-black">
   <div class="pointer-events-none fixed inset-0 overflow-hidden" id="app-glow-container">
@@ -1623,149 +1559,179 @@
   </nav>
   </div>
 
-  <!-- ─── Transaction Modal (Add / Edit) ─── -->
   <!-- ── 1. MODAL NOVA TRANSAÇÃO (LIQUID GLASS PRECISO) ── -->
-  <div id="tx-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="glass-modal">
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <h2 class="modal-title" id="tx-modal-title">Nova Transação</h2>
-          <button class="btn-scanner" id="tx-ocr-btn"><i data-lucide="camera"></i> <span class="hidden sm:inline">Scanner Inteligente</span></button>
-          <input type="file" id="tx-ocr-input" accept="image/*" class="hidden" />
+  <div id="tx-modal-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60">
+    <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <h2 class="modal-title" id="modal-title-text">Nova Transação</h2>
+        <button class="btn-scanner" id="btn-scanner"><i data-lucide="camera"></i> Scanner Inteligente</button><input type="file" id="tx-ocr-input" accept="image/*" class="hidden" />
+      </div>
+      <button class="btn-close"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="modal-body" id="modal-body-scroll">
+      <div class="form-group">
+        <label>Tipo *</label>
+        <div class="type-selector">
+          <div class="type-btn active entrada" id="btn-entrada"><i data-lucide="plus-circle"></i> Entrada</div>
+          <div class="type-btn saida" id="btn-saida"><i data-lucide="minus-circle"></i> Saída</div>
+          <input type="hidden" id="tipo-transacao" value="entrada">
         </div>
-        <button class="btn-close" id="tx-modal-close"><i data-lucide="x"></i></button>
       </div>
 
-      <div class="modal-body" id="modal-body-scroll">
+      <div class="form-grid-2">
         <div class="form-group">
-          <label>Tipo *</label>
-          <div class="type-selector">
-            <div class="type-btn active entrada" id="btn-entrada"><i data-lucide="plus-circle"></i> Entrada</div>
-            <div class="type-btn saida" id="btn-saida"><i data-lucide="minus-circle"></i> Saída</div>
-            <input type="hidden" id="tx-modal-type" value="entrada">
-            <button type="button" class="hidden" id="tx-tab-entrada" data-type="entrada"></button>
-            <button type="button" class="hidden" id="tx-tab-saida" data-type="saida"></button>
-          </div>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>Conta ou Cartão *</label>
-            <div class="custom-select" id="tx-conta-select">
-              <input type="hidden" name="conta" id="tx-modal-account" required>
-              <div class="select-trigger" tabindex="0" role="combobox" aria-expanded="false">
-                <div class="select-trigger-content">
-                  <span class="placeholder-text" style="color: var(--text-placeholder); font-size: 14px;">Selecione a origem...</span>
-                </div>
-                <div class="select-icon"><i data-lucide="chevron-down"></i></div>
+          <label>Conta ou Cartão *</label>
+          <div class="custom-select" id="conta-select">
+            <input type="hidden" name="conta" id="conta-input" required>
+            <div class="select-trigger" tabindex="0" role="combobox" aria-expanded="false">
+              <div class="select-trigger-content">
+                <span class="placeholder-text" style="color: var(--text-placeholder); font-size: 14px;">Selecione a origem...</span>
               </div>
-              <div class="select-dropdown" role="listbox">
-                <div class="select-search"><i data-lucide="search"></i><input type="text" placeholder="Busque a conta..." class="search-input-field"></div>
-                <div class="select-options" id="tx-account-options-list">
-                  <!-- Populado via JS -->
-                </div>
+              <div class="select-icon"><i data-lucide="chevron-down"></i></div>
+            </div>
+            <div class="select-dropdown" role="listbox">
+              <div class="select-search"><i data-lucide="search"></i><input type="text" placeholder="Busque a conta..." class="search-input-field"></div>
+              <div class="select-options" id="tx-account-options-list">
+                <div class="select-group-label">Contas Bancárias</div>
+                <div class="select-option" role="option" data-value="nubank-cc"><div class="bank-icon bg-nubank">nu</div><div class="option-text"><span class="option-title">Nubank - Conta Corrente</span><span class="option-subtitle">Saldo: R$ 1.250,00</span></div></div>
+                <div class="select-option" role="option" data-value="itau-cc"><div class="bank-icon bg-itau">it</div><div class="option-text"><span class="option-title">Itaú - Poupança</span><span class="option-subtitle">Saldo: R$ 5.400,00</span></div></div>
+                <div class="select-group-label">Cartões de Crédito</div>
+                <div class="select-option" role="option" data-value="nubank-cr"><div class="bank-icon bg-nubank">nu</div><div class="option-text"><span class="option-title">Nubank - Crédito</span><span class="option-subtitle">Limite disp: R$ 2.000,00</span></div></div>
               </div>
             </div>
           </div>
-          <div class="form-group">
-            <label>Valor *</label>
-            <input type="text" class="form-control" placeholder="R$ 0,00" id="tx-modal-value" inputmode="decimal">
-          </div>
         </div>
+        <div class="form-group"><label>Valor *</label><input type="text" class="form-control" placeholder="R$ 0,00" id="input-valor"></div>
+      </div>
 
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>Descrição *</label>
-            <input type="text" class="form-control" placeholder="Ex: Pagamento fornecedor" id="tx-modal-desc">
+      <div class="form-grid-2">
+        <div class="form-group"><label>Descrição *</label><input type="text" class="form-control" placeholder="Ex: Pagamento fornecedor" id="input-descricao"></div>
+        
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between;">
+            <label>Categoria *</label>
+            <span style="color: var(--accent-cyan); font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px;">Auto <i data-lucide="wand-2" style="width:10px; height:10px;"></i></span>
           </div>
           
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between;">
-              <label>Categoria *</label>
-              <span style="color: var(--accent-cyan); font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px;">IA <i data-lucide="wand-2" style="width:10px; height:10px;"></i></span>
+          <div class="custom-select" id="categoria-select">
+            <input type="hidden" name="categoria" id="categoria-input" value="alimentacao" required>
+            <div class="select-trigger" style="padding: 10px 16px 10px 10px;" tabindex="0" role="combobox" aria-expanded="false">
+              <div class="select-trigger-content">
+                <div class="cat-icon bg-food" id="cat-trigger-icon"><i data-lucide="utensils"></i></div>
+                <input type="text" class="combo-input" id="cat-combo-input" value="Alimentação" placeholder="Selecione ou digite..." autocomplete="off">
+              </div>
+              <div class="select-icon"><i data-lucide="chevron-down"></i></div>
             </div>
             
-            <div class="custom-select" id="tx-categoria-select">
-              <input type="hidden" name="categoria" id="tx-modal-cat" required>
-              <div class="select-trigger" style="padding: 10px 16px 10px 10px;" tabindex="0" role="combobox" aria-expanded="false">
-                <div class="select-trigger-content">
-                   <div class="cat-icon" id="cat-trigger-icon" style="background-color: var(--bg-hover);">
-                     <i data-lucide="tag"></i>
-                   </div>
-                   <input type="text" class="combo-input" id="cat-combo-input" placeholder="Selecione ou digite..." autocomplete="off">
+            <div class="select-dropdown" role="listbox">
+              <div class="select-options" id="cat-options-list">
+                <div class="select-option is-selected" role="option" data-value="alimentacao">
+                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-food"><i data-lucide="utensils"></i></div><span class="option-title">Alimentação</span></div>
+                  <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
                 </div>
-                <div class="select-icon"><i data-lucide="chevron-down"></i></div>
+                <div class="select-option" role="option" data-value="energia">
+                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-power"><i data-lucide="zap"></i></div><span class="option-title">Energia Elétrica</span></div>
+                  <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
+                </div>
+                <div class="select-option" role="option" data-value="transporte">
+                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-transport"><i data-lucide="car"></i></div><span class="option-title">Transporte</span></div>
+                  <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
+                </div>
+                <div class="select-option" role="option" data-value="cannabis">
+                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-weed"><i data-lucide="cannabis"></i></div><span class="option-title">Cannabis</span></div>
+                  <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
+                </div>
               </div>
               
-              <div class="select-dropdown" role="listbox">
-                <div class="select-options" id="tx-cat-options-list">
-                  <!-- Populado via JS -->
-                </div>
-                
-                <div class="select-action-btn" id="btn-open-builder"><i data-lucide="plus"></i> Nova Categoria</div>
+              <div class="select-action-btn" id="btn-open-builder"><i data-lucide="plus"></i> Nova Categoria</div>
 
-                <div class="category-builder-form" id="builder-form">
-                  <label style="margin: 0; font-size: 10px;">Criar Nova Categoria</label>
-                  <input type="text" class="form-control builder-input" id="new-cat-name" placeholder="Ex: Internet">
-                  <div class="builder-row">
-                    <input type="text" class="form-control builder-input" id="new-cat-icon" placeholder="Ícone (ex: wifi)">
-                    <input type="color" class="color-picker-btn" id="new-cat-color" value="#3b82f6" title="Cor de fundo">
-                  </div>
-                  <div class="builder-row" style="margin-top: 4px;">
-                    <button class="btn btn-cancel" style="padding: 10px; font-size: 12px;" id="btn-cancel-cat" type="button">Cancelar</button>
-                    <button class="btn btn-save" style="padding: 10px; font-size: 12px;" id="btn-save-cat" type="button">Salvar</button>
-                  </div>
+              <div class="category-builder-form" id="builder-form">
+                <label style="margin: 0; font-size: 10px;">Criar Nova Categoria</label>
+                <input type="text" class="form-control builder-input" id="new-cat-name" placeholder="Ex: Internet">
+                <div class="builder-row">
+                  <input type="text" class="form-control builder-input" id="new-cat-icon" placeholder="Ícone (ex: wifi)">
+                  <input type="color" class="color-picker-btn" id="new-cat-color" value="#3b82f6" title="Cor de fundo">
+                </div>
+                <div class="builder-row" style="margin-top: 4px;">
+                  <button class="btn btn-cancel" id="btn-cancel-tx" style="padding: 10px; font-size: 12px;" id="btn-cancel-cat">Cancelar</button>
+                  <button class="btn btn-save" id="btn-save-tx" style="padding: 10px; font-size: 12px;" id="btn-save-cat">Salvar</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
+      <div class="form-group">
+        <label>Contato</label>
+        <div class="input-wrapper">
+          <input type="text" class="form-control" placeholder="Contato (opcional)" id="input-contato"><i data-lucide="refresh-cw" class="input-icon-right"></i>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group"><label>Data de Competência</label><div class="input-wrapper"><input type="text" class="form-control date-picker" value="" id="input-data"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
+        <div class="form-group"><label>Data de Vencimento</label><div class="input-wrapper"><input type="text" class="form-control date-picker" placeholder="DD/MM/AAAA" id="input-vencimento"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
+      </div>
+
+      <div class="toggle-wrapper active" id="toggle-pagamento"><input type="checkbox" id="tx-modal-realized" class="hidden" checked>
+        <div class="toggle-switch"></div><span class="toggle-label">Pagamento Realizado</span>
+      </div>
+
+      <button class="btn-accordion" id="btn-mais-detalhes">Mais detalhes <i data-lucide="chevron-down"></i></button>
+
+      <div class="accordion-content" id="content-mais-detalhes">
+        <div style="background-color: var(--bg-input); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <i data-lucide="repeat" style="color: var(--accent-purple);"></i>
+            <div><span class="toggle-label">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
+          </div>
+          <div class="toggle-wrapper" id="toggle-recorrente"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
+        </div>
+        <div class="form-group"><label>Parcelas (Opcional)</label><input type="text" class="form-control" placeholder="1 = à vista" id="input-parcelas"></div>
+        <div class="form-group"><label>Observações</label><textarea class="form-control" rows="3" placeholder="Informações adicionais sobre esta transação..." id="input-observacoes"></textarea></div>
+        
         <div class="form-group">
-          <label>Contato</label>
-          <div class="input-wrapper">
-            <input type="text" class="form-control" id="tx-modal-contact" placeholder="Contato (opcional)"><i data-lucide="refresh-cw" class="input-icon-right"></i>
+          <label>Anexos</label>
+          <input type="file" id="file-upload" accept="image/*,.pdf" style="display: none;">
+          <div class="upload-area" id="upload-box" onclick="document.getElementById('file-upload').click()">
+            <i data-lucide="paperclip"></i>
+            <span id="file-name-display">Clique para anexar imagem ou PDF</span>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="form-grid-2">
-          <div class="form-group"><label>Data de Competência</label><div class="input-wrapper"><input type="text" class="form-control" id="tx-modal-date" placeholder="DD/MM/AAAA"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
-          <div class="form-group"><label>Data de Vencimento</label><div class="input-wrapper"><input type="text" class="form-control" id="tx-modal-due-date" placeholder="DD/MM/AAAA"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
-        </div>
+    <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-2 pb-2"></p>
+    <div class="modal-footer">
+      <button class="btn btn-cancel">Cancelar</button><button class="btn btn-save">Salvar</button>
+    </div>
+  </div>
+  </div>
 
-        <!-- Hidden inputs para compatibilidade legacy -->
+        <!-- Legacy inputs needed for JS compatibility -->
         <select id="tx-modal-payment" class="hidden"><option value="conta" selected>Conta</option></select>
         <select id="tx-modal-card" class="hidden"></select>
 
         <div class="toggle-wrapper active" id="toggle-pagamento-realizado">
-          <div class="toggle-switch"></div>
-          <span class="toggle-label" id="tx-realized-label">Pagamento Realizado</span>
+          <div class="toggle-switch"></div><span class="toggle-label" id="tx-realized-label">Pagamento Realizado</span>
           <input type="checkbox" id="tx-modal-realized" class="hidden" checked>
         </div>
 
         <button type="button" class="btn-accordion" id="tx-more-details-btn">Mais detalhes <i data-lucide="chevron-down"></i></button>
 
         <div class="accordion-content" id="tx-more-details-area">
-          <div style="background-color: var(--bg-input); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+          <div style="background-color: var(--tx-bg-input); padding: 16px; border-radius: var(--tx-radius-md); border: 1px solid var(--tx-border); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; gap: 12px; align-items: center;">
-              <i data-lucide="repeat" style="color: var(--accent-purple);"></i>
+              <i data-lucide="repeat" style="color: var(--tx-accent-purple);"></i>
               <div><span class="toggle-label">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
             </div>
-            <div class="toggle-wrapper" id="toggle-recorrente-wrap">
-               <div class="toggle-switch"></div>
-               <input type="checkbox" id="tx-modal-recurring" class="hidden">
-            </div>
+            <div class="toggle-wrapper" id="toggle-recorrente-wrap"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
           </div>
-          
-          <div class="form-group">
-            <label>Parcelas (Opcional)</label>
-            <input type="number" class="form-control" id="tx-modal-split" placeholder="1 = à vista" min="1" max="24">
-          </div>
-          
-          <div class="form-group">
-            <label>Observações</label>
-            <textarea class="form-control" id="tx-modal-notes" rows="3" placeholder="Informações adicionais sobre esta transação..."></textarea>
-          </div>
+          <div class="form-group"><label>Parcelas (Opcional)</label><input type="number" class="form-control" placeholder="1 = à vista" min="1" max="24" id="tx-modal-split"></div>
+          <div class="form-group"><label>Observações</label><textarea class="form-control" rows="3" placeholder="Informações adicionais..." id="tx-modal-notes"></textarea></div>
           
           <div class="form-group">
             <label>Anexos</label>
@@ -1776,7 +1742,7 @@
             </div>
           </div>
         </div>
-        
+
         <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-2 pb-2"></p>
       </div>
 
@@ -1788,21 +1754,20 @@
   </div>
 
   <!-- ── 2. MODAL DE CONFIRMAÇÃO DE EXCLUSÃO (CATEGORIA) ── -->
-  <div class="confirm-overlay z-[9999]" id="delete-cat-confirm-modal">
+  <div class="confirm-overlay" id="delete-confirm-modal">
     <div class="confirm-modal">
       <div class="confirm-title"><i data-lucide="alert-triangle"></i> Excluir Categoria</div>
       <div class="confirm-text">
         Tem certeza que deseja excluir a categoria "<strong id="cat-to-delete-name"></strong>"? Esta ação removerá a categoria da sua lista.
       </div>
       <div class="confirm-actions">
-        <button class="btn-confirm-cancel" id="btn-cancel-cat-delete">Cancelar</button>
-        <button class="btn-confirm-delete" id="btn-confirm-cat-delete">Sim, excluir</button>
+        <button class="btn-confirm-cancel" id="btn-cancel-delete">Cancelar</button>
+        <button class="btn-confirm-delete" id="btn-confirm-delete">Sim, excluir</button>
       </div>
     </div>
   </div>
 
-
-  <!-- ─── Delete Confirm Dialog (individual) ─── -->
+<!-- ─── Delete Confirm Dialog (individual) ─── -->
   <div id="tx-delete-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.72);backdrop-filter:blur(8px)">
     <div class="w-full max-w-md rounded-2xl border border-white/10 p-7 shadow-2xl"
@@ -2284,312 +2249,10 @@
   <!-- ═══════════════════════════════════════════════════════════════
        NOVOS COMPONENTES — inline script (não-módulo para acesso global)
        ═══════════════════════════════════════════════════════════════ -->
-  <script>
-  /* ────────────────────────────────────────────────────────────────
-     1. MODAL — Tipo Abas (Entrada / Saída)
-     ──────────────────────────────────────────────────────────────── */
-  (function initTxTypeTabs() {
-    function setup() {
-      const tabEntrada = document.getElementById('tx-tab-entrada');
-      const tabSaida   = document.getElementById('tx-tab-saida');
-      const selType    = document.getElementById('tx-modal-type');
-      const paySection = document.getElementById('tx-payment-section');
-
-      if (!tabEntrada || !tabSaida || !selType) return;
-
-      function setType(type) {
-        selType.value = type;
-        // Sincroniza aparência das abas
-        tabEntrada.classList.toggle('active', type === 'entrada');
-        tabSaida.classList.toggle('active',   type === 'saida');
-        // Mostra/oculta seção de pagamento (só para saída)
-        if (paySection) {
-          paySection.style.display = type === 'saida' ? '' : 'none';
-        }
-        // Dispara evento change para que o JS existente reaja
-        selType.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-
-      tabEntrada.addEventListener('click', () => setType('entrada'));
-      tabSaida.addEventListener('click',   () => setType('saida'));
-
-      // Observa mudanças externas no select (ex: ao abrir modal de edição)
-      selType.addEventListener('change', () => {
-        const v = selType.value;
-        tabEntrada.classList.toggle('active', v === 'entrada');
-        tabSaida.classList.toggle('active',   v === 'saida');
-      });
-
-      // Estado inicial
-      setType(selType.value || 'saida');
-    }
-
-    // O modal pode não estar no DOM ainda na carga; usar MutationObserver
-    if (document.getElementById('tx-tab-entrada')) {
-      setup();
-    } else {
-      const obs = new MutationObserver(() => {
-        if (document.getElementById('tx-tab-entrada')) { obs.disconnect(); setup(); }
-      });
-      obs.observe(document.body, { childList: true, subtree: true });
-    }
-  })();
-
-  /* ────────────────────────────────────────────────────────────────
-     2. MODAL — Date Picker (calendar button → native input)
-     ──────────────────────────────────────────────────────────────── */
-  (function initDatePicker() {
-    function setup() {
-      const btn    = document.getElementById('tx-date-picker-btn');
-      const native = document.getElementById('tx-modal-date-native');
-      const text   = document.getElementById('tx-modal-date');
-      if (!btn || !native || !text) return;
-
-      // Abrir o picker nativo ao clicar no ícone
-      btn.addEventListener('click', () => {
-        native.showPicker ? native.showPicker() : native.click();
-      });
-
-      // Quando o picker nativo muda, formata DD/MM/AAAA no campo de texto
-      native.addEventListener('change', () => {
-        if (!native.value) return;
-        const [y, m, d] = native.value.split('-');
-        text.value = `${d}/${m}/${y}`;
-        // Mantém sincronia reversa caso o JS existente leia o campo texto
-        text.dispatchEvent(new Event('input', { bubbles: true }));
-      });
-
-      // Sincronia reversa: ao digitar manualmente no campo texto,
-      // atualiza o input nativo (para consistência visual)
-      text.addEventListener('input', () => {
-        const parts = text.value.split('/');
-        if (parts.length === 3 && parts[2].length === 4) {
-          const iso = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-          native.value = iso;
-        }
-      });
-    }
-
-    if (document.getElementById('tx-date-picker-btn')) {
-      setup();
-    } else {
-      const obs = new MutationObserver(() => {
-        if (document.getElementById('tx-date-picker-btn')) { obs.disconnect(); setup(); }
-      });
-      obs.observe(document.body, { childList: true, subtree: true });
-    }
-  })();
-
-  /* ────────────────────────────────────────────────────────────────
-     3. MODAL — "Mais detalhes / Menos detalhes"
-     ──────────────────────────────────────────────────────────────── */
-  (function initMoreDetails() {
-    function setup() {
-      const btn   = document.getElementById('tx-more-details-btn');
-      const area  = document.getElementById('tx-more-details-area');
-      const arrow = document.getElementById('tx-more-details-arrow');
-      if (!btn || !area) return;
-
-      let open = false;
-      btn.addEventListener('click', () => {
-        open = !open;
-        area.classList.toggle('open', open);
-        if (arrow) arrow.textContent = open ? '∧' : '›';
-        btn.textContent = '';
-        if (arrow) btn.appendChild(arrow);
-        btn.insertAdjacentText('afterbegin', open ? 'Menos detalhes ' : 'Mais detalhes ');
-      });
-    }
-
-    if (document.getElementById('tx-more-details-btn')) {
-      setup();
-    } else {
-      const obs = new MutationObserver(() => {
-        if (document.getElementById('tx-more-details-btn')) { obs.disconnect(); setup(); }
-      });
-      obs.observe(document.body, { childList: true, subtree: true });
-    }
-  })();
-
-  /* ────────────────────────────────────────────────────────────────
-     4. CALENDÁRIO FINANCEIRO — Home Tab
-     ──────────────────────────────────────────────────────────────── */
-  (function initFinancialCalendar() {
-
-    /* ── [FIX] Lê transações reais do state da aplicação ── */
-    function getRealTransactions() {
-      return (window.appState && Array.isArray(window.appState.transactions))
-        ? window.appState.transactions
-        : [];
-    }
-
-    /* ── Agrupa transações por data (YYYY-MM-DD) ── */
-    /* Transações no state usam formato "DD/MM/YYYY" → convertemos aqui */
-    function buildDayMap(transactions) {
-      const map = {};
-      transactions.forEach(tx => {
-        if (!tx.date) return;
-        let key = tx.date;
-        // Converte "DD/MM/YYYY" → "YYYY-MM-DD"
-        if (tx.date.includes('/')) {
-          const parts = tx.date.split('/');
-          if (parts.length === 3) key = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-        if (!map[key]) map[key] = { entrada: 0, saida: 0 };
-        const v = Math.abs(tx.value ?? tx.amount ?? tx.valor ?? 0);
-        const isIncome = tx.value > 0 || tx.tipo === 'entrada';
-        if (isIncome) map[key].entrada += v;
-        else           map[key].saida  += v;
-      });
-      return map;
-    }
-
-    /* ── Formata moeda compacta (R$ 1.200 → "1,2k") ── */
-    function fmtCompact(val) {
-      if (val >= 1000) return 'R$ ' + (val/1000).toFixed(1).replace('.',',') + 'k';
-      return 'R$ ' + val.toFixed(2).replace('.',',');
-    }
-
-    /* ── Renderiza o grid do calendário ── */
-    function renderCalendar(year, month) {
-      const grid  = document.getElementById('fin-cal-grid');
-      const label = document.getElementById('fin-cal-month-label');
-      if (!grid || !label) return;
-
-      const today = new Date();
-      const firstDay = new Date(year, month, 1);
-      const lastDay  = new Date(year, month + 1, 0);
-      const startDow = firstDay.getDay(); // 0 = Dom
-      const daysInMonth = lastDay.getDate();
-
-      // Rótulo
-      const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-      label.textContent = `${monthNames[month]} ${year}`;
-
-      // [FIX] Usa transações reais do state em vez de dados mock
-      const dayMap = buildDayMap(getRealTransactions());
-
-      grid.innerHTML = '';
-
-      // Dias do mês anterior (fill start)
-      const prevLastDay = new Date(year, month, 0).getDate();
-      for (let i = startDow - 1; i >= 0; i--) {
-        const d = prevLastDay - i;
-        const cell = document.createElement('div');
-        cell.className = 'fin-cal-day other-month';
-        cell.innerHTML = `<span class="fin-cal-day-num">${d}</span>`;
-        grid.appendChild(cell);
-      }
-
-      // Dias do mês atual
-      for (let d = 1; d <= daysInMonth; d++) {
-        const mm = String(month + 1).padStart(2, '0');
-        const dd = String(d).padStart(2, '0');
-        const key = `${year}-${mm}-${dd}`;
-        const isToday = (d === today.getDate() && month === today.getMonth() && year === today.getFullYear());
-
-        const cell = document.createElement('div');
-        cell.className = 'fin-cal-day' + (isToday ? ' today' : '');
-
-        let html = `<span class="fin-cal-day-num">${d}</span>`;
-
-        if (dayMap[key]) {
-          const { entrada, saida } = dayMap[key];
-          if (entrada > 0) {
-            html += `<span class="fin-cal-tag fin-cal-tag--in">+${fmtCompact(entrada)}</span>`;
-          }
-          if (saida > 0) {
-            html += `<span class="fin-cal-tag fin-cal-tag--out">-${fmtCompact(saida)}</span>`;
-          }
-        }
-
-        cell.innerHTML = html;
-        grid.appendChild(cell);
-      }
-
-      // Dias do próximo mês (fill end — até completar 6 linhas se necessário)
-      const totalCells = grid.children.length;
-      const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-      for (let d = 1; d <= remaining; d++) {
-        const cell = document.createElement('div');
-        cell.className = 'fin-cal-day other-month';
-        cell.innerHTML = `<span class="fin-cal-day-num">${d}</span>`;
-        grid.appendChild(cell);
-      }
-    }
-
-    /* ── Estado e event listeners ── */
-    function setup() {
-      const prevBtn = document.getElementById('fin-cal-prev');
-      const nextBtn = document.getElementById('fin-cal-next');
-      if (!prevBtn || !nextBtn) return;
-
-      const now = new Date();
-      let curYear  = now.getFullYear();
-      let curMonth = now.getMonth();
-
-      renderCalendar(curYear, curMonth);
-
-      // [FIX] Expõe a função para que o renderAll do app refresque o calendário
-      // ao salvar/editar transações sem precisar navegar de aba
-      window.finCalRender = () => renderCalendar(curYear, curMonth);
-
-      prevBtn.addEventListener('click', () => {
-        curMonth--;
-        if (curMonth < 0) { curMonth = 11; curYear--; }
-        renderCalendar(curYear, curMonth);
-      });
-
-      nextBtn.addEventListener('click', () => {
-        curMonth++;
-        if (curMonth > 11) { curMonth = 0; curYear++; }
-        renderCalendar(curYear, curMonth);
-      });
-    }
-
-    if (document.getElementById('fin-cal-grid')) {
-      setup();
-    } else {
-      const obs = new MutationObserver(() => {
-        if (document.getElementById('fin-cal-grid')) { obs.disconnect(); setup(); }
-      });
-      obs.observe(document.body, { childList: true, subtree: true });
-    }
-
-  })();
-  </script>
+  
 
   <!-- Script Navigation Relatorios -->
-  <script>
-    function switchRepTab(tabId) {
-      const tabs = ['dre', 'rxv', 'cashflow', 'comparison'];
-      
-      tabs.forEach(id => {
-        const btn = document.getElementById(`rep-tab-${id}`);
-        if(btn) {
-          if (id === tabId) {
-            btn.className = "rep-tab-item active whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm transition-colors border-cyan-400 text-cyan-400";
-          } else {
-            btn.className = "rep-tab-item whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-white/50 hover:text-white/80 hover:border-white/20";
-          }
-        }
-      });
-
-      tabs.forEach(id => {
-        const panel = document.getElementById(`rep-content-${id}`);
-        if(panel) {
-          if (id === tabId) {
-            panel.classList.remove('hidden');
-            panel.classList.add('block');
-          } else {
-            panel.classList.remove('block');
-            panel.classList.add('hidden');
-          }
-        }
-      });
-    }
-  </script>
+  
 
   <!-- Fingu AI Side Panel Overlay -->
   <div id="ai-panel-backdrop" class="fixed inset-0 z-[90] hidden bg-[#0b0f1b]/60 backdrop-blur-sm transition-opacity opacity-0"></div>

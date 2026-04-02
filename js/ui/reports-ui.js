@@ -500,3 +500,33 @@ function renderComparison(state) {
 
   tbody.innerHTML = h || '<tr><td colspan="5" class="px-4 py-8 text-center text-white/30">Nenhum dado comparativo.</td></tr>';
 }
+
+
+// Inline script moved from app.html
+window.switchRepTab = function(tabId) {
+      const tabs = ['dre', 'rxv', 'cashflow', 'comparison'];
+      
+      tabs.forEach(id => {
+        const btn = document.getElementById(`rep-tab-${id}`);
+        if(btn) {
+          if (id === tabId) {
+            btn.className = "rep-tab-item active whitespace-nowrap py-3 px-1 border-b-2 font-semibold text-sm transition-colors border-cyan-400 text-cyan-400";
+          } else {
+            btn.className = "rep-tab-item whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-white/50 hover:text-white/80 hover:border-white/20";
+          }
+        }
+      });
+
+      tabs.forEach(id => {
+        const panel = document.getElementById(`rep-content-${id}`);
+        if(panel) {
+          if (id === tabId) {
+            panel.classList.remove('hidden');
+            panel.classList.add('block');
+          } else {
+            panel.classList.remove('block');
+            panel.classList.add('hidden');
+          }
+        }
+      });
+    }

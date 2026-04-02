@@ -113,7 +113,7 @@ class ModernFloxSelect {
     
     // Reset do form de criação se fechado
     const builder = document.getElementById('builder-form');
-    const list = document.getElementById('tx-cat-options-list');
+    const list = document.getElementById('cat-options-list');
     const btnOpen = document.getElementById('btn-open-builder');
     if (builder && list) {
        builder.style.display = 'none';
@@ -213,7 +213,7 @@ function addCustomCategory(name) {
 
 /** Popula o dropdown rico de categoria */
 function populateCategorySelect(container, selected) {
-  const optionsList = document.getElementById('tx-cat-options-list');
+  const optionsList = document.getElementById('cat-options-list');
   if (!optionsList) return;
 
   const all = getAllCategories();
@@ -841,19 +841,19 @@ export function renderTransactions() {
 
 export function openTxModal() {
   _editingTxId = null;
-  document.getElementById('tx-modal-title').textContent = 'Nova Transação';
+  document.getElementById('modal-title-text').textContent = 'Nova Transação';
   
   // Limpa campos básicos
-  ['desc', 'value', 'split', 'notes'].forEach(f => {
-    const el = document.getElementById(`tx-modal-${f}`);
+  ['input-descricao', 'input-valor', 'input-parcelas', 'input-observacoes', 'input-contato'].forEach(id => {
+    const el = document.getElementById(id);
     if (el) el.value = '';
   });
   
-  const bdDate = document.getElementById('tx-modal-date');
+  const bdDate = document.getElementById('input-data');
   if (bdDate) bdDate.value = new Date().toLocaleDateString('pt-BR');
   
   const typeValue = 'saida';
-  const typeInput = document.getElementById('tx-modal-type');
+  const typeInput = document.getElementById('tipo-transacao');
   if (typeInput) typeInput.value = typeValue;
 
   // Sincroniza abas visuais do novo design
@@ -866,7 +866,7 @@ export function openTxModal() {
   _syncTypeTabs(typeValue);
   
   // Reseta toggles customizados
-  const realizedWrap = document.getElementById('toggle-pagamento-realizado');
+  const realizedWrap = document.getElementById('toggle-pagamento');
   if (realizedWrap) realizedWrap.classList.remove('active');
   const realizedChk = document.getElementById('tx-modal-realized');
   if (realizedChk) realizedChk.checked = false;
@@ -884,17 +884,17 @@ export function openTxModal() {
   if (window.txAccountInstance) window.txAccountInstance.setValue('');
 
   // Limpa anexos
-  const attachNameEl = document.getElementById('tx-attachment-name');
+  const attachNameEl = document.getElementById('file-name-display');
   if (attachNameEl) attachNameEl.textContent = 'Clique para anexar imagem ou PDF';
-  const attachInput = document.getElementById('tx-modal-attachment');
+  const attachInput = document.getElementById('file-upload');
   if (attachInput) attachInput.value = '';
 
   const errEl = document.getElementById('tx-modal-error');
   if (errEl) errEl.classList.add('hidden');
 
   // Reseta accordion
-  const areaMore = document.getElementById('tx-more-details-area');
-  const btnMore = document.getElementById('tx-more-details-btn');
+  const areaMore = document.getElementById('content-mais-detalhes');
+  const btnMore = document.getElementById('btn-mais-detalhes');
   if (areaMore) areaMore.classList.remove('open');
   if (btnMore) {
     btnMore.innerHTML = 'Mais detalhes <i data-lucide="chevron-down"></i>';
@@ -903,7 +903,7 @@ export function openTxModal() {
 
   document.getElementById('tx-modal-overlay')?.classList.remove('hidden');
   if (window.lucide) window.lucide.createIcons();
-  setTimeout(() => document.getElementById('tx-modal-desc')?.focus(), 150);
+  setTimeout(() => document.getElementById('input-descricao')?.focus(), 150);
 }
 
 export function openEditTx(id) {
@@ -911,18 +911,18 @@ export function openEditTx(id) {
   if (!tx) return;
   _editingTxId = id;
 
-  document.getElementById('tx-modal-title').textContent = 'Editar Transação';
-  document.getElementById('tx-modal-desc').value = tx.desc;
+  document.getElementById('modal-title-text').textContent = 'Editar Transação';
+  document.getElementById('input-descricao').value = tx.desc;
   
   // Popular e selecionar Categoria
   populateCategorySelect(null, tx.cat);
   if (window.txCategoryInstance) window.txCategoryInstance.setValue(tx.cat);
 
-  const dateInput = document.getElementById('tx-modal-date');
+  const dateInput = document.getElementById('input-data');
   if (dateInput) dateInput.value = tx.date;
   
-  document.getElementById('tx-modal-value').value = "R$ " + formatMoney(Math.abs(tx.value)).replace('R$ ', '');
-  document.getElementById('tx-modal-split').value = tx.installments > 1 ? tx.installments : '';
+  document.getElementById('input-valor').value = "R$ " + formatMoney(Math.abs(tx.value)).replace('R$ ', '');
+  document.getElementById('input-parcelas').value = tx.installments > 1 ? tx.installments : '';
   
   // Popular e selecionar Conta/Cartão
   const selectValue = tx.cardId || tx.accountId || 'principal';
@@ -931,7 +931,7 @@ export function openEditTx(id) {
 
   const isIncome = tx.value > 0;
   const typeValue = isIncome ? 'entrada' : 'saida';
-  const typeInput = document.getElementById('tx-modal-type');
+  const typeInput = document.getElementById('tipo-transacao');
   if (typeInput) typeInput.value = typeValue;
 
   // Sincroniza abas visuais
@@ -950,7 +950,7 @@ export function openEditTx(id) {
 
   // Toggles customizados
   const realized = (tx.status !== 'pendente');
-  const realizedWrap = document.getElementById('toggle-pagamento-realizado');
+  const realizedWrap = document.getElementById('toggle-pagamento');
   const realizedChk = document.getElementById('tx-modal-realized');
   if (realizedWrap) realizedWrap.classList.toggle('active', realized);
   if (realizedChk) realizedChk.checked = realized;
@@ -962,9 +962,9 @@ export function openEditTx(id) {
   if (recurringChk) recurringChk.checked = recurring;
 
   // Observações e Anexo
-  const notesEl = document.getElementById('tx-modal-notes');
+  const notesEl = document.getElementById('input-observacoes');
   if (notesEl) notesEl.value = tx.notes || '';
-  const attachNameEl = document.getElementById('tx-attachment-name');
+  const attachNameEl = document.getElementById('file-name-display');
   if (attachNameEl) {
     attachNameEl.textContent = tx.attachmentUrl 
       ? tx.attachmentUrl.split('/').pop() 
@@ -980,7 +980,7 @@ export async function handleOcrImageInput(e) {
   const file = e.target.files?.[0];
   if (!file) return;
 
-  const btn = document.getElementById('tx-ocr-btn');
+  const btn = document.getElementById('btn-scanner');
   const ogHtml = btn.innerHTML;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span class="hidden sm:inline">Lendo...</span>';
   btn.disabled = true;
@@ -995,24 +995,24 @@ export async function handleOcrImageInput(e) {
     // Procura por formato de Moeda: R$ 10,00 ou 10.00
     const valueMatch = text.match(/(?:R\$|r\$)?\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2}))/);
     if (valueMatch) {
-      document.getElementById('tx-modal-value').value = valueMatch[1];
+      document.getElementById('input-valor').value = valueMatch[1];
     } else {
       // Tenta numero simples com ponto ou virgula no final do texto
       const simpleMatch = text.match(/(\d+[.,]\d{2})\b/);
-      if (simpleMatch) document.getElementById('tx-modal-value').value = simpleMatch[1].replace('.', ',');
+      if (simpleMatch) document.getElementById('input-valor').value = simpleMatch[1].replace('.', ',');
     }
     
     // Tenta pinçar um nome descritivo (linha mais longa que não pareça apenas números/datas)
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 4);
     const descLine = lines.find(l => !l.includes('R$') && !/\d{2,}/.test(l) && !l.toLowerCase().includes('total'));
     if (descLine) {
-      document.getElementById('tx-modal-desc').value = descLine.substring(0, 30);
+      document.getElementById('input-descricao').value = descLine.substring(0, 30);
     } else {
-      document.getElementById('tx-modal-desc').value = 'Comprovante Escaneado';
+      document.getElementById('input-descricao').value = 'Comprovante Escaneado';
     }
     
     // [FIX] Atualiza o <select> de tipo (substituiu os radios antigos)
-    const typeSelect = document.getElementById('tx-modal-type');
+    const typeSelect = document.getElementById('tipo-transacao');
     if (typeSelect) typeSelect.value = 'saida';
 
     showToast('Comprovante processado! Revise os valores.', 'success');
@@ -1107,13 +1107,13 @@ export function deleteTx() {
 }
 
 export function saveTxModal() {
-  const desc = document.getElementById('tx-modal-desc').value.trim();
-  const cat = document.getElementById('tx-modal-cat').value;
-  const dateStr = document.getElementById('tx-modal-date').value.trim();
-  const rawValue = parseCurrencyInput(document.getElementById('tx-modal-value').value);
+  const desc = document.getElementById('input-descricao').value.trim();
+  const cat = document.getElementById('categoria-input').value;
+  const dateStr = document.getElementById('input-data').value.trim();
+  const rawValue = parseCurrencyInput(document.getElementById('input-valor').value);
   
-  const selectedId = document.getElementById('tx-modal-account').value;
-  const typeValue = document.getElementById('tx-modal-type').value;
+  const selectedId = document.getElementById('conta-input').value;
+  const typeValue = document.getElementById('tipo-transacao').value;
   const isIncome = typeValue === 'entrada';
   
   const isCardSelected = !!(selectedId && state.cards?.some(c => c.id === selectedId));
@@ -1122,9 +1122,9 @@ export function saveTxModal() {
   const payment = isCardSelected ? 'cartao_credito' : 'conta';
   
   const isRecurring = document.getElementById('tx-modal-recurring')?.checked;
-  const installments = parseInt(document.getElementById('tx-modal-split').value) || 1;
-  const notes = document.getElementById('tx-modal-notes')?.value.trim() || null;
-  const attachFile = document.getElementById('tx-modal-attachment')?.files?.[0] || null;
+  const installments = parseInt(document.getElementById('input-parcelas').value) || 1;
+  const notes = document.getElementById('input-observacoes')?.value.trim() || null;
+  const attachFile = document.getElementById('file-upload')?.files?.[0] || null;
   const txStatus = document.getElementById('tx-modal-realized')?.checked ? 'efetivado' : 'pendente';
 
   const errEl = document.getElementById('tx-modal-error');
@@ -1370,24 +1370,24 @@ export function bindTxEvents() {
   }
 
   // --- Funcionalidades do Modal "Nova Transação" ---
-  if (el('tx-conta-select')) window.txAccountInstance = new ModernFloxSelect(el('tx-conta-select'));
-  if (el('tx-categoria-select')) window.txCategoryInstance = new ModernFloxSelect(el('tx-categoria-select'));
+  if (el('conta-select')) window.txAccountInstance = new ModernFloxSelect(el('conta-select'));
+  if (el('categoria-select')) window.txCategoryInstance = new ModernFloxSelect(el('categoria-select'));
 
   el('tx-add-btn')?.addEventListener('click', openTxModal);
   el('tx-modal-close')?.addEventListener('click', () => el('tx-modal-overlay')?.classList.add('hidden'));
-  el('tx-modal-cancel')?.addEventListener('click', () => el('tx-modal-overlay')?.classList.add('hidden'));
-  el('tx-modal-save')?.addEventListener('click', saveTxModal);
+  el('btn-cancel-tx')?.addEventListener('click', () => el('tx-modal-overlay')?.classList.add('hidden'));
+  el('btn-save-tx')?.addEventListener('click', saveTxModal);
 
   // Tabs de Entrada/Saída
-  const btnEntrada = el('btn-entrada'), btnSaida = el('btn-saida'), txModalType = el('tx-modal-type');
+  const btnEntrada = el('btn-entrada'), btnSaida = el('btn-saida'), txModalType = el('tipo-transacao');
   if (btnEntrada && btnSaida) {
     btnEntrada.addEventListener('click', () => { btnEntrada.classList.add('active'); btnSaida.classList.remove('active'); if (txModalType) txModalType.value = 'entrada'; _syncTypeTabs('entrada'); });
     btnSaida.addEventListener('click', () => { btnSaida.classList.add('active'); btnEntrada.classList.remove('active'); if (txModalType) txModalType.value = 'saida'; _syncTypeTabs('saida'); });
   }
 
   // Accordion Mais detalhes (PRECISO)
-  const btnMore = el('tx-more-details-btn');
-  const areaMore = el('tx-more-details-area');
+  const btnMore = el('btn-mais-detalhes');
+  const areaMore = el('content-mais-detalhes');
   const modalBody = el('modal-body-scroll');
   if (btnMore && areaMore) {
     btnMore.addEventListener('click', () => {
@@ -1410,18 +1410,18 @@ export function bindTxEvents() {
   }
 
   // Toggles de status/recorrência
-  el('toggle-pagamento-realizado')?.addEventListener('click', function() { this.classList.toggle('active'); const chk = el('tx-modal-realized'); if (chk) chk.checked = this.classList.contains('active'); });
+  el('toggle-pagamento')?.addEventListener('click', function() { this.classList.toggle('active'); const chk = el('tx-modal-realized'); if (chk) chk.checked = this.classList.contains('active'); });
   el('toggle-recorrente-wrap')?.addEventListener('click', function() { this.classList.toggle('active'); const chk = el('tx-modal-recurring'); if (chk) chk.checked = this.classList.contains('active'); });
 
   // OCR
-  el('tx-ocr-btn')?.addEventListener('click', () => el('tx-ocr-input')?.click());
+  el('btn-scanner')?.addEventListener('click', () => el('tx-ocr-input')?.click());
   el('tx-ocr-input')?.addEventListener('change', handleOcrImageInput);
 
   // Criador de Categoria Inline (Sincronizado)
   el('btn-open-builder')?.addEventListener('click', (e) => {
     e.stopPropagation();
     const btnOpen = el('btn-open-builder');
-    const optionsList = el('tx-cat-options-list');
+    const optionsList = el('cat-options-list');
     const builderForm = el('builder-form');
     if (btnOpen) btnOpen.style.display = 'none';
     if (optionsList) optionsList.style.display = 'none';
@@ -1432,7 +1432,7 @@ export function bindTxEvents() {
   el('btn-cancel-cat')?.addEventListener('click', (e) => {
     e.stopPropagation();
     const builderForm = el('builder-form');
-    const optionsList = el('tx-cat-options-list');
+    const optionsList = el('cat-options-list');
     const btnOpen = el('btn-open-builder');
     if (builderForm) builderForm.style.display = 'none';
     if (optionsList) optionsList.style.display = 'block';
@@ -1447,7 +1447,7 @@ export function bindTxEvents() {
       populateCategorySelect(null, name);
       // O populateCategorySelect já deve disparar a seleção no ModernFloxSelect
       const builderForm = el('builder-form');
-      const optionsList = el('tx-cat-options-list');
+      const optionsList = el('cat-options-list');
       const btnOpen = el('btn-open-builder');
       if (builderForm) builderForm.style.display = 'none';
       if (optionsList) optionsList.style.display = 'block';
@@ -1468,7 +1468,7 @@ export function bindTxEvents() {
   el('tx-bulk-delete-confirm')?.addEventListener('click', _executeBulkDelete);
 
   // Mascara e Dates
-  el('tx-modal-value')?.addEventListener('input', (e) => {
+  el('input-valor')?.addEventListener('input', (e) => {
     let v = e.target.value.replace(/\D/g, "");
     if (v) { v = (v / 100).toFixed(2).replace(".", ","); e.target.value = "R$ " + v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1."); }
   });
@@ -1500,7 +1500,7 @@ export function bindTxEvents() {
         if (customSelect) customSelect.value = instance.currentYear;
       }
     };
-    flatpickr("#tx-modal-date", commonDateCfg);
+    flatpickr("#'input-data', commonDateCfg);
     flatpickr("#tx-modal-due-date", commonDateCfg);
   }
 

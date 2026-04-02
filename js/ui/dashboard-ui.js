@@ -1206,3 +1206,150 @@ export function renderPaymentMethods(periodData) {
   expEl.innerHTML = renderMethodList(expenses, totalOut, 'Sem saídas no período');
 }
 
+
+
+// Inline script moved from app.html
+(function initFinancialCalendar() {
+
+    /* ── [FIX] Lê transações reais do state da aplicação ── */
+    function getRealTransactions() {
+      return (window.appState && Array.isArray(window.appState.transactions))
+        ? window.appState.transactions
+        : [];
+    }
+
+    /* ── Agrupa transações por data (YYYY-MM-DD) ── */
+    /* Transações no state usam formato "DD/MM/YYYY" → convertemos aqui */
+    function buildDayMap(transactions) {
+      const map = {};
+      transactions.forEach(tx => {
+        if (!tx.date) return;
+        let key = tx.date;
+        // Converte "DD/MM/YYYY" → "YYYY-MM-DD"
+        if (tx.date.includes('/')) {
+          const parts = tx.date.split('/');
+          if (parts.length === 3) key = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        if (!map[key]) map[key] = { entrada: 0, saida: 0 };
+        const v = Math.abs(tx.value ?? tx.amount ?? tx.valor ?? 0);
+        const isIncome = tx.value > 0 || tx.tipo === 'entrada';
+        if (isIncome) map[key].entrada += v;
+        else           map[key].saida  += v;
+      });
+      return map;
+    }
+
+    /* ── Formata moeda compacta (R$ 1.200 → "1,2k") ── */
+    function fmtCompact(val) {
+      if (val >= 1000) return 'R$ ' + (val/1000).toFixed(1).replace('.',',') + 'k';
+      return 'R$ ' + val.toFixed(2).replace('.',',');
+    }
+
+    /* ── Renderiza o grid do calendário ── */
+    function renderCalendar(year, month) {
+      const grid  = document.getElementById('fin-cal-grid');
+      const label = document.getElementById('fin-cal-month-label');
+      if (!grid || !label) return;
+
+      const today = new Date();
+      const firstDay = new Date(year, month, 1);
+      const lastDay  = new Date(year, month + 1, 0);
+      const startDow = firstDay.getDay(); // 0 = Dom
+      const daysInMonth = lastDay.getDate();
+
+      // Rótulo
+      const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      label.textContent = `${monthNames[month]} ${year}`;
+
+      // [FIX] Usa transações reais do state em vez de dados mock
+      const dayMap = buildDayMap(getRealTransactions());
+
+      grid.innerHTML = '';
+
+      // Dias do mês anterior (fill start)
+      const prevLastDay = new Date(year, month, 0).getDate();
+      for (let i = startDow - 1; i >= 0; i--) {
+        const d = prevLastDay - i;
+        const cell = document.createElement('div');
+        cell.className = 'fin-cal-day other-month';
+        cell.innerHTML = `<span class="fin-cal-day-num">${d}</span>`;
+        grid.appendChild(cell);
+      }
+
+      // Dias do mês atual
+      for (let d = 1; d <= daysInMonth; d++) {
+        const mm = String(month + 1).padStart(2, '0');
+        const dd = String(d).padStart(2, '0');
+        const key = `${year}-${mm}-${dd}`;
+        const isToday = (d === today.getDate() && month === today.getMonth() && year === today.getFullYear());
+
+        const cell = document.createElement('div');
+        cell.className = 'fin-cal-day' + (isToday ? ' today' : '');
+
+        let html = `<span class="fin-cal-day-num">${d}</span>`;
+
+        if (dayMap[key]) {
+          const { entrada, saida } = dayMap[key];
+          if (entrada > 0) {
+            html += `<span class="fin-cal-tag fin-cal-tag--in">+${fmtCompact(entrada)}</span>`;
+          }
+          if (saida > 0) {
+            html += `<span class="fin-cal-tag fin-cal-tag--out">-${fmtCompact(saida)}</span>`;
+          }
+        }
+
+        cell.innerHTML = html;
+        grid.appendChild(cell);
+      }
+
+      // Dias do próximo mês (fill end — até completar 6 linhas se necessário)
+      const totalCells = grid.children.length;
+      const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+      for (let d = 1; d <= remaining; d++) {
+        const cell = document.createElement('div');
+        cell.className = 'fin-cal-day other-month';
+        cell.innerHTML = `<span class="fin-cal-day-num">${d}</span>`;
+        grid.appendChild(cell);
+      }
+    }
+
+    /* ── Estado e event listeners ── */
+    function setup() {
+      const prevBtn = document.getElementById('fin-cal-prev');
+      const nextBtn = document.getElementById('fin-cal-next');
+      if (!prevBtn || !nextBtn) return;
+
+      const now = new Date();
+      let curYear  = now.getFullYear();
+      let curMonth = now.getMonth();
+
+      renderCalendar(curYear, curMonth);
+
+      // [FIX] Expõe a função para que o renderAll do app refresque o calendário
+      // ao salvar/editar transações sem precisar navegar de aba
+      window.finCalRender = () => renderCalendar(curYear, curMonth);
+
+      prevBtn.addEventListener('click', () => {
+        curMonth--;
+        if (curMonth < 0) { curMonth = 11; curYear--; }
+        renderCalendar(curYear, curMonth);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        curMonth++;
+        if (curMonth > 11) { curMonth = 0; curYear++; }
+        renderCalendar(curYear, curMonth);
+      });
+    }
+
+    if (document.getElementById('fin-cal-grid')) {
+      setup();
+    } else {
+      const obs = new MutationObserver(() => {
+        if (document.getElementById('fin-cal-grid')) { obs.disconnect(); setup(); }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    }
+
+  })();
