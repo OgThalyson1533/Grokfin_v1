@@ -81,24 +81,24 @@
     .modal-body::-webkit-scrollbar-track { background: transparent; }
     .modal-body::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 
-    .form-group { display: flex; flex-direction: column; gap: 8px; }
-    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .modal .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .modal .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-    label {
+    .modal label {
       font-size: 11px; font-weight: 700; color: var(--text-muted);
       text-transform: uppercase; letter-spacing: 0.5px;
     }
 
-    .input-wrapper { position: relative; width: 100%; }
+    .modal .input-wrapper { position: relative; width: 100%; }
 
-    .form-control {
+    .modal .form-control {
       width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color);
       color: var(--text-main); font-size: 14px; padding: 14px 16px;
       border-radius: var(--radius-md); transition: var(--transition); outline: none; font-family: inherit;
     }
-    .form-control::placeholder { color: var(--text-placeholder); }
-    .form-control:focus { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus), var(--shadow-glow); }
-    .input-icon-right { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    .modal .form-control::placeholder { color: var(--text-placeholder); }
+    .modal .form-control:focus { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus), var(--shadow-glow); }
+    .modal .input-icon-right { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
 
     .type-selector { display: flex; gap: 12px; }
     .type-btn {
@@ -307,11 +307,11 @@
 
     /* BOTÕES DO FOOTER REDONDOS */
     .modal-footer { padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; gap: 16px; flex-shrink: 0; }
-    .btn { flex: 1; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: var(--transition); text-align: center; }
-    .btn-cancel { background: #1e2532; color: var(--text-main); }
-    .btn-cancel:hover { background: var(--bg-hover); }
-    .btn-save { background: var(--accent-cyan); color: #000; box-shadow: 0 4px 14px rgba(0, 242, 195, 0.3); }
-    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 242, 195, 0.4); }
+    .modal .btn { flex: 1; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: var(--transition); text-align: center; }
+    .modal .btn-cancel { background: #1e2532; color: var(--text-main); }
+    .modal .btn-cancel:hover { background: var(--bg-hover); }
+    .modal .btn-save { background: var(--accent-cyan); color: #000; box-shadow: 0 4px 14px rgba(0, 242, 195, 0.3); }
+    .modal .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 242, 195, 0.4); }
 
     /* MEDIA QUERIES MOBILE */
     @media (max-width: 600px) {

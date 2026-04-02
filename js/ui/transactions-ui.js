@@ -1500,8 +1500,8 @@ export function bindTxEvents() {
         if (customSelect) customSelect.value = instance.currentYear;
       }
     };
-    flatpickr("#'input-data', commonDateCfg);
-    flatpickr("#tx-modal-due-date", commonDateCfg);
+    flatpickr("#input-data", commonDateCfg);
+    flatpickr("#input-vencimento", commonDateCfg);
   }
 
   window.confirmDeleteCategory = (option, selectInstance) => {

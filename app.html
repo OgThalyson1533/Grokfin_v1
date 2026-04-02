@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com 'unsafe-inline'; connect-src 'self' *.supabase.co economia.awesomeapi.com.br api.coingecko.com fonts.googleapis.com api.anthropic.com generativelanguage.googleapis.com https://api.unsplash.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data: blob: https://images.unsplash.com;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com cdn.tailwindcss.com unpkg.com npmcdn.com 'unsafe-inline'; connect-src 'self' *.supabase.co economia.awesomeapi.com.br api.coingecko.com fonts.googleapis.com api.anthropic.com generativelanguage.googleapis.com https://api.unsplash.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data: blob: https://images.unsplash.com;">
   <title>Flox • Painel Financeiro Inteligente</title>
   <meta name="theme-color" content="#0b0f1b">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1601,7 +1601,7 @@
         <h2 class="modal-title" id="modal-title-text">Nova Transação</h2>
         <button class="btn-scanner" id="btn-scanner"><i data-lucide="camera"></i> Scanner Inteligente</button><input type="file" id="tx-ocr-input" accept="image/*" class="hidden" />
       </div>
-      <button class="btn-close"><i data-lucide="x"></i></button>
+      <button class="btn-close" id="tx-modal-close"><i data-lucide="x"></i></button>
     </div>
 
     <div class="modal-body" id="modal-body-scroll">
@@ -1689,8 +1689,8 @@
                   <input type="color" class="color-picker-btn" id="new-cat-color" value="#3b82f6" title="Cor de fundo">
                 </div>
                 <div class="builder-row" style="margin-top: 4px;">
-                  <button class="btn btn-cancel" id="btn-cancel-tx" style="padding: 10px; font-size: 12px;" id="btn-cancel-cat">Cancelar</button>
-                  <button class="btn btn-save" id="btn-save-tx" style="padding: 10px; font-size: 12px;" id="btn-save-cat">Salvar</button>
+                  <button class="btn btn-cancel" id="btn-cancel-cat" style="padding: 10px; font-size: 12px;">Cancelar</button>
+                  <button class="btn btn-save" id="btn-save-cat" style="padding: 10px; font-size: 12px;">Salvar</button>
                 </div>
               </div>
             </div>
@@ -1711,7 +1711,7 @@
       </div>
 
       <div class="toggle-wrapper active" id="toggle-pagamento"><input type="checkbox" id="tx-modal-realized" class="hidden" checked>
-        <div class="toggle-switch"></div><span class="toggle-label">Pagamento Realizado</span>
+        <div class="toggle-switch"></div><span class="toggle-label" id="tx-realized-label">Pagamento Realizado</span>
       </div>
 
       <button class="btn-accordion" id="btn-mais-detalhes">Mais detalhes <i data-lucide="chevron-down"></i></button>
@@ -1722,7 +1722,7 @@
             <i data-lucide="repeat" style="color: var(--accent-purple);"></i>
             <div><span class="toggle-label">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
           </div>
-          <div class="toggle-wrapper" id="toggle-recorrente"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
+          <div class="toggle-wrapper" id="toggle-recorrente-wrap"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
         </div>
         <div class="form-group"><label>Parcelas (Opcional)</label><input type="text" class="form-control" placeholder="1 = à vista" id="input-parcelas"></div>
         <div class="form-group"><label>Observações</label><textarea class="form-control" rows="3" placeholder="Informações adicionais sobre esta transação..." id="input-observacoes"></textarea></div>
@@ -1740,63 +1740,23 @@
 
     <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-2 pb-2"></p>
     <div class="modal-footer">
-      <button class="btn btn-cancel">Cancelar</button><button class="btn btn-save">Salvar</button>
+      <button class="btn btn-cancel" id="btn-cancel-tx">Cancelar</button><button class="btn btn-save" id="btn-save-tx">Salvar</button>
     </div>
   </div>
   </div>
 
-        <!-- Legacy inputs needed for JS compatibility -->
-        <select id="tx-modal-payment" class="hidden"><option value="conta" selected>Conta</option></select>
-        <select id="tx-modal-card" class="hidden"></select>
 
-        <div class="toggle-wrapper active" id="toggle-pagamento-realizado">
-          <div class="toggle-switch"></div><span class="toggle-label" id="tx-realized-label">Pagamento Realizado</span>
-          <input type="checkbox" id="tx-modal-realized" class="hidden" checked>
-        </div>
-
-        <button type="button" class="btn-accordion" id="tx-more-details-btn">Mais detalhes <i data-lucide="chevron-down"></i></button>
-
-        <div class="accordion-content" id="tx-more-details-area">
-          <div style="background-color: var(--tx-bg-input); padding: 16px; border-radius: var(--tx-radius-md); border: 1px solid var(--tx-border); display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 12px; align-items: center;">
-              <i data-lucide="repeat" style="color: var(--tx-accent-purple);"></i>
-              <div><span class="toggle-label">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
-            </div>
-            <div class="toggle-wrapper" id="toggle-recorrente-wrap"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
-          </div>
-          <div class="form-group"><label>Parcelas (Opcional)</label><input type="number" class="form-control" placeholder="1 = à vista" min="1" max="24" id="tx-modal-split"></div>
-          <div class="form-group"><label>Observações</label><textarea class="form-control" rows="3" placeholder="Informações adicionais..." id="tx-modal-notes"></textarea></div>
-          
-          <div class="form-group">
-            <label>Anexos</label>
-            <input type="file" id="tx-modal-attachment" accept="image/*,.pdf" style="display: none;">
-            <div class="upload-area" id="upload-box" onclick="document.getElementById('tx-modal-attachment').click()">
-              <i data-lucide="paperclip"></i>
-              <span id="tx-attachment-name">Clique para anexar imagem ou PDF</span>
-            </div>
-          </div>
-        </div>
-
-        <p id="tx-modal-error" class="hidden text-xs text-rose-400 font-semibold px-2 pb-2"></p>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-cancel" id="tx-modal-cancel">Cancelar</button>
-        <button type="button" class="btn btn-save" id="tx-modal-save">Salvar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ── 2. MODAL DE CONFIRMAÇÃO DE EXCLUSÃO (CATEGORIA) ── -->
-  <div class="confirm-overlay" id="delete-confirm-modal">
+  <div class="confirm-overlay" id="delete-cat-confirm-modal">
     <div class="confirm-modal">
       <div class="confirm-title"><i data-lucide="alert-triangle"></i> Excluir Categoria</div>
       <div class="confirm-text">
         Tem certeza que deseja excluir a categoria "<strong id="cat-to-delete-name"></strong>"? Esta ação removerá a categoria da sua lista.
       </div>
       <div class="confirm-actions">
-        <button class="btn-confirm-cancel" id="btn-cancel-delete">Cancelar</button>
-        <button class="btn-confirm-delete" id="btn-confirm-delete">Sim, excluir</button>
+        <button class="btn-confirm-cancel" id="btn-cancel-cat-delete">Cancelar</button>
+        <button class="btn-confirm-delete" id="btn-confirm-cat-delete">Sim, excluir</button>
       </div>
     </div>
   </div>
