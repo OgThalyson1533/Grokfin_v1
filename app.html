@@ -18,7 +18,41 @@
   <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="./Icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
-  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Georgia', 'serif'],
+          },
+          boxShadow: {
+            glow: '0 0 0 1px rgba(0,245,255,.08), 0 18px 40px rgba(0,0,0,.28)',
+            brand: '0 0 24px rgba(0,245,255,.24)',
+            success: '0 0 24px rgba(0,255,133,.20)'
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <!-- [NEW] OCR Client-Side nativo para recibos -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- [NEW] Ícones Lucide para visual premium -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- [NEW] Flatpickr para seletores de data premium -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+  <!-- CSS Modular (extraído do Fin.html sem alterar nenhum estilo) -->
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/glass.css">
+  <link rel="stylesheet" href="./css/nav.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/transactions.css">
 </head>
 <body class="selection:bg-cyan-300 selection:text-black">
   <div class="pointer-events-none fixed inset-0 overflow-hidden" id="app-glow-container">
