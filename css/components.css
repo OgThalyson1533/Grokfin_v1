@@ -257,6 +257,90 @@
   text-transform: uppercase;
 }
 
+/* ── Gauge High Fidelity ─────────────────────────────────────────────────── */
+.gauge-hf-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.gauge-hf-track {
+  fill: none;
+  stroke: rgba(255,255,255,.08);
+  stroke-width: 18;
+  stroke-linecap: butt;
+}
+.gauge-hf-completed {
+  fill: none;
+  stroke: url(#gaugeHFGreen);
+  stroke-width: 18;
+  stroke-linecap: butt;
+  stroke-dasharray: 251.32;
+  stroke-dashoffset: 251.32;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gauge-hf-planned {
+  fill: none;
+  stroke: #f79626;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 251.32;
+  stroke-dashoffset: 251.32;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gauge-hf-pointer {
+  transform-origin: 100px 100px;
+  transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gauge-hf-pointer-shape {
+  fill: #f79626;
+  stroke: #111624;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.gauge-hf-values {
+  position: absolute;
+  bottom: 4px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.gauge-hf-val-completed {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -1px;
+  color: #ffffff;
+}
+.gauge-hf-val-planned {
+  font-size: 20px;
+  font-weight: 400;
+  color: rgba(255,255,255,.40);
+  margin-left: 2px;
+  margin-top: -2px;
+}
+.gauge-hf-legend {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 12px;
+  color: rgba(255,255,255,.50);
+}
+.gauge-hf-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gauge-hf-color-box {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.gauge-hf-color-box.green  { background: #6cd81d; }
+.gauge-hf-color-box.orange { background: #f79626; }
+
 .tx-more-details-btn:hover { color: #00f5ff; }
 
 /* Área expansível com animação */

@@ -826,51 +826,59 @@ export function renderPeriodFilter(activeFilter) {
   if (chipLabel) chipLabel.textContent = PERIOD_LABELS[activeFilter] || 'no período';
 }
 
-/** Gauge SVG semicircle — Medidor de Risco */
+/** Gauge High Fidelity — Medidor de Saúde Financeira */
 export function renderHealthGauge(periodData, filter, analytics) {
-  const arc     = document.getElementById('home-gauge-arc');
-  const needle  = document.getElementById('home-gauge-needle');
-  const pctEl   = document.getElementById('home-gauge-pct');
-  const labelEl = document.getElementById('home-gauge-label');
+  const completedBar  = document.getElementById('gauge-hf-completed-bar');
+  const plannedBar    = document.getElementById('gauge-hf-planned-bar');
+  const pointerGroup  = document.getElementById('gauge-hf-pointer');
+  const valCompleted  = document.getElementById('gauge-hf-val-completed');
+  const valPlanned    = document.getElementById('gauge-hf-val-planned');
   const periodLabelEl = document.getElementById('home-gauge-period-label');
-  if (!arc) return;
+  if (!completedBar) return;
 
   const exp = periodData.expenses || 0;
-  const inc = Math.max(periodData.incomes || 0, 0.01); // fallback safely to calculate risk
+  const inc = Math.max(periodData.incomes || 0, 0.01);
   const riskRatio = clamp((exp / inc) * 100, 0, 100);
-  const ratio = isNaN(riskRatio) ? 0 : riskRatio;
 
-  // Arc total length is ~251.3 (π × r = π × 80)
-  const totalArc = 251.3;
-  const filled   = (ratio / 100) * totalArc;
-  arc.style.strokeDashoffset = String(totalArc - filled);
+  // healthScore: 100 = perfeito (sem gastos), 0 = gasto total da renda
+  const healthScore = Math.round(clamp(100 - riskRatio, 0, 100));
+  // Meta: score >= 70 é considerado saudável (gastar no máx 30% da renda)
+  const TARGET_HEALTH = 70;
 
-  if (needle) {
-    const needleDeg = -90 + (ratio / 100) * 180;
-    needle.style.transform = `rotate(${needleDeg}deg)`;
+  const circumference = Math.PI * 80; // ~251.32
+
+  const pCompleted = healthScore / 100;
+  const pPlanned   = TARGET_HEALTH / 100;
+
+  completedBar.style.strokeDashoffset = String(circumference - pCompleted * circumference);
+  plannedBar.style.strokeDashoffset   = String(circumference - pPlanned   * circumference);
+
+  const pointerAngle = pPlanned * 180;
+  if (pointerGroup) pointerGroup.style.transform = `rotate(${pointerAngle}deg)`;
+
+  if (valPlanned) valPlanned.textContent = `/${TARGET_HEALTH}`;
+
+  // Animação do número
+  if (valCompleted) {
+    const start = parseInt(valCompleted.textContent) || 0;
+    const end   = healthScore;
+    let startTs = null;
+    const step = (ts) => {
+      if (!startTs) startTs = ts;
+      const p = Math.min((ts - startTs) / 1500, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      valCompleted.textContent = Math.floor(ease * (end - start) + start);
+      if (p < 1) requestAnimationFrame(step);
+      else valCompleted.textContent = end;
+    };
+    requestAnimationFrame(step);
   }
 
-  if (pctEl) {
-    pctEl.innerHTML = `${Math.round(ratio)}%<span style="display:block;font-size:10px;font-weight:900;margin-top:2px;">RISCO</span>`;
-  }
-
-  // Reversed color logic: 100% Risk = Bad (Red)
-  let zoneColor, zoneLabel, gradId;
-  if (ratio >= 80) {
-    zoneColor = '#ff6685'; zoneLabel = 'Risco'; gradId = 'url(#gaugeRed)';
-  } else if (ratio >= 50) {
-    zoneColor = '#facc15'; zoneLabel = 'Atenção'; gradId = 'url(#gaugeYellow)';
-  } else {
-    zoneColor = '#00ff85'; zoneLabel = 'Saudável'; gradId = 'url(#gaugeGreen)';
-  }
-
-  arc.setAttribute('stroke', gradId);
-  if (labelEl) { labelEl.textContent = zoneLabel; labelEl.style.color = zoneColor; }
   if (periodLabelEl) periodLabelEl.textContent = PERIOD_LABELS[filter] || 'Período';
 
   // Breakdown bars
   const total = Math.max(periodData.incomes, periodData.expenses, 1);
-  const set = (id, val) => { const e = document.getElementById(id); if (e) e.style.width = `${clamp((val/total)*100, 0, 100)}%`; };
+  const set     = (id, val) => { const e = document.getElementById(id); if (e) e.style.width = `${clamp((val/total)*100, 0, 100)}%`; };
   const setText = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = formatMoneyShort(val); };
 
   set('gauge-variable-bar', periodData.variableExpenses);
@@ -880,7 +888,7 @@ export function renderHealthGauge(periodData, filter, analytics) {
   setText('gauge-fixed-val',    periodData.fixedCosts);
   setText('gauge-surplus-val',  periodData.surplus);
 
-  // KPIs
+  // KPIs legados (ocultos, mantidos para compatibilidade)
   const el = id => document.getElementById(id);
   if (el('gauge-kpi-expenses')) el('gauge-kpi-expenses').textContent = formatMoneyShort(periodData.expenses);
   if (el('gauge-kpi-incomes'))  el('gauge-kpi-incomes').textContent  = formatMoneyShort(periodData.incomes);

@@ -1,700 +1,288 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Nova Transação - Flox UI Premium</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gauge Chart UI</title>
+    <style>
+        /* Importando uma fonte limpa e moderna parecida com a do vídeo */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
-  
-  <style>
-    /* =========================================
-       VARIÁVEIS DE TEMA (Estilo "Flox" / SpaceX)
-       ========================================= */
-    :root {
-      --bg-page: #0a0e17;       
-      --bg-surface: #121822;    
-      --bg-input: #1a2230;      
-      --bg-hover: #232d3f;      
-      
-      --border-color: #2a3441;
-      --border-focus: #00f2c3;  
-      
-      --accent-cyan: #00f2c3;   
-      --accent-green: #10b981;  
-      --accent-red: #ef4444;    
-      --accent-purple: #8b5cf6; 
-      --accent-orange: #f97316; 
-      --accent-yellow: #eab308;
-      --accent-blue: #3b82f6;
-      --accent-weed: #47c13e; 
-      
-      --text-main: #f8fafc;
-      --text-muted: #8b9bb4;
-      --text-placeholder: #5c6b81;
-      
-      --radius-lg: 16px;
-      --radius-md: 10px;
-      --radius-sm: 8px;
-      --shadow-glow: 0 0 20px rgba(0, 242, 195, 0.15);
-      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+        body {
+            background-color: #121815; /* Fundo geral escuro */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+        }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+        .gauge-card {
+            background-color: #212824; /* Fundo do card */
+            border-radius: 12px;
+            padding: 24px;
+            width: 280px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
 
-    body {
-      background-color: var(--bg-page); font-family: 'Inter', sans-serif;
-      color: var(--text-main); display: flex; justify-content: center;
-      align-items: center; min-height: 100vh; padding: 16px;
-    }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
 
-    .modal {
-      background-color: var(--bg-surface); width: 100%; max-width: 480px;
-      border-radius: var(--radius-lg); border: 1px solid var(--border-color);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
-      display: flex; flex-direction: column; position: relative;
-      max-height: 90vh; /* Garante que caiba na tela do celular */
-    }
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #e0e5e2;
+        }
 
-    .modal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 24px; border-bottom: 1px solid var(--border-color);
-      flex-shrink: 0; /* Impede que o header esprema */
-    }
+        .icon-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #4ade80;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
 
-    .modal-title-group { display: flex; align-items: center; gap: 12px; }
-    .modal-title { font-size: 18px; font-weight: 700; }
+        .info-icon {
+            color: #83928a;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
 
-    .btn-scanner {
-      display: flex; align-items: center; gap: 6px;
-      background-color: rgba(16, 185, 129, 0.1); color: var(--accent-green);
-      border: 1px solid rgba(16, 185, 129, 0.2); padding: 6px 12px;
-      border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition);
-    }
-    .btn-scanner:hover { background-color: rgba(16, 185, 129, 0.2); }
+        .info-icon:hover {
+            color: #ffffff;
+        }
 
-    .btn-close {
-      background-color: var(--bg-input); border: none; color: var(--text-muted);
-      width: 32px; height: 32px; border-radius: 50%; display: flex;
-      align-items: center; justify-content: center; cursor: pointer; transition: var(--transition);
-    }
-    .btn-close:hover { color: var(--text-main); background-color: var(--bg-hover); }
+        .gauge-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
 
-    .modal-body {
-      padding: 24px; display: flex; flex-direction: column; gap: 20px;
-      overflow-y: auto; overflow-x: hidden;
-      flex: 1; /* Permite rolar apenas o conteúdo interno */
-      -webkit-overflow-scrolling: touch; /* Rolagem nativa suave no iOS/Android */
-    }
-    .modal-body::-webkit-scrollbar { width: 6px; }
-    .modal-body::-webkit-scrollbar-track { background: transparent; }
-    .modal-body::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        svg {
+            width: 100%;
+            overflow: visible;
+        }
 
-    .form-group { display: flex; flex-direction: column; gap: 8px; }
-    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        /* Fundo do medidor (Cinza Escuro) */
+        .track {
+            fill: none;
+            stroke: #2e3a33;
+            stroke-width: 16;
+            stroke-linecap: round;
+        }
 
-    label {
-      font-size: 11px; font-weight: 700; color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
+        /* Barra de Progresso Realizado (Verde) */
+        .completed-bar {
+            fill: none;
+            stroke: #4ade80;
+            stroke-width: 16;
+            stroke-linecap: round;
+            stroke-dasharray: 235.62; /* Comprimento = PI * raio(75) */
+            stroke-dashoffset: 235.62;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
 
-    .input-wrapper { position: relative; width: 100%; }
+        /* Barra de Planejado (Laranja e mais fina, por fora) */
+        .planned-bar {
+            fill: none;
+            stroke: #f28e2b;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 267.04; /* Comprimento = PI * raio(85) */
+            stroke-dashoffset: 267.04;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
 
-    .form-control {
-      width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color);
-      color: var(--text-main); font-size: 14px; padding: 14px 16px;
-      border-radius: var(--radius-md); transition: var(--transition); outline: none; font-family: inherit;
-    }
-    .form-control::placeholder { color: var(--text-placeholder); }
-    .form-control:focus { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus), var(--shadow-glow); }
-    .input-icon-right { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+        /* Container do Ponteiro Laranja */
+        .pointer-group {
+            transform-origin: 100px 100px;
+            transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
 
-    .type-selector { display: flex; gap: 12px; }
-    .type-btn {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 12px; background-color: var(--bg-input);
-      border: 1px solid var(--border-color); border-radius: var(--radius-md);
-      color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
-    }
-    .type-btn.active.entrada { background-color: rgba(16, 185, 129, 0.1); border-color: var(--accent-green); color: var(--accent-green); }
-    .type-btn.active.saida { background-color: rgba(239, 68, 68, 0.1); border-color: var(--accent-red); color: var(--accent-red); }
+        .pointer {
+            fill: #f28e2b;
+        }
 
-    /* DROPDOWNS E COMBOBOX */
-    .custom-select { position: relative; user-select: none; }
-    .select-trigger {
-      display: flex; justify-content: space-between; align-items: center;
-      width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color);
-      padding: 10px 16px; min-height: 48px; border-radius: var(--radius-md);
-      color: var(--text-main); cursor: pointer; transition: var(--transition); outline: none;
-    }
-    .select-trigger:focus-within, .custom-select.open .select-trigger { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus), var(--shadow-glow); }
-    .select-trigger-content { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; }
-    
-    .combo-input {
-      background: transparent; border: none; color: var(--text-main);
-      font-family: inherit; font-size: 14px; outline: none; flex: 1; width: 100%;
-    }
-    .combo-input::placeholder { color: var(--text-placeholder); }
+        .values-container {
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+        }
 
-    .select-icon { color: var(--text-muted); transition: transform var(--transition); flex-shrink: 0; display: flex; }
-    .custom-select.open .select-icon { transform: rotate(180deg); color: var(--text-main); }
+        .val-completed {
+            font-size: 44px;
+            font-weight: 700;
+            line-height: 1;
+        }
 
-    .select-dropdown {
-      position: absolute; top: calc(100% + 8px); left: 0; width: 100%;
-      background-color: var(--bg-surface); border: 1px solid var(--border-focus);
-      border-radius: var(--radius-md); box-shadow: 0 15px 35px rgba(0,0,0,0.5), var(--shadow-glow);
-      z-index: 100; opacity: 0; visibility: hidden; transform: translateY(-10px);
-      transition: var(--transition); overflow: hidden; display: flex; flex-direction: column;
-    }
-    .custom-select.open .select-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .val-planned {
+            font-size: 20px;
+            font-weight: 600;
+            color: #83928a;
+            margin-left: 4px;
+        }
 
-    .select-search {
-      padding: 12px; border-bottom: 1px solid var(--border-color);
-      display: flex; align-items: center; gap: 10px; background-color: var(--bg-surface);
-    }
-    .select-search input { background: transparent; border: none; color: var(--text-main); width: 100%; outline: none; font-size: 14px; }
-    
-    .select-options { max-height: 240px; overflow-y: auto; padding: 6px; }
-    .select-options::-webkit-scrollbar { width: 4px; }
-    .select-options::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #83928a;
+        }
 
-    .select-group-label {
-      padding: 14px 12px 6px; font-size: 10px; font-weight: 800; color: var(--text-placeholder);
-      text-transform: uppercase; letter-spacing: 1px; pointer-events: none;
-    }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-    .select-option {
-      display: flex; align-items: center; gap: 12px; padding: 10px 12px;
-      border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);
-    }
-    .select-option:hover, .select-option.is-focused { background-color: var(--bg-hover); }
-    .select-option.is-selected { background-color: rgba(0, 242, 195, 0.1); border: 1px solid rgba(0, 242, 195, 0.2); }
+        .color-box {
+            width: 8px;
+            height: 14px;
+            border-radius: 2px;
+        }
 
-    .delete-cat-btn {
-      background: transparent; border: none; color: var(--text-muted);
-      cursor: pointer; padding: 6px; border-radius: 6px; 
-      opacity: 0; 
-      transition: var(--transition); margin-left: auto;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .select-option:hover .delete-cat-btn { opacity: 0.5; } 
-    .delete-cat-btn:hover { opacity: 1 !important; color: var(--accent-red); background-color: rgba(239, 68, 68, 0.1); }
-    .delete-cat-btn i { width: 14px; height: 14px; }
+        .color-box.green {
+            background-color: #4ade80;
+        }
 
-    .bank-icon, .cat-icon {
-      width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center;
-      justify-content: center; font-weight: 700; font-size: 14px; color: white; flex-shrink: 0;
-    }
-    .cat-icon { width: 28px; height: 28px; border-radius: 6px; }
-    .cat-icon i { width: 14px; height: 14px; }
-    
-    .bg-nubank { background-color: var(--accent-purple); } .bg-itau { background-color: var(--accent-orange); } .bg-santander { background-color: var(--accent-red); }
-    .bg-food { background-color: var(--accent-orange); } .bg-power { background-color: var(--accent-yellow); } .bg-transport { background-color: var(--accent-blue); }
-    .bg-weed { background-color: var(--accent-weed); color: #fff; }
-
-    .option-text { display: flex; flex-direction: column; flex: 1; }
-    .option-title { font-size: 14px; font-weight: 500; }
-    .option-subtitle { font-size: 11px; color: var(--text-muted); }
-
-    .select-action-btn {
-      padding: 12px 16px; border-top: 1px solid var(--border-color); display: flex; align-items: center;
-      gap: 8px; color: var(--accent-cyan); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); background-color: var(--bg-surface);
-    }
-    .select-action-btn:hover { background-color: rgba(0, 242, 195, 0.08); }
-
-    /* FORMULÁRIO INLINE (CRIAR CATEGORIA) */
-    .category-builder-form {
-      display: none; padding: 16px; flex-direction: column; gap: 12px;
-      border-top: 1px solid var(--border-color); background-color: var(--bg-input);
-    }
-    .builder-row { display: flex; gap: 8px; align-items: center; }
-    .builder-input { flex: 1; padding: 10px; font-size: 13px; }
-    .color-picker-btn { width: 38px; height: 38px; border-radius: var(--radius-sm); border: none; padding: 0; cursor: pointer; overflow: hidden; }
-    .color-picker-btn::-webkit-color-swatch-wrapper { padding: 0; }
-    .color-picker-btn::-webkit-color-swatch { border: none; }
-
-    /* MODAL DE CONFIRMAÇÃO (EXCLUSÃO) */
-    .confirm-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 9999; opacity: 0; visibility: hidden; transition: var(--transition);
-    }
-    .confirm-overlay.open { opacity: 1; visibility: visible; }
-    .confirm-modal {
-      background: var(--bg-surface); width: 320px; border-radius: var(--radius-md);
-      border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5), var(--shadow-glow);
-      padding: 24px; display: flex; flex-direction: column; gap: 16px;
-      transform: translateY(20px) scale(0.95); transition: var(--transition);
-    }
-    .confirm-overlay.open .confirm-modal { transform: translateY(0) scale(1); }
-    .confirm-title { font-size: 16px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-    .confirm-title i { color: var(--accent-red); width: 18px; height: 18px; }
-    .confirm-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-    .confirm-text strong { color: var(--text-main); }
-    .confirm-actions { display: flex; gap: 12px; margin-top: 8px; }
-    .btn-confirm-cancel {
-      flex: 1; background: var(--bg-input); color: var(--text-main); padding: 10px;
-      border-radius: var(--radius-sm); border: 1px solid var(--border-color);
-      font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition);
-    }
-    .btn-confirm-cancel:hover { background: var(--bg-hover); }
-    .btn-confirm-delete {
-      flex: 1; background: rgba(239, 68, 68, 0.1); color: var(--accent-red); padding: 10px;
-      border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.3);
-      font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition);
-    }
-    .btn-confirm-delete:hover { background: var(--accent-red); color: #fff; }
-
-    /* TOGGLES, ACORDEÃO E ARQUIVOS */
-    .toggle-wrapper { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-    .toggle-switch { position: relative; width: 44px; height: 24px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; transition: var(--transition); }
-    .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background-color: var(--text-muted); border-radius: 50%; transition: var(--transition); }
-    .toggle-wrapper.active .toggle-switch { background-color: var(--accent-cyan); border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 242, 195, 0.4); }
-    .toggle-wrapper.active .toggle-switch::after { transform: translateX(20px); background-color: #000; }
-    .toggle-label { font-size: 14px; font-weight: 600; color: var(--text-main); }
-    .toggle-subtext { display: block; font-size: 11px; font-weight: 400; color: var(--text-muted); margin-top: 2px; }
-
-    /* ACORDEÃO CORRIGIDO PARA MOBILE */
-    .btn-accordion {
-      display: inline-flex; align-items: center; gap: 8px; background-color: var(--bg-input); border: 1px solid var(--border-color);
-      color: var(--text-main); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; align-self: flex-start; transition: var(--transition);
-    }
-    .btn-accordion.active i { transform: rotate(180deg); }
-    
-    .accordion-content { 
-      display: none; 
-      flex-direction: column; 
-      gap: 20px; 
-      margin-top: 8px;
-      animation: fadeIn 0.3s ease forwards;
-    }
-    .accordion-content.open { display: flex; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* UPLOAD ÁREA CORRIGIDA IGUAL AO SEU PRINT */
-    .upload-area {
-      border: 1px dashed rgba(0, 242, 195, 0.4);
-      background-color: transparent; 
-      border-radius: var(--radius-md);
-      padding: 16px; display: flex; align-items: center; gap: 10px; 
-      cursor: pointer; transition: var(--transition);
-    }
-    .upload-area:hover { background-color: rgba(0, 242, 195, 0.05); border-color: var(--accent-cyan); }
-    .upload-area.has-file { border-style: solid; border-color: var(--accent-green); background-color: rgba(16, 185, 129, 0.05); }
-    .upload-area span { font-weight: 500; color: var(--text-muted); font-size: 13px; }
-    .upload-area i { width: 18px; height: 18px; color: var(--accent-cyan); }
-
-    /* CALENDÁRIO */
-    .flatpickr-calendar {
-      background: var(--bg-surface) !important; border: 1px solid var(--border-color) !important;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), var(--shadow-glow) !important;
-      border-radius: var(--radius-lg) !important; font-family: 'Inter', sans-serif !important;
-      padding: 16px !important; width: 320px !important; 
-    }
-    .flatpickr-months { margin-bottom: 16px !important; }
-    .flatpickr-month { color: var(--text-main) !important; fill: var(--text-main) !important; height: 32px !important; }
-    .flatpickr-current-month { font-size: 16px !important; font-weight: 700 !important; padding-top: 4px !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; }
-    .flatpickr-prev-month, .flatpickr-next-month { color: var(--text-muted) !important; fill: var(--text-muted) !important; transition: var(--transition) !important; padding: 6px !important; }
-    .flatpickr-prev-month:hover, .flatpickr-next-month:hover { color: var(--text-main) !important; fill: var(--text-main) !important; background: var(--bg-input) !important; border-radius: var(--radius-sm) !important; }
-    .flatpickr-weekdays { background: transparent !important; height: 24px !important; }
-    span.flatpickr-weekday { color: var(--text-muted) !important; font-size: 10px !important; font-weight: 800 !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
-    .flatpickr-days { width: 100% !important; border: none !important; }
-    .dayContainer { width: 100% !important; min-width: 100% !important; max-width: 100% !important; justify-content: space-between !important; }
-    .flatpickr-day { color: var(--text-main) !important; border-radius: var(--radius-sm) !important; border: 1px solid transparent !important; transition: var(--transition) !important; font-weight: 500 !important; max-width: 36px !important; height: 36px !important; line-height: 36px !important; margin: 2px 0 !important; }
-    .flatpickr-day:hover { background: var(--bg-hover) !important; border-color: var(--border-color) !important; }
-    .flatpickr-day.today { border-color: var(--border-focus) !important; color: var(--accent-cyan) !important; font-weight: 800 !important; }
-    .flatpickr-day.selected, .flatpickr-day.selected:hover, .flatpickr-day.selected:focus { background: var(--accent-cyan) !important; border-color: var(--accent-cyan) !important; color: #000 !important; font-weight: 800 !important; box-shadow: 0 0 15px rgba(0, 242, 195, 0.4) !important; }
-    .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: #334155 !important; }
-    .flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-current-month .custom-year-select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-color: var(--bg-input) !important; border: 1px solid var(--border-color) !important; color: var(--text-main) !important; border-radius: var(--radius-sm) !important; padding: 6px 12px !important; font-weight: 600 !important; font-size: 14px !important; outline: none !important; cursor: pointer !important; transition: var(--transition) !important; margin: 0 !important; }
-    .flatpickr-current-month .flatpickr-monthDropdown-months:hover, .flatpickr-current-month .flatpickr-monthDropdown-months:focus, .flatpickr-current-month .custom-year-select:hover, .flatpickr-current-month .custom-year-select:focus { border-color: var(--border-focus) !important; box-shadow: 0 0 0 1px var(--border-focus), var(--shadow-glow) !important; }
-    .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month, .flatpickr-current-month .custom-year-select option { background-color: var(--bg-surface) !important; color: var(--text-main) !important; font-weight: 500 !important; padding: 10px !important; }
-
-    /* BOTÕES DO FOOTER REDONDOS */
-    .modal-footer { padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; gap: 16px; flex-shrink: 0; }
-    .btn { flex: 1; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: var(--transition); text-align: center; }
-    .btn-cancel { background: #1e2532; color: var(--text-main); }
-    .btn-cancel:hover { background: var(--bg-hover); }
-    .btn-save { background: var(--accent-cyan); color: #000; box-shadow: 0 4px 14px rgba(0, 242, 195, 0.3); }
-    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 242, 195, 0.4); }
-
-    /* MEDIA QUERIES MOBILE */
-    @media (max-width: 600px) {
-      .form-grid-2 { grid-template-columns: 1fr; gap: 20px; }
-      .modal-header, .modal-footer { padding: 16px; }
-      .modal-body { padding: 16px; gap: 24px; }
-      .select-dropdown { position: fixed; left: 5%; right: 5%; width: 90%; top: 50% !important; transform: translateY(-50%) !important; }
-    }
-  </style>
+        .color-box.orange {
+            background-color: #f28e2b;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <h2 class="modal-title">Nova Transação</h2>
-        <button class="btn-scanner"><i data-lucide="camera"></i> Scanner Inteligente</button>
-      </div>
-      <button class="btn-close"><i data-lucide="x"></i></button>
+<div class="gauge-card">
+    <div class="header">
+        <div class="title">
+            <div class="icon-box">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#121815" stroke-width="4" stroke-linecap="round">
+                    <line x1="4" y1="9" x2="20" y2="9"></line>
+                    <line x1="4" y1="15" x2="20" y2="15"></line>
+                </svg>
+            </div>
+            LP - 1
+        </div>
+        <div class="info-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="4" ry="4"></rect>
+                <circle cx="12" cy="8" r="1"></circle>
+                <line x1="12" y1="12" x2="12" y2="16"></line>
+            </svg>
+        </div>
     </div>
 
-    <div class="modal-body" id="modal-body-scroll">
-      <div class="form-group">
-        <label>Tipo *</label>
-        <div class="type-selector">
-          <div class="type-btn active entrada" id="btn-entrada"><i data-lucide="plus-circle"></i> Entrada</div>
-          <div class="type-btn saida" id="btn-saida"><i data-lucide="minus-circle"></i> Saída</div>
-          <input type="hidden" id="tipo-transacao" value="entrada">
-        </div>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-group">
-          <label>Conta ou Cartão *</label>
-          <div class="custom-select" id="conta-select">
-            <input type="hidden" name="conta" id="conta-input" required>
-            <div class="select-trigger" tabindex="0" role="combobox" aria-expanded="false">
-              <div class="select-trigger-content">
-                <span class="placeholder-text" style="color: var(--text-placeholder); font-size: 14px;">Selecione a origem...</span>
-              </div>
-              <div class="select-icon"><i data-lucide="chevron-down"></i></div>
-            </div>
-            <div class="select-dropdown" role="listbox">
-              <div class="select-search"><i data-lucide="search"></i><input type="text" placeholder="Busque a conta..." class="search-input-field"></div>
-              <div class="select-options">
-                <div class="select-group-label">Contas Bancárias</div>
-                <div class="select-option" role="option" data-value="nubank-cc"><div class="bank-icon bg-nubank">nu</div><div class="option-text"><span class="option-title">Nubank - Conta Corrente</span><span class="option-subtitle">Saldo: R$ 1.250,00</span></div></div>
-                <div class="select-option" role="option" data-value="itau-cc"><div class="bank-icon bg-itau">it</div><div class="option-text"><span class="option-title">Itaú - Poupança</span><span class="option-subtitle">Saldo: R$ 5.400,00</span></div></div>
-                <div class="select-group-label">Cartões de Crédito</div>
-                <div class="select-option" role="option" data-value="nubank-cr"><div class="bank-icon bg-nubank">nu</div><div class="option-text"><span class="option-title">Nubank - Crédito</span><span class="option-subtitle">Limite disp: R$ 2.000,00</span></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="form-group"><label>Valor *</label><input type="text" class="form-control" placeholder="R$ 0,00" id="input-valor"></div>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-group"><label>Descrição *</label><input type="text" class="form-control" placeholder="Ex: Pagamento fornecedor"></div>
-        
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between;">
-            <label>Categoria *</label>
-            <span style="color: var(--accent-cyan); font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px;">Auto <i data-lucide="wand-2" style="width:10px; height:10px;"></i></span>
-          </div>
-          
-          <div class="custom-select" id="categoria-select">
-            <input type="hidden" name="categoria" id="categoria-input" value="alimentacao" required>
-            <div class="select-trigger" style="padding: 10px 16px 10px 10px;" tabindex="0" role="combobox" aria-expanded="false">
-              <div class="select-trigger-content">
-                <div class="cat-icon bg-food" id="cat-trigger-icon"><i data-lucide="utensils"></i></div>
-                <input type="text" class="combo-input" id="cat-combo-input" value="Alimentação" placeholder="Selecione ou digite..." autocomplete="off">
-              </div>
-              <div class="select-icon"><i data-lucide="chevron-down"></i></div>
-            </div>
+    <div class="gauge-container">
+        <svg viewBox="0 0 200 115">
+            <path class="track" d="M 25 100 A 75 75 0 0 1 175 100" />
             
-            <div class="select-dropdown" role="listbox">
-              <div class="select-options" id="cat-options-list">
-                <div class="select-option is-selected" role="option" data-value="alimentacao">
-                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-food"><i data-lucide="utensils"></i></div><span class="option-title">Alimentação</span></div>
-                  <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
-                </div>
-                <div class="select-option" role="option" data-value="energia">
-                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-power"><i data-lucide="zap"></i></div><span class="option-title">Energia Elétrica</span></div>
-                  <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
-                </div>
-                <div class="select-option" role="option" data-value="transporte">
-                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-transport"><i data-lucide="car"></i></div><span class="option-title">Transporte</span></div>
-                  <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
-                </div>
-                <div class="select-option" role="option" data-value="cannabis">
-                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-weed"><i data-lucide="cannabis"></i></div><span class="option-title">Cannabis</span></div>
-                  <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
-                </div>
-              </div>
-              
-              <div class="select-action-btn" id="btn-open-builder"><i data-lucide="plus"></i> Nova Categoria</div>
+            <path class="completed-bar" id="completed-bar" d="M 25 100 A 75 75 0 0 1 175 100" />
+            
+            <path class="planned-bar" id="planned-bar" d="M 15 100 A 85 85 0 0 1 185 100" />
+            
+            <g class="pointer-group" id="pointer-group">
+                <polygon class="pointer" points="5,96 5,104 15,100" />
+            </g>
+        </svg>
 
-              <div class="category-builder-form" id="builder-form">
-                <label style="margin: 0; font-size: 10px;">Criar Nova Categoria</label>
-                <input type="text" class="form-control builder-input" id="new-cat-name" placeholder="Ex: Internet">
-                <div class="builder-row">
-                  <input type="text" class="form-control builder-input" id="new-cat-icon" placeholder="Ícone (ex: wifi)">
-                  <input type="color" class="color-picker-btn" id="new-cat-color" value="#3b82f6" title="Cor de fundo">
-                </div>
-                <div class="builder-row" style="margin-top: 4px;">
-                  <button class="btn btn-cancel" style="padding: 10px; font-size: 12px;" id="btn-cancel-cat">Cancelar</button>
-                  <button class="btn btn-save" style="padding: 10px; font-size: 12px;" id="btn-save-cat">Salvar</button>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="values-container">
+            <span class="val-completed" id="val-completed">0</span>
+            <span class="val-planned" id="val-planned">/0</span>
         </div>
-      </div>
-
-      <div class="form-group">
-        <label>Contato</label>
-        <div class="input-wrapper">
-          <input type="text" class="form-control" placeholder="Contato (opcional)"><i data-lucide="refresh-cw" class="input-icon-right"></i>
-        </div>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-group"><label>Data de Competência</label><div class="input-wrapper"><input type="text" class="form-control date-picker" value="31/03/2026"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
-        <div class="form-group"><label>Data de Vencimento</label><div class="input-wrapper"><input type="text" class="form-control date-picker" placeholder="DD/MM/AAAA"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
-      </div>
-
-      <div class="toggle-wrapper active" id="toggle-pagamento">
-        <div class="toggle-switch"></div><span class="toggle-label">Pagamento Realizado</span>
-      </div>
-
-      <button class="btn-accordion" id="btn-mais-detalhes">Mais detalhes <i data-lucide="chevron-down"></i></button>
-
-      <div class="accordion-content" id="content-mais-detalhes">
-        <div style="background-color: var(--bg-input); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <i data-lucide="repeat" style="color: var(--accent-purple);"></i>
-            <div><span class="toggle-label">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
-          </div>
-          <div class="toggle-wrapper" id="toggle-recorrente"><div class="toggle-switch"></div></div>
-        </div>
-        <div class="form-group"><label>Parcelas (Opcional)</label><input type="text" class="form-control" placeholder="1 = à vista"></div>
-        <div class="form-group"><label>Observações</label><textarea class="form-control" rows="3" placeholder="Informações adicionais sobre esta transação..."></textarea></div>
-        
-        <div class="form-group">
-          <label>Anexos</label>
-          <input type="file" id="file-upload" accept="image/*,.pdf" style="display: none;">
-          <div class="upload-area" id="upload-box" onclick="document.getElementById('file-upload').click()">
-            <i data-lucide="paperclip"></i>
-            <span id="file-name-display">Clique para anexar imagem ou PDF</span>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-cancel">Cancelar</button><button class="btn btn-save">Salvar</button>
-    </div>
-  </div>
-
-  <div class="confirm-overlay" id="delete-confirm-modal">
-    <div class="confirm-modal">
-      <div class="confirm-title"><i data-lucide="alert-triangle"></i> Excluir Categoria</div>
-      <div class="confirm-text">
-        Tem certeza que deseja excluir a categoria "<strong id="cat-to-delete-name"></strong>"? Esta ação removerá a categoria da sua lista.
-      </div>
-      <div class="confirm-actions">
-        <button class="btn-confirm-cancel" id="btn-cancel-delete">Cancelar</button>
-        <button class="btn-confirm-delete" id="btn-confirm-delete">Sim, excluir</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    lucide.createIcons();
-    
-    // Configuração Flatpickr
-    flatpickr(".date-picker", { 
-      dateFormat: "d/m/Y", locale: "pt", allowInput: true, disableMobile: true, static: false, position: "auto",
-      nextArrow: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
-      prevArrow: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
-      onReady: function(selectedDates, dateStr, instance) {
-        const yearWrapper = instance.currentYearElement.parentNode;
-        const yearSelect = document.createElement('select');
-        yearSelect.className = 'custom-year-select';
-        const currentYear = new Date().getFullYear();
-        for (let i = currentYear - 10; i <= currentYear + 10; i++) {
-          const option = document.createElement('option');
-          option.value = i; option.text = i;
-          yearSelect.appendChild(option);
-        }
-        yearSelect.value = instance.currentYear;
-        yearSelect.addEventListener('change', function(e) { instance.changeYear(Number(e.target.value)); });
-        yearWrapper.style.display = 'none';
-        yearWrapper.parentNode.insertBefore(yearSelect, yearWrapper.nextSibling);
-      },
-      onYearChange: function(selectedDates, dateStr, instance) {
-        const customSelect = instance.monthNav.querySelector('.custom-year-select');
-        if (customSelect) customSelect.value = instance.currentYear;
-      }
-    });
-
-    // Lógicas botões e toggles
-    const btnEntrada = document.getElementById('btn-entrada'); const btnSaida = document.getElementById('btn-saida');
-    const inputTipo = document.getElementById('tipo-transacao'); const labelRecebimento = document.querySelector('#toggle-pagamento .toggle-label');
-    btnEntrada.addEventListener('click', () => { btnEntrada.classList.add('active'); btnSaida.classList.remove('active'); inputTipo.value = 'entrada'; labelRecebimento.textContent = 'Recebimento Realizado'; });
-    btnSaida.addEventListener('click', () => { btnSaida.classList.add('active'); btnEntrada.classList.remove('active'); inputTipo.value = 'saida'; labelRecebimento.textContent = 'Pagamento Realizado'; });
-
-    document.querySelectorAll('.toggle-wrapper').forEach(toggle => toggle.addEventListener('click', () => toggle.classList.toggle('active')));
-
-    // ACORDEÃO COM SCROLL AUTOMÁTICO
-    const btnMaisDetalhes = document.getElementById('btn-mais-detalhes'); 
-    const contentMaisDetalhes = document.getElementById('content-mais-detalhes');
-    const modalBody = document.getElementById('modal-body-scroll');
-
-    btnMaisDetalhes.addEventListener('click', () => {
-      const isOpeen = contentMaisDetalhes.classList.contains('open');
-      if (isOpeen) { 
-        contentMaisDetalhes.classList.remove('open'); btnMaisDetalhes.classList.remove('active'); btnMaisDetalhes.innerHTML = 'Mais detalhes <i data-lucide="chevron-down"></i>'; 
-      } else { 
-        contentMaisDetalhes.classList.add('open'); btnMaisDetalhes.classList.add('active'); btnMaisDetalhes.innerHTML = 'Menos detalhes <i data-lucide="chevron-up"></i>'; 
-        setTimeout(() => { modalBody.scrollTo({ top: modalBody.scrollHeight, behavior: 'smooth' }); }, 50);
-      }
-      lucide.createIcons();
-    });
-
-    document.getElementById('input-valor').addEventListener('input', (e) => {
-      let value = e.target.value.replace(/\D/g, ""); value = (value / 100).toFixed(2) + ""; value = value.replace(".", ",");
-      e.target.value = value ? "R$ " + value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.") : "";
-    });
-
-    // Validação Anexo
-    document.getElementById('file-upload').addEventListener('change', function(e) {
-      const file = e.target.files[0]; const display = document.getElementById('file-name-display'); const box = document.getElementById('upload-box');
-      if (!file) return;
-      if (file.size > 5 * 1024 * 1024) { alert("O limite máximo é de 5MB."); this.value = ''; box.classList.remove('has-file'); display.textContent = 'Clique para anexar imagem ou PDF'; return; }
-      box.classList.add('has-file'); display.textContent = `Anexado: ${file.name}`;
-    });
-
-    // ==========================================
-    // ESTADO DO MODAL DE EXCLUSÃO
-    // ==========================================
-    let currentOptionToDelete = null;
-    const deleteModal = document.getElementById('delete-confirm-modal');
-    
-    document.getElementById('btn-cancel-delete').addEventListener('click', () => { deleteModal.classList.remove('open'); currentOptionToDelete = null; });
-    document.getElementById('btn-confirm-delete').addEventListener('click', () => {
-      if (currentOptionToDelete) {
-        const option = currentOptionToDelete;
-        const dropdownEl = option.closest('.custom-select');
-        if (option.classList.contains('is-selected')) {
-          const comboInput = dropdownEl.querySelector('.combo-input');
-          if (comboInput) {
-             comboInput.value = '';
-             const icon = dropdownEl.querySelector('#cat-trigger-icon');
-             if(icon) { icon.className = 'cat-icon'; icon.style.backgroundColor = 'var(--bg-hover)'; icon.innerHTML = '<i data-lucide="tag"></i>'; lucide.createIcons(); }
-          }
-        }
-        option.remove();
-        deleteModal.classList.remove('open');
-        currentOptionToDelete = null;
-      }
-    });
-
-    // ==========================================
-    // Classe Dropdown Original Recuperada
-    // ==========================================
-    class ModernFloxSelect {
-      constructor(element) {
-        this.element = element; this.trigger = element.querySelector('.select-trigger');
-        this.triggerContent = element.querySelector('.select-trigger-content'); this.dropdown = element.querySelector('.select-dropdown');
-        this.hiddenInput = element.querySelector('input[type="hidden"]');
-        this.comboInput = element.querySelector('.combo-input'); this.searchInput = element.querySelector('.search-input-field');
-        this.isOpen = false; this.bindEvents();
-      }
-
-      getOptions() { return Array.from(this.element.querySelectorAll('.select-option')); }
-
-      bindEvents() {
-        this.trigger.addEventListener('click', (e) => { if(e.target === this.comboInput && this.isOpen) return; this.toggle(); });
-        
-        this.dropdown.addEventListener('click', (e) => {
-          const deleteBtn = e.target.closest('.delete-cat-btn');
-          if (deleteBtn) {
-            e.stopPropagation();
-            currentOptionToDelete = deleteBtn.closest('.select-option');
-            document.getElementById('cat-to-delete-name').textContent = currentOptionToDelete.querySelector('.option-title').textContent;
-            deleteModal.classList.add('open');
-            return;
-          }
-          const option = e.target.closest('.select-option');
-          if (option) { e.stopPropagation(); this.selectOption(option); }
-        });
-
-        if (this.searchInput) this.searchInput.addEventListener('input', (e) => this.filterOptions(e.target.value));
-        if (this.comboInput) {
-          this.comboInput.addEventListener('input', (e) => {
-            this.open(); this.filterOptions(e.target.value);
-            if(e.target.value === '') {
-               const icon = this.element.querySelector('#cat-trigger-icon');
-               if(icon) { icon.className = 'cat-icon'; icon.style.backgroundColor = 'var(--bg-hover)'; icon.innerHTML = '<i data-lucide="tag"></i>'; lucide.createIcons(); }
-            }
-          });
-        }
-        document.addEventListener('click', (e) => { if (!this.element.contains(e.target) && this.isOpen && !deleteModal.contains(e.target)) this.close(); });
-      }
-
-      filterOptions(term) {
-        term = term.toLowerCase();
-        this.getOptions().forEach(opt => {
-          const text = opt.querySelector('.option-title').textContent.toLowerCase();
-          opt.style.display = text.includes(term) ? 'flex' : 'none';
-        });
-      }
-
-      toggle() { this.isOpen ? this.close() : this.open(); }
-      open() { this.isOpen = true; this.element.classList.add('open'); if (this.searchInput) setTimeout(() => this.searchInput.focus(), 50); }
-      
-      close() {
-        this.isOpen = false; this.element.classList.remove('open');
-        const builder = document.getElementById('builder-form'); const btnOpen = document.getElementById('btn-open-builder'); const list = document.getElementById('cat-options-list');
-        if (builder && list) { builder.style.display = 'none'; list.style.display = 'block'; btnOpen.style.display = 'flex'; }
-      }
-
-      selectOption(option) {
-        this.getOptions().forEach(opt => opt.classList.remove('is-selected')); option.classList.add('is-selected');
-        if (this.comboInput) {
-           this.comboInput.value = option.querySelector('.option-title').textContent;
-           const triggerIcon = this.element.querySelector('#cat-trigger-icon'); const optionIcon = option.querySelector('.cat-icon');
-           if (triggerIcon && optionIcon) { triggerIcon.className = optionIcon.className; triggerIcon.style.backgroundColor = optionIcon.style.backgroundColor; triggerIcon.innerHTML = optionIcon.innerHTML; }
-        } else { this.triggerContent.innerHTML = option.innerHTML; }
-        this.hiddenInput.value = option.dataset.value; this.close();
-      }
-    }
-
-    new ModernFloxSelect(document.getElementById('conta-select'));
-    const dropdownCat = new ModernFloxSelect(document.getElementById('categoria-select'));
-
-    // ==========================================
-    // CRIADOR DE CATEGORIA INLINE RECUPERADO
-    // ==========================================
-    const btnOpenBuilder = document.getElementById('btn-open-builder'); const builderForm = document.getElementById('builder-form'); const catOptionsList = document.getElementById('cat-options-list');
-    btnOpenBuilder.addEventListener('click', (e) => {
-      e.stopPropagation(); btnOpenBuilder.style.display = 'none'; catOptionsList.style.display = 'none'; builderForm.style.display = 'flex';
-      document.getElementById('new-cat-name').value = document.getElementById('cat-combo-input').value; document.getElementById('new-cat-name').focus();
-    });
-
-    document.getElementById('btn-cancel-cat').addEventListener('click', (e) => { e.stopPropagation(); builderForm.style.display = 'none'; catOptionsList.style.display = 'block'; btnOpenBuilder.style.display = 'flex'; });
-
-    document.getElementById('btn-save-cat').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const name = document.getElementById('new-cat-name').value.trim(); const iconName = document.getElementById('new-cat-icon').value.trim() || 'tag'; const color = document.getElementById('new-cat-color').value;
-      if (!name) { alert("Dê um nome para a categoria."); return; }
-      
-      const newOption = document.createElement('div'); newOption.className = 'select-option'; newOption.setAttribute('role', 'option'); newOption.setAttribute('data-value', name.toLowerCase().replace(/\s+/g, '-'));
-      newOption.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-          <div class="cat-icon" style="background-color: ${color};"><i data-lucide="${iconName}"></i></div><span class="option-title">${name}</span>
+    <div class="legend">
+        <div class="legend-item">
+            <div class="color-box green"></div>
+            Completed
         </div>
-        <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
-      `;
+        <div class="legend-item">
+            <div class="color-box orange"></div>
+            Planed </div>
+    </div>
+</div>
 
-      catOptionsList.appendChild(newOption); lucide.createIcons();
-      document.getElementById('new-cat-name').value = ''; document.getElementById('new-cat-icon').value = '';
-      builderForm.style.display = 'none'; catOptionsList.style.display = 'block'; btnOpenBuilder.style.display = 'flex';
-      dropdownCat.selectOption(newOption);
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // --- CONFIGURAÇÃO DOS DADOS ---
+        const completedValue = 39;
+        const plannedValue = 58;
+        const maxScale = 100; // Define o 100% da curva do relógio
+
+        // Mapeando os elementos HTML
+        const completedBar = document.getElementById('completed-bar');
+        const plannedBar = document.getElementById('planned-bar');
+        const pointerGroup = document.getElementById('pointer-group');
+        const valCompleted = document.getElementById('val-completed');
+        const valPlanned = document.getElementById('val-planned');
+
+        // Constantes matemáticas do SVG baseado nos Raios (r=75 e r=85)
+        const cCompleted = Math.PI * 75; // ~235.62
+        const cPlanned = Math.PI * 85;   // ~267.04
+
+        // Calculando as porcentagens
+        const pCompleted = Math.min(completedValue / maxScale, 1);
+        const pPlanned = Math.min(plannedValue / maxScale, 1);
+
+        // Disparando as animações das linhas ao carregar
+        setTimeout(() => {
+            // Animando barra verde
+            completedBar.style.strokeDashoffset = cCompleted - (pCompleted * cCompleted);
+            
+            // Animando barra laranja
+            plannedBar.style.strokeDashoffset = cPlanned - (pPlanned * cPlanned);
+            
+            // Rotacionando a seta laranja com base no valor planejado
+            const pointerAngle = pPlanned * 180;
+            pointerGroup.style.transform = `rotate(${pointerAngle}deg)`;
+        }, 100);
+
+        // Definindo o texto planejado fixo
+        valPlanned.innerText = `/${plannedValue}`;
+
+        // Função para animar a subida dos números
+        function animateNumber(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                
+                // Usando uma curva ease-out para o número frear suavemente no fim
+                const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+                element.innerText = Math.floor(easeOutProgress * (end - start) + start);
+                
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    element.innerText = end;
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Dispara a animação do número central
+        setTimeout(() => {
+            animateNumber(valCompleted, 0, completedValue, 1500);
+        }, 100);
     });
-
-  </script>
+</script>
 </body>
 </html>

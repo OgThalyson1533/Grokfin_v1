@@ -418,38 +418,56 @@
           <p class="home-section-title">Saúde Financeira</p>
           <span class="text-[10px] text-white/35" id="home-gauge-period-label">Este mês</span>
         </div>
-        <!-- Gauge e Breakdown compactos para alinhar lateralmente ou verticalmente -->
-        <div class="flex flex-col sm:flex-row lg:flex-col items-center justify-center gap-5">
-          <!-- Gauge SVG -->
-          <div class="relative flex-shrink-0" style="width:160px;height:90px">
-            <svg viewBox="0 0 200 110" width="100%" height="100%" style="overflow:visible">
+        <!-- Gauge HF + Breakdown -->
+        <div class="flex flex-col items-center gap-4">
+
+          <!-- Gauge High Fidelity SVG -->
+          <div class="gauge-hf-container" style="height:118px;">
+            <svg viewBox="0 0 200 120" style="width:100%;max-width:260px;overflow:visible">
               <defs>
+                <linearGradient id="gaugeHFGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#55c115" />
+                  <stop offset="100%" stop-color="#8aff2b" />
+                </linearGradient>
+                <!-- gradientes legados mantidos para compatibilidade com o JS existente -->
                 <linearGradient id="gaugeGreen" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stop-color="#00ff85"/>
-                  <stop offset="100%" stop-color="#00f5ff"/>
+                  <stop offset="0%" stop-color="#00ff85"/><stop offset="100%" stop-color="#00f5ff"/>
                 </linearGradient>
                 <linearGradient id="gaugeYellow" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stop-color="#facc15"/>
-                  <stop offset="100%" stop-color="#fb923c"/>
+                  <stop offset="0%" stop-color="#facc15"/><stop offset="100%" stop-color="#fb923c"/>
                 </linearGradient>
                 <linearGradient id="gaugeRed" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stop-color="#f97316"/>
-                  <stop offset="100%" stop-color="#ff6685"/>
+                  <stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ff6685"/>
                 </linearGradient>
               </defs>
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="14" stroke-linecap="round"/>
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGreen)" stroke-width="14" stroke-linecap="round"
-                    stroke-dasharray="251.3" stroke-dashoffset="75.4" opacity="0.35"/>
-              <path id="home-gauge-arc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGreen)" stroke-width="14" stroke-linecap="round"
-                    stroke-dasharray="251.3" stroke-dashoffset="251.3" style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .5s ease"/>
+
+              <path class="gauge-hf-track"     d="M 20 100 A 80 80 0 0 1 180 100" />
+              <path class="gauge-hf-completed" id="gauge-hf-completed-bar" d="M 20 100 A 80 80 0 0 1 180 100" />
+              <path class="gauge-hf-planned"   id="gauge-hf-planned-bar"   d="M 20 100 A 80 80 0 0 1 180 100" />
+              <g class="gauge-hf-pointer" id="gauge-hf-pointer">
+                <path class="gauge-hf-pointer-shape" d="M 20 100 L 8 92 L 12 100 L 8 108 Z" />
+              </g>
             </svg>
-            <div class="absolute bottom-1 left-0 right-0 flex flex-col items-center">
-              <span class="text-xl font-black text-white leading-none" id="home-gauge-pct">0%</span>
-              <span class="text-[8px] font-bold uppercase tracking-widest mt-1" id="home-gauge-label" style="color:#00ff85">Saudável</span>
+            <div class="gauge-hf-values">
+              <span class="gauge-hf-val-completed" id="gauge-hf-val-completed">0</span>
+              <span class="gauge-hf-val-planned"   id="gauge-hf-val-planned">/100</span>
             </div>
           </div>
-          <!-- Breakdown bars -->
-          <div class="w-full flex-1 space-y-2" id="home-gauge-breakdown">
+
+          <!-- Legenda -->
+          <div class="gauge-hf-legend">
+            <div class="gauge-hf-legend-item">
+              <div class="gauge-hf-color-box green"></div>
+              Realizado
+            </div>
+            <div class="gauge-hf-legend-item">
+              <div class="gauge-hf-color-box orange"></div>
+              Meta
+            </div>
+          </div>
+
+          <!-- Breakdown bars (IDs mantidos) -->
+          <div class="w-full space-y-2" id="home-gauge-breakdown">
             <div class="gauge-breakdown-row">
               <div class="flex justify-between text-xs mb-1">
                 <span class="text-white/55 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>Gastos Var.</span>
@@ -472,7 +490,8 @@
               <div class="progress-track" style="height:5px"><div id="gauge-surplus-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#34d399,#00ff85)"></div></div>
             </div>
           </div>
-          <!-- Legacy KPI fields we hide so the logic doesn't break -->
+
+          <!-- Legacy KPI fields (ocultos, mantidos para compatibilidade com o JS) -->
           <div class="hidden">
             <div id="gauge-kpi-expenses"></div>
             <div id="gauge-kpi-incomes"></div>
