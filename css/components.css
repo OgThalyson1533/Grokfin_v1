@@ -1224,6 +1224,228 @@
 }
 
 /* ══════════════════════════════════════════════════════
+   CALENDAR TOOLTIP — Desktop mouseenter
+══════════════════════════════════════════════════════ */
+.cal-tooltip {
+  position: fixed;
+  z-index: 9900;
+  min-width: 220px; max-width: 300px;
+  background: rgba(10,17,30,.96);
+  border: 1px solid rgba(0,245,255,.18);
+  border-radius: 14px;
+  padding: .75rem 1rem;
+  box-shadow: 0 8px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(0,245,255,.06);
+  backdrop-filter: blur(16px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px) scale(.97);
+  transition: opacity .15s ease, transform .15s ease;
+  font-size: .76rem;
+  color: rgba(255,255,255,.82);
+  line-height: 1.5;
+}
+.cal-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.cal-tip-net {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  margin-bottom: .45rem;
+}
+.cal-tip-section {
+  font-size: .6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: rgba(255,255,255,.38);
+  margin: .35rem 0 .15rem;
+}
+.cal-tip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+  padding: .12rem 0;
+}
+.cal-tip-desc {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(255,255,255,.72);
+}
+.cal-tip-val { font-weight: 700; white-space: nowrap; }
+.tip-in  { color: #34d399; }
+.tip-out { color: #fb7185; }
+.cal-tip-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: .4rem;
+  padding-top: .35rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.cal-tip-badge {
+  font-size: .55rem;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 2px 6px;
+  line-height: 1.4;
+}
+.badge-close { background: rgba(251,191,36,.14); color: #fbbf24; }
+.badge-due   { background: rgba(248,113,113,.16); color: #f87171; }
+.badge-fixed { background: rgba(139,92,246,.16);  color: #a78bfa; }
+
+/* ══════════════════════════════════════════════════════
+   CALENDAR MODAL / BOTTOM-SHEET — All devices on click
+══════════════════════════════════════════════════════ */
+.cal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9950;
+  background: rgba(0,0,0,.52);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+}
+.cal-modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cal-modal-sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 82vh;
+  background: #0c1422;
+  border: 1px solid rgba(0,245,255,.12);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(100%);
+  transition: transform .28s cubic-bezier(.22,.82,.42,1);
+  box-shadow: 0 -8px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(0,245,255,.06);
+}
+.cal-modal-overlay.open .cal-modal-sheet {
+  transform: translateY(0);
+}
+@media (min-width: 600px) {
+  .cal-modal-overlay { align-items: center; }
+  .cal-modal-sheet {
+    border: 1px solid rgba(0,245,255,.14);
+    border-radius: 20px;
+    max-height: 75vh;
+  }
+}
+.cal-modal-drag-handle {
+  width: 40px; height: 4px;
+  background: rgba(255,255,255,.15);
+  border-radius: 999px;
+  margin: .7rem auto .25rem;
+  flex-shrink: 0;
+}
+@media (min-width: 600px) { .cal-modal-drag-handle { display: none; } }
+.cal-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .6rem 1.1rem .55rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  flex-shrink: 0;
+}
+.cal-modal-title {
+  font-size: .95rem;
+  font-weight: 800;
+  color: rgba(255,255,255,.9);
+  letter-spacing: -.01em;
+}
+.cal-modal-close {
+  width: 2rem; height: 2rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: .5rem;
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.55);
+  font-size: .8rem;
+  border: none; cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.cal-modal-close:hover { background: rgba(255,255,255,.1); color: white; }
+.cal-modal-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: .6rem 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+.cal-modal-summary {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .78rem;
+  font-weight: 700;
+  padding: .5rem 0 .6rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  margin-bottom: .2rem;
+  flex-wrap: wrap;
+}
+.cal-modal-section {
+  font-size: .6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: rgba(255,255,255,.35);
+  margin: .5rem 0 .15rem;
+}
+.cal-modal-tx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .45rem .5rem;
+  border-radius: 8px;
+  transition: background .12s;
+}
+.cal-modal-tx-row:hover { background: rgba(255,255,255,.04); }
+.cal-modal-tx-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+.cal-modal-tx-desc {
+  font-size: .82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cal-modal-tx-cat {
+  font-size: .65rem;
+  color: rgba(255,255,255,.38);
+}
+.cal-modal-tx-val {
+  font-size: .82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.cal-modal-event-row {
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .35rem .6rem;
+  border-radius: 7px;
+  margin-bottom: .1rem;
+}
+
+/* ══════════════════════════════════════════════════════
    COMPARISON CARDS — colored accent variant
 ══════════════════════════════════════════════════════ */
 .compare-card {

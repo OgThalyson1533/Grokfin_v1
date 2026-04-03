@@ -13,6 +13,13 @@ import { syncActiveViewLabel, switchTab } from './navigation.js';
 
 let currentInsight = { label: 'Aplicar', action: { type: 'noop' } };
 
+// ── Calendar interaction state ─────────────────────────────────────────────
+let _calByDay   = null;
+let _calYear    = null;
+let _calMonth   = null;
+let _calTooltip = null;
+let _calModal   = null;
+
 export function setTrendChip(id, value) {
   const element = document.getElementById(id);
   if (!element) return;
@@ -717,6 +724,196 @@ window.changeCalendarMonth = (offset) => {
   import('./dashboard-ui.js').then(m => m.renderHomeFinancialCalendar());
 };
 
+// ── Calendar Tooltip + Modal helpers ──────────────────────────────────────
+
+const _isMobile = () => window.matchMedia('(hover: none)').matches;
+
+function _fmtMoney(v) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+}
+
+function _getTooltip() {
+  if (!_calTooltip) {
+    _calTooltip = document.createElement('div');
+    _calTooltip.className = 'cal-tooltip';
+    _calTooltip.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(_calTooltip);
+  }
+  return _calTooltip;
+}
+
+function _getModal() {
+  if (!_calModal) {
+    _calModal = document.createElement('div');
+    _calModal.className = 'cal-modal-overlay';
+    _calModal.setAttribute('role', 'dialog');
+    _calModal.setAttribute('aria-modal', 'true');
+    _calModal.innerHTML = `
+      <div class="cal-modal-sheet">
+        <div class="cal-modal-drag-handle"></div>
+        <div class="cal-modal-header">
+          <span class="cal-modal-title" id="cal-modal-title"></span>
+          <button class="cal-modal-close" aria-label="Fechar">✕</button>
+        </div>
+        <div class="cal-modal-body" id="cal-modal-body"></div>
+      </div>`;
+    document.body.appendChild(_calModal);
+    _calModal.querySelector('.cal-modal-close').addEventListener('click', _closeModal);
+    _calModal.addEventListener('click', e => { if (e.target === _calModal) _closeModal(); });
+  }
+  return _calModal;
+}
+
+function _closeModal() {
+  if (!_calModal) return;
+  _calModal.classList.remove('open');
+}
+
+function _hideTooltip() {
+  if (_calTooltip) _calTooltip.classList.remove('visible');
+}
+
+function _positionTooltip(tip, anchorRect) {
+  const tw = tip.offsetWidth  || 260;
+  const th = tip.offsetHeight || 180;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  let left = anchorRect.left + anchorRect.width / 2 - tw / 2;
+  let top  = anchorRect.top - th - 8;
+  if (left < 6)       left = 6;
+  if (left + tw > vw - 6) left = vw - tw - 6;
+  if (top < 6)        top  = anchorRect.bottom + 8;
+  tip.style.left = left + 'px';
+  tip.style.top  = top  + 'px';
+}
+
+function _buildTooltipHtml(data) {
+  if (!data) return '';
+  const net = data.income - data.expense;
+  const netColor = net >= 0 ? '#34d399' : '#fb7185';
+
+  // Top 3 receitas e Top 3 despesas
+  const txs = data.transactions || [];
+  const income3  = [...txs].filter(t => t.value > 0).sort((a,b) => b.value - a.value).slice(0,3);
+  const expense3 = [...txs].filter(t => t.value < 0).sort((a,b) => a.value - b.value).slice(0,3);
+
+  const txRows = (arr, cls) => arr.map(t =>
+    `<div class="cal-tip-row">
+      <span class="cal-tip-desc">${escapeHtml(t.desc || t.cat || '')}</span>
+      <span class="cal-tip-val ${cls}">${_fmtMoney(Math.abs(t.value))}</span>
+    </div>`
+  ).join('');
+
+  const cardBadges = [
+    ...(data.cardClose || []).map(n => `<span class="cal-tip-badge badge-close">✂ ${escapeHtml(n)}</span>`),
+    ...(data.cardDue   || []).map(n => `<span class="cal-tip-badge badge-due">💳 ${escapeHtml(n)}</span>`)
+  ].join('');
+
+  const fixedBadges = (data.fixedEvents || []).map(f =>
+    `<span class="cal-tip-badge badge-fixed">${f.isIncome ? '↑' : '↓'} ${escapeHtml(f.name)}</span>`
+  ).join('');
+
+  return `
+    <div class="cal-tip-net" style="color:${netColor}">${net >= 0 ? '+' : ''}${_fmtMoney(net)}</div>
+    ${income3.length  ? `<div class="cal-tip-section">Receitas</div>${txRows(income3, 'tip-in')}`  : ''}
+    ${expense3.length ? `<div class="cal-tip-section">Despesas</div>${txRows(expense3, 'tip-out')}` : ''}
+    ${cardBadges || fixedBadges ? `<div class="cal-tip-badges">${cardBadges}${fixedBadges}</div>` : ''}`;
+}
+
+function _buildModalHtml(data, dayNum) {
+  if (!data) return '<p style="opacity:.5;font-size:.85rem;text-align:center;padding:2rem">Nenhum evento neste dia.</p>';
+
+  const txs = data.transactions || [];
+  const incomes  = txs.filter(t => t.value > 0).sort((a,b) => b.value - a.value);
+  const expenses = txs.filter(t => t.value < 0).sort((a,b) => a.value - b.value);
+
+  const txBlock = (arr, label, cls) => {
+    if (!arr.length) return '';
+    return `<div class="cal-modal-section">${label}</div>` +
+      arr.map(t => `
+        <div class="cal-modal-tx-row">
+          <div class="cal-modal-tx-info">
+            <span class="cal-modal-tx-desc">${escapeHtml(t.desc || '—')}</span>
+            <span class="cal-modal-tx-cat">${escapeHtml(t.cat || '')}</span>
+          </div>
+          <span class="cal-modal-tx-val ${cls}">${t.value >= 0 ? '+' : ''}${_fmtMoney(t.value)}</span>
+        </div>`).join('');
+  };
+
+  const cardLines = [
+    ...(data.cardClose || []).map(n => `<div class="cal-modal-event-row badge-close">✂ Fecha fatura — ${escapeHtml(n)}</div>`),
+    ...(data.cardDue   || []).map(n => `<div class="cal-modal-event-row badge-due">💳 Vencimento — ${escapeHtml(n)}</div>`)
+  ].join('');
+
+  const fixedLines = (data.fixedEvents || []).map(f =>
+    `<div class="cal-modal-event-row badge-fixed">${f.isIncome ? '↑' : '↓'} ${escapeHtml(f.name)} (despesa fixa)</div>`
+  ).join('');
+
+  const net = data.income - data.expense;
+  const netColor = net >= 0 ? '#34d399' : '#fb7185';
+
+  return `
+    <div class="cal-modal-summary">
+      <span style="color:#34d399">+${_fmtMoney(data.income)}</span>
+      <span style="color:#64748b">·</span>
+      <span style="color:#fb7185">-${_fmtMoney(data.expense)}</span>
+      <span style="color:#64748b">·</span>
+      <span style="color:${netColor};font-weight:800">Líquido: ${net >= 0 ? '+' : ''}${_fmtMoney(net)}</span>
+    </div>
+    ${cardLines}${fixedLines}
+    ${txBlock(incomes,  'Receitas',  'tip-in')}
+    ${txBlock(expenses, 'Despesas', 'tip-out')}
+    ${!txs.length && !cardLines && !fixedLines ? '<p style="opacity:.5;font-size:.85rem;text-align:center;padding:1rem">Nenhuma transação.</p>' : ''}`;
+}
+
+function _openModal(dayNum) {
+  const data = _calByDay ? _calByDay[dayNum] : null;
+  const modal = _getModal();
+  const dateStr = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+    .format(new Date(_calYear, _calMonth, dayNum));
+  modal.querySelector('#cal-modal-title').textContent = dateStr;
+  modal.querySelector('#cal-modal-body').innerHTML = _buildModalHtml(data, dayNum);
+  modal.classList.add('open');
+}
+
+function _bindCalendarInteractions(container) {
+  // Remove previous listeners by cloning (event delegation on container itself)
+  const fresh = container.cloneNode(true);
+  container.parentNode.replaceChild(fresh, container);
+
+  const isMobile = _isMobile();
+
+  if (!isMobile) {
+    // Desktop: mouseenter for tooltip, mouseleave to hide, click for modal
+    fresh.addEventListener('mouseover', e => {
+      const cell = e.target.closest('[data-day]');
+      if (!cell) return;
+      const day = Number(cell.dataset.day);
+      const data = _calByDay?.[day];
+      // Only show tooltip if there's something to show
+      if (!data || (!data.transactions?.length && !data.cardClose?.length && !data.cardDue?.length && !data.fixedEvents?.length)) return;
+      const tip = _getTooltip();
+      tip.innerHTML = _buildTooltipHtml(data);
+      tip.classList.add('visible');
+      // Position after content is set so dimensions are available
+      requestAnimationFrame(() => _positionTooltip(tip, cell.getBoundingClientRect()));
+    });
+
+    fresh.addEventListener('mouseout', e => {
+      const cell = e.target.closest('[data-day]');
+      if (!cell) return;
+      if (!cell.contains(e.relatedTarget)) _hideTooltip();
+    });
+  }
+
+  fresh.addEventListener('click', e => {
+    const cell = e.target.closest('[data-day]');
+    if (!cell) return;
+    _hideTooltip();
+    _openModal(Number(cell.dataset.day));
+  });
+}
+
 /** Calendário financeiro: mostra entradas/saídas por dia do mês selecionado */
 export function renderHomeFinancialCalendar() {
   const container = document.getElementById('home-financial-calendar');
@@ -739,7 +936,9 @@ export function renderHomeFinancialCalendar() {
     const d = _parseDateBRLocal(t.date);
     if (d.getFullYear() === year && d.getMonth() === month) {
       const day = d.getDate();
-      if (!byDay[day]) byDay[day] = { income: 0, expense: 0 };
+      if (!byDay[day]) byDay[day] = { income: 0, expense: 0, transactions: [] };
+      if (!byDay[day].transactions) byDay[day].transactions = [];
+      byDay[day].transactions.push(t);
       if (t.value > 0) byDay[day].income  += t.value;
       else             byDay[day].expense += Math.abs(t.value);
     }
@@ -801,21 +1000,25 @@ export function renderHomeFinancialCalendar() {
 
     const isToday = isCurrentMonth && !isOther && dayNum === todayNum;
     const data = !isOther ? byDay[dayNum] : null;
+    const dayAttr = !isOther ? `data-day="${dayNum}"` : '';
 
-    const cardCloseTitle = data?.cardClose?.map(n => `Fecha: ${n}`).join('\n') || '';
-    const cardDueTitle   = data?.cardDue?.map(n => `Vence: ${n}`).join('\n') || '';
-    const fixedTitle     = data?.fixedEvents?.map(e => (e.isIncome ? '↑' : '↓') + ' ' + e.name).join('\n') || '';
-    cells += `<div class="fin-cal-day${isOther ? ' other-month' : ''}${isToday ? ' today' : ''}">
+    cells += `<div class="fin-cal-day${isOther ? ' other-month' : ''}${isToday ? ' today' : ''}" ${dayAttr}>
       <span class="fin-cal-day-num">${dayNum}</span>
       ${data && data.income  > 0 ? `<span class="fin-cal-pill-in">+${formatMoneyShort(data.income)}</span>`  : ''}
       ${data && data.expense > 0 ? `<span class="fin-cal-pill-out">-${formatMoneyShort(data.expense)}</span>` : ''}
-      ${data?.cardClose?.length  ? `<span class="fin-cal-pill-card-close" title="${cardCloseTitle}">✂ Fecha</span>` : ''}
-      ${data?.cardDue?.length    ? `<span class="fin-cal-pill-card-due"   title="${cardDueTitle}">💳 Vence</span>` : ''}
-      ${data?.fixedEvents?.length ? `<span class="fin-cal-pill-fixed" title="${fixedTitle}">⚡${data.fixedEvents.length}</span>` : ''}
+      ${data?.cardClose?.length  ? `<span class="fin-cal-pill-card-close">✂ Fecha</span>` : ''}
+      ${data?.cardDue?.length    ? `<span class="fin-cal-pill-card-due">💳 Vence</span>` : ''}
+      ${data?.fixedEvents?.length ? `<span class="fin-cal-pill-fixed">⚡${data.fixedEvents.length}</span>` : ''}
     </div>`;
   }
 
   container.innerHTML = headerHtml + `<div class="fin-cal-grid">${cells}</div>`;
+
+  // Store for interaction handlers and bind events
+  _calByDay  = byDay;
+  _calYear   = year;
+  _calMonth  = month;
+  _bindCalendarInteractions(container);
 }
 
 // ══════════════════════════════════════════════════════════
