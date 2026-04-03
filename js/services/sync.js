@@ -352,34 +352,27 @@ export async function syncFromSupabase(state) {
     }
 
     // Transações
-    if (txs?.length) {
-      state.transactions = txs.map(t => {
-        const [year, month, day] = t.date.split('-');
-        return {
-          id: t.id,
-          date: `${day}/${month}/${year}`,
-          desc: t.description,
-          cat: t.category,
-          value: Number(t.amount),
-          payment: t.payment,
-          cardId: t.card_id,
-          accountId: t.account_id,
-          recurringTemplate: t.recurring_template,
-          installments: t.installments,
-          installmentCurrent: t.installment_current,
-          // [FIX TX] Mapeamento dos novos campos vindos do banco
-          notes: t.notes || null,
-          attachmentUrl: t.attachment_url || null,
-          status: t.status || 'efetivado' // [FIX] carrega status do banco
-        };
-      });
-      // [FIX] Modelo de passivo CC: excluí despesas de cartão do saldo disponível
-      const isCcExpense = t => t.value < 0 && (t.payment === 'cartao_credito' || (t.cardId && !t.accountId));
-      state.balance = state.transactions.filter(t => !isCcExpense(t)).reduce((acc, t) => acc + t.value, 0);
-    } else {
-      state.transactions = [];
-      state.balance = 0;
-    }
+    state.transactions = txs?.length
+      ? txs.map(t => {
+          const [year, month, day] = t.date.split('-');
+          return {
+            id: t.id,
+            date: `${day}/${month}/${year}`,
+            desc: t.description,
+            cat: t.category,
+            value: Number(t.amount),
+            payment: t.payment,
+            cardId: t.card_id,
+            accountId: t.account_id,
+            recurringTemplate: t.recurring_template,
+            installments: t.installments,
+            installmentCurrent: t.installment_current,
+            notes: t.notes || null,
+            attachmentUrl: t.attachment_url || null,
+            status: t.status || 'efetivado'
+          };
+        })
+      : [];
 
     // Metas
     state.goals = goals?.length
@@ -457,6 +450,13 @@ export async function syncFromSupabase(state) {
           createdAt: m.created_at
         }))
       : [];
+
+    // Saldo = saldo inicial de todas as contas + transações não-CC
+    // Calculado APÓS state.accounts estar populado para incluir initialBalance
+    const _isCcExpense = t => t.value < 0 && (t.payment === 'cartao_credito' || (t.cardId && !t.accountId));
+    const _txSum       = state.transactions.filter(t => !_isCcExpense(t)).reduce((s, t) => s + t.value, 0);
+    const _initSum     = state.accounts.reduce((s, a) => s + (a.initialBalance || 0), 0);
+    state.balance      = Number((_txSum + _initSum).toFixed(2));
 
     state.isNewUser = !isOnboardingCompleted && !txs?.length && !goals?.length;
 

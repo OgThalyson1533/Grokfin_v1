@@ -166,14 +166,11 @@ export function saveState() {
     if (Array.isArray(state.transactions)) {
       const isCcExpense = t => t.value < 0 && (
         t.payment === 'cartao_credito' ||
-        (t.cardId && !t.accountId)   // transações vinculadas a cartão sem conta bancária
+        (t.cardId && !t.accountId)
       );
-      state.balance = Number(
-        state.transactions
-          .filter(t => !isCcExpense(t))
-          .reduce((acc, t) => acc + (t.value || 0), 0)
-          .toFixed(2)
-      );
+      const txSum       = state.transactions.filter(t => !isCcExpense(t)).reduce((s, t) => s + (t.value || 0), 0);
+      const initialSum  = (state.accounts || []).reduce((s, a) => s + (a.initialBalance || 0), 0);
+      state.balance     = Number((txSum + initialSum).toFixed(2));
     }
 
     // Background sync para o Supabase (Debounced)

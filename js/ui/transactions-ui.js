@@ -304,12 +304,16 @@ export function populateAccountSelect(container, selectedValue) {
     accounts.forEach(acc => {
       const initial = acc.name.substring(0, 2).toLowerCase();
       const isSelected = selectedValue === acc.id;
+      // Saldo real = saldo inicial + todas as transações vinculadas a esta conta
+      const accTxSum      = (state.transactions || []).filter(t => t.accountId === acc.id).reduce((s, t) => s + (t.value || 0), 0);
+      const accBalance    = (acc.initialBalance || 0) + accTxSum;
+      const balanceColor  = accBalance < 0 ? 'color:#f87171' : '';
       html += `
         <div class="select-option ${isSelected ? 'is-selected' : ''}" role="option" data-value="${acc.id}">
           <div class="bank-icon" style="background: rgba(255,255,255,0.1); color: white;">${initial}</div>
           <div class="option-text">
             <span class="option-title">${escapeHtml(acc.name)}</span>
-            <span class="option-subtitle">Saldo disponível: ${formatMoney(acc.balance || 0)}</span>
+            <span class="option-subtitle" style="${balanceColor}">Saldo: ${formatMoney(accBalance)}</span>
           </div>
         </div>
       `;
