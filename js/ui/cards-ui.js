@@ -13,6 +13,7 @@ import { isSupabaseConfigured } from '../services/supabase.js';
 
 let _activeCardId = null;
 let _editingCardId = null;
+let _payingCardId  = null;
 
 export function renderCards() {
   const grid = document.getElementById('cards-grid');
@@ -78,18 +79,28 @@ export function selectCard(id) {
   renderCards();
   const card = state.cards.find(c => c.id === id);
   if (!card) return;
-  const panel = document.getElementById('card-invoice-panel');
-  const title = document.getElementById('card-invoice-title');
-  const list = document.getElementById('card-invoice-list');
-  const addBtn = document.getElementById('card-tx-add-btn');
-  if (title) title.textContent = card.cardType === 'debito' ? `Lançamentos — ${card.name}` : `Fatura — ${card.name}`;
+  const panel   = document.getElementById('card-invoice-panel');
+  const title   = document.getElementById('card-invoice-title');
+  const list    = document.getElementById('card-invoice-list');
+  const addBtn  = document.getElementById('card-tx-add-btn');
+  const payBtn  = document.getElementById('card-pay-btn');
+
+  if (panel)  panel.classList.remove('hidden');
+  if (title)  title.textContent = card.cardType === 'debito' ? `Lançamentos — ${card.name}` : `Fatura — ${card.name}`;
   if (addBtn) addBtn.classList.remove('hidden');
+  // Botão "Pagar Fatura" só aparece para cartões de crédito com saldo em aberto
+  if (payBtn) {
+    const hasFatura = card.cardType === 'credito' && (card.invoices || []).length > 0;
+    payBtn.classList.toggle('hidden', !hasFatura);
+  }
+
   const invoices = card.invoices || [];
   if (!invoices.length) {
     if (list) list.innerHTML = '<p class="text-white/40 text-sm py-4">Sem lançamentos nesta fatura.</p>';
     if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     return;
   }
+
   const total = invoices.reduce((a, t) => a + t.value, 0);
   if (list) {
     list.innerHTML = `
@@ -106,7 +117,7 @@ export function selectCard(id) {
               </span>
               <div>
                 <p class="text-sm font-semibold text-white">${escapeHtml(tx.desc)}</p>
-                <p class="text-xs text-white/40">${tx.cat} ${tx.installments > 1 ? `• ${tx.installmentCurrent}/${tx.installments}x` : ''}</p>
+                <p class="text-xs text-white/40">${tx.cat}${tx.installments > 1 ? ` • ${tx.installmentCurrent}/${tx.installments}x` : ''}</p>
               </div>
             </div>
             <div class="text-right">
@@ -117,6 +128,86 @@ export function selectCard(id) {
       </div>`;
   }
   if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+export function payInvoice(cardId) {
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card || card.cardType !== 'credito') return;
+  const invoices = card.invoices || [];
+  const total = invoices.reduce((a, t) => a + t.value, 0);
+  if (!total) { showToast('Fatura zerada — nada a pagar.', 'info'); return; }
+
+  _payingCardId = cardId;
+
+  const nameEl    = document.getElementById('pay-invoice-card-name');
+  const totalEl   = document.getElementById('pay-invoice-total');
+  const selectEl  = document.getElementById('pay-invoice-account');
+  const errorEl   = document.getElementById('pay-invoice-error');
+
+  if (nameEl)  nameEl.textContent  = card.name;
+  if (totalEl) totalEl.textContent = formatMoney(total);
+  if (errorEl) errorEl.classList.add('hidden');
+  if (selectEl) {
+    const accounts = state.accounts || [];
+    selectEl.innerHTML = [
+      '<option value="">— Selecione a conta —</option>',
+      ...accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`)
+    ].join('');
+    // Pré-seleciona a conta padrão do cartão se definida
+    if (card.defaultAccountId) selectEl.value = card.defaultAccountId;
+  }
+
+  document.getElementById('pay-invoice-modal-overlay').classList.remove('hidden');
+}
+
+export function confirmPayInvoice() {
+  const card = state.cards.find(c => c.id === _payingCardId);
+  if (!card) return;
+
+  const selectEl = document.getElementById('pay-invoice-account');
+  const errorEl  = document.getElementById('pay-invoice-error');
+  const accountId = selectEl?.value || '';
+
+  if (!accountId) {
+    if (errorEl) { errorEl.textContent = 'Selecione a conta para débito.'; errorEl.classList.remove('hidden'); }
+    return;
+  }
+
+  const invoices = card.invoices || [];
+  const total = invoices.reduce((a, t) => a + t.value, 0);
+  if (!total) {
+    document.getElementById('pay-invoice-modal-overlay').classList.add('hidden');
+    return;
+  }
+
+  const account = state.accounts.find(a => a.id === accountId);
+  const today   = new Intl.DateTimeFormat('pt-BR').format(new Date());
+
+  // Lança débito na conta bancária
+  state.transactions.unshift({
+    id:            uid('tx'),
+    date:          today,
+    desc:          `Pagamento fatura ${card.name}`,
+    cat:           'Pagamento de Cartão',
+    value:         -total,
+    payment:       'conta',
+    accountId,
+    cardId:        null,
+    notes:         null,
+    attachmentUrl: null
+  });
+
+  // Zera fatura e limite usado
+  card.invoices = [];
+  card.used = 0;
+
+  document.getElementById('pay-invoice-modal-overlay').classList.add('hidden');
+  saveState();
+  if (window.appRenderAll) window.appRenderAll(); else renderCards();
+  // Atualiza painel lateral (fatura zerada)
+  selectCard(_payingCardId);
+  showToast(`Fatura ${card.name} paga! ${formatMoney(total)} debitado de ${account?.name || 'sua conta'}.`, 'success');
+  _payingCardId = null;
 }
 
 export function deleteCardTx(cardId, txId) {
@@ -303,24 +394,41 @@ export function bindCardEvents() {
   document.getElementById('card-modal-close')?.addEventListener('click', () => document.getElementById('card-modal-overlay').classList.add('hidden'));
   document.getElementById('card-modal-cancel')?.addEventListener('click', () => document.getElementById('card-modal-overlay').classList.add('hidden'));
   document.getElementById('card-modal-save')?.addEventListener('click', saveCardModal);
-  
-  document.getElementById('card-modal-overlay')?.addEventListener('click', e => { 
-    if (e.target === document.getElementById('card-modal-overlay')) document.getElementById('card-modal-overlay').classList.add('hidden'); 
+  document.getElementById('card-modal-overlay')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('card-modal-overlay')) document.getElementById('card-modal-overlay').classList.add('hidden');
   });
-  
+
+  // Painel de fatura — fechar
+  document.getElementById('card-invoice-close')?.addEventListener('click', () => {
+    document.getElementById('card-invoice-panel')?.classList.add('hidden');
+    document.getElementById('card-tx-add-btn')?.classList.add('hidden');
+    document.getElementById('card-pay-btn')?.classList.add('hidden');
+    _activeCardId = null;
+  });
+
+  // Painel de fatura — novo lançamento
   document.getElementById('card-tx-add-btn')?.addEventListener('click', () => { if (_activeCardId) openCardTx(_activeCardId); });
   document.getElementById('card-tx-modal-close')?.addEventListener('click', () => document.getElementById('card-tx-modal-overlay').classList.add('hidden'));
   document.getElementById('card-tx-cancel')?.addEventListener('click', () => document.getElementById('card-tx-modal-overlay').classList.add('hidden'));
   document.getElementById('card-tx-save')?.addEventListener('click', saveCardTx);
-  
-  document.getElementById('card-tx-modal-overlay')?.addEventListener('click', e => { 
-    if (e.target === document.getElementById('card-tx-modal-overlay')) document.getElementById('card-tx-modal-overlay').classList.add('hidden'); 
+  document.getElementById('card-tx-modal-overlay')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('card-tx-modal-overlay')) document.getElementById('card-tx-modal-overlay').classList.add('hidden');
+  });
+
+  // Painel de fatura — pagar fatura
+  document.getElementById('card-pay-btn')?.addEventListener('click', () => { if (_activeCardId) payInvoice(_activeCardId); });
+  document.getElementById('pay-invoice-modal-close')?.addEventListener('click', () => document.getElementById('pay-invoice-modal-overlay').classList.add('hidden'));
+  document.getElementById('pay-invoice-cancel')?.addEventListener('click', () => document.getElementById('pay-invoice-modal-overlay').classList.add('hidden'));
+  document.getElementById('pay-invoice-confirm')?.addEventListener('click', confirmPayInvoice);
+  document.getElementById('pay-invoice-modal-overlay')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('pay-invoice-modal-overlay')) document.getElementById('pay-invoice-modal-overlay').classList.add('hidden');
   });
 
   // Global exposes for inline onclick handlers inside renderCards
-  window.selectCard = selectCard;
-  window.deleteCardTx = deleteCardTx;
-  window.openEditCard = openEditCard;
-  window.deleteCard = deleteCard;
+  window.selectCard    = selectCard;
+  window.deleteCardTx  = deleteCardTx;
+  window.openEditCard  = openEditCard;
+  window.deleteCard    = deleteCard;
+  window.payInvoice    = payInvoice;
 }
 

@@ -168,7 +168,9 @@ export async function syncToSupabase(state) {
     );
   }
 
-  // 4. Cartões + Faturas (cartões primeiro, depois faturas — FK constraint)
+  // 4. Cartões + Faturas
+  // Estratégia "replace" para card_invoices: apaga tudo do usuário e reinserência.
+  // Upsert puro nunca removeria itens deletados (ex: fatura paga → invoices=[]).
   if (state.cards?.length && hasChanged('cards', state.cards)) {
     const cardRows = state.cards.map(c => ({
       id: cleanUUID(c.id),
@@ -179,7 +181,8 @@ export async function syncToSupabase(state) {
       color: c.color,
       card_limit: c.limit,
       closing_day: c.closing || null,
-      due_day: c.due || null
+      due_day: c.due || null,
+      default_account_id: c.defaultAccountId ? cleanUUID(c.defaultAccountId) : null
     }));
     const invoiceRows = state.cards.flatMap(card =>
       (card.invoices || []).map(inv => ({
@@ -190,13 +193,20 @@ export async function syncToSupabase(state) {
         category: inv.cat,
         amount: inv.value,
         installments: inv.installments || 1,
-        installment_current: inv.installmentCurrent || 1
+        installment_current: inv.installmentCurrent || 1,
+        tx_ref_id: inv.txRefId ? cleanUUID(inv.txRefId) : null
       }))
     );
-    // Cartões e faturas em sequência (FK dependency), mas esse bloco corre em paralelo com os outros
     tasks.push(
       upsertWithRetry('cards', cardRows).then(r => {
-        if (r.ok && invoiceRows.length) return upsertWithRetry('card_invoices', invoiceRows);
+        if (!r.ok) return r;
+        // Sempre apaga e reinserência — garante que faturas pagas somem do banco
+        return supabase.from('card_invoices').delete().eq('user_id', uid)
+          .then(() => {
+            if (invoiceRows.length) return upsertWithRetry('card_invoices', invoiceRows);
+            return { ok: true };
+          })
+          .catch(e => { console.error('[Sync] Falha ao limpar card_invoices:', e); return { ok: false }; });
       })
     );
   }
@@ -253,6 +263,28 @@ export async function syncToSupabase(state) {
     }))));
   }
 
+  // 10. Histórico de chat (replace: apaga e reinere — mensagens são imutáveis)
+  if (Array.isArray(state.chatHistory) && state.chatHistory.length && hasChanged('chatHistory', state.chatHistory)) {
+    tasks.push(
+      supabase.from('chat_messages').delete().eq('user_id', uid)
+        .then(({ error: delError }) => {
+          if (delError) {
+            console.error('[Sync] Falha ao limpar chat remoto:', delError.message);
+            return { ok: false, error: delError };
+          }
+          const msgs = state.chatHistory.slice(-50).map(m => ({
+            id: cleanUUID(m.id),
+            user_id: uid,
+            role: m.role,
+            text: m.text,
+            created_at: m.createdAt || new Date().toISOString()
+          }));
+          return upsertWithRetry('chat_messages', msgs);
+        })
+        .catch(e => { console.error('[Sync] Falha crítica no sync de chat:', e); return { ok: false }; })
+    );
+  }
+
   if (!tasks.length) {
     console.info('[Sync] Sem mudanças — skip.');
     return;
@@ -287,7 +319,8 @@ export async function syncFromSupabase(state) {
       { data: invoices },
       { data: invs },
       { data: customCats },
-      { data: accountsData }
+      { data: accountsData },
+      { data: chatMsgs }
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
       supabase.from('transactions').select('*').eq('user_id', uid).order('date', { ascending: false }),
@@ -298,7 +331,8 @@ export async function syncFromSupabase(state) {
       supabase.from('card_invoices').select('*').eq('user_id', uid),
       supabase.from('investments').select('*').eq('user_id', uid),
       supabase.from('custom_categories').select('name').eq('user_id', uid),
-      supabase.from('accounts').select('*').eq('user_id', uid)
+      supabase.from('accounts').select('*').eq('user_id', uid),
+      supabase.from('chat_messages').select('*').eq('user_id', uid).order('created_at', { ascending: true }).limit(50)
     ]);
 
     // Perfil
@@ -378,10 +412,14 @@ export async function syncFromSupabase(state) {
             limit: Number(c.card_limit),
             used: cInvs.reduce((s, inv) => s + Number(inv.amount), 0),
             closing: c.closing_day, due: c.due_day,
+            defaultAccountId: c.default_account_id || null,
             invoices: cInvs.map(inv => ({
-              id: inv.id, desc: inv.description, cat: inv.category,
+              id: inv.id,
+              txRefId: inv.tx_ref_id || null,
+              desc: inv.description, cat: inv.category,
               value: Number(inv.amount),
-              installments: inv.installments, installmentCurrent: inv.installment_current
+              installments: inv.installments,
+              installmentCurrent: inv.installment_current
             }))
           };
         })
@@ -410,10 +448,20 @@ export async function syncFromSupabase(state) {
         }))
       : [];
 
+    // Histórico de chat
+    state.chatHistory = chatMsgs?.length
+      ? chatMsgs.map(m => ({
+          id: m.id,
+          role: m.role,
+          text: m.text,
+          createdAt: m.created_at
+        }))
+      : [];
+
     state.isNewUser = !isOnboardingCompleted && !txs?.length && !goals?.length;
 
     // Popula cache de hash para evitar re-sync imediato após pull
-    ['transactions', 'goals', 'cards', 'investments', 'fixedExpenses', 'accounts'].forEach(k => {
+    ['transactions', 'goals', 'cards', 'investments', 'fixedExpenses', 'accounts', 'chatHistory'].forEach(k => {
       _lastSyncHash[k] = quickHash(state[k]);
     });
 

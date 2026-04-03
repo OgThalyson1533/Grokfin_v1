@@ -137,41 +137,13 @@ function mapLegacyActiveTab(index) {
 // ── loadState ─────────────────────────────────────────────────────────────────
 
 export function loadState() {
-  const seed = buildSeedState();
-  try {
-    const currentRaw = localStorage.getItem(STORAGE_KEY);
-    const legacyRaw  = currentRaw ? null : localStorage.getItem(LEGACY_STORAGE_KEY);
-    const raw = currentRaw || legacyRaw;
-    if (!raw) return seed;
-
-    const saved = JSON.parse(raw);
-    const savedActiveTab = Number(saved?.ui?.activeTab);
-    const activeTab = currentRaw
-      ? mapCurrentActiveTab(Number.isFinite(savedActiveTab) ? savedActiveTab : seed.ui.activeTab)
-      : mapLegacyActiveTab(Number.isFinite(savedActiveTab) ? savedActiveTab : seed.ui.activeTab);
-
-    const goalsSource = Array.isArray(saved.goals) && saved.goals.length ? saved.goals : seed.goals;
-
-    return {
-      ...seed,
-      ...saved,
-      isNewUser: saved.isNewUser ?? (raw ? false : true),
-      exchange:     { ...seed.exchange,     ...(saved.exchange    || {}), trend: { ...seed.exchange.trend, ...(saved.exchange?.trend || {}) } },
-      ui:           { ...seed.ui,           ...(saved.ui          || {}), activeTab },
-      budgets:      { ...seed.budgets,      ...(saved.budgets     || {}) },
-      profile:      { ...seed.profile,      ...(saved.profile     || {}) },
-      transactions: Array.isArray(saved.transactions) && saved.transactions.length ? saved.transactions : seed.transactions,
-      customCategories: Array.isArray(saved.customCategories) ? saved.customCategories : [],
-      cards:        Array.isArray(saved.cards)        ? saved.cards        : seed.cards,
-      accounts:     Array.isArray(saved.accounts)     ? saved.accounts     : seed.accounts,
-      investments:  Array.isArray(saved.investments)  ? saved.investments  : seed.investments,
-      fixedExpenses:Array.isArray(saved.fixedExpenses)? saved.fixedExpenses: seed.fixedExpenses,
-      goals:        goalsSource,
-      chatHistory:  Array.isArray(saved.chatHistory)  ? saved.chatHistory  : []
-    };
-  } catch {
-    return seed;
-  }
+  // Migração definitiva para Supabase: remove chaves de dados do localStorage.
+  // As chaves de configuração (grokfin-cfg, grokfin_env_*) em supabase.js são mantidas.
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch {}
+  // Estado inicial limpo — dados reais chegam via syncFromSupabase() em app.js.
+  // UI começa sempre nos defaults (sem filtros stale, sem página travada).
+  return buildSeedState();
 }
 
 // ── saveState ─────────────────────────────────────────────────────────────────
@@ -204,9 +176,6 @@ export function saveState() {
       );
     }
 
-    const toSave = { ...state, chatHistory: (state.chatHistory || []).slice(-40) };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-    
     // Background sync para o Supabase (Debounced)
     if (!state.isNewUser) {
       clearTimeout(_syncTimeout);
@@ -214,12 +183,7 @@ export function saveState() {
         syncToSupabase(state).catch(e => console.error('[Sync] Falha auto-sync:', e));
       }, 2500);
     }
-  } catch {
-    // localStorage cheio — tenta versão slim sem imagens e chat
-    try {
-      const slim = { ...state, chatHistory: [], profile: { ...state.profile, bannerImage: '', avatarImage: '' } };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
-      console.warn('GrokFin: localStorage quase cheio, imagens de perfil removidas do cache.');
-    } catch { /* ignore */ }
+  } catch (e) {
+    console.error('[State] Erro em saveState:', e);
   }
 }

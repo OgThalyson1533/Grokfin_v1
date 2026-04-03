@@ -847,7 +847,7 @@ export function handleChatImageInput(e) {
 export function bindChatEvents() {
   const btn = document.getElementById('chat-send-btn');
   const input = document.getElementById('chat-input');
-  const fileInput = document.getElementById('file-upload');
+  const fileInput = document.getElementById('chat-file-upload');
   
   if (btn) btn.addEventListener('click', sendChatMessage);
   if (input) {

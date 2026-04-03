@@ -745,6 +745,32 @@ export function renderHomeFinancialCalendar() {
     }
   });
 
+  // Eventos de cartão de crédito (fechamento e vencimento)
+  (state.cards || []).forEach(card => {
+    if (card.cardType !== 'credito') return;
+    if (card.closing) {
+      const d = Math.min(card.closing, new Date(year, month + 1, 0).getDate());
+      if (!byDay[d]) byDay[d] = { income: 0, expense: 0 };
+      if (!byDay[d].cardClose) byDay[d].cardClose = [];
+      byDay[d].cardClose.push(card.name);
+    }
+    if (card.due) {
+      const d = Math.min(card.due, new Date(year, month + 1, 0).getDate());
+      if (!byDay[d]) byDay[d] = { income: 0, expense: 0 };
+      if (!byDay[d].cardDue) byDay[d].cardDue = [];
+      byDay[d].cardDue.push(card.name);
+    }
+  });
+
+  // Eventos de despesas fixas agendadas no mês
+  (state.fixedExpenses || []).forEach(f => {
+    if (!f.active || !f.day || !f.value) return;
+    const d = Math.min(f.day, new Date(year, month + 1, 0).getDate());
+    if (!byDay[d]) byDay[d] = { income: 0, expense: 0 };
+    if (!byDay[d].fixedEvents) byDay[d].fixedEvents = [];
+    byDay[d].fixedEvents.push({ name: f.name, isIncome: !!f.isIncome });
+  });
+
   // Dias do mês
   const firstDay  = new Date(year, month, 1).getDay(); // 0=Dom
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -776,10 +802,16 @@ export function renderHomeFinancialCalendar() {
     const isToday = isCurrentMonth && !isOther && dayNum === todayNum;
     const data = !isOther ? byDay[dayNum] : null;
 
+    const cardCloseTitle = data?.cardClose?.map(n => `Fecha: ${n}`).join('\n') || '';
+    const cardDueTitle   = data?.cardDue?.map(n => `Vence: ${n}`).join('\n') || '';
+    const fixedTitle     = data?.fixedEvents?.map(e => (e.isIncome ? '↑' : '↓') + ' ' + e.name).join('\n') || '';
     cells += `<div class="fin-cal-day${isOther ? ' other-month' : ''}${isToday ? ' today' : ''}">
       <span class="fin-cal-day-num">${dayNum}</span>
       ${data && data.income  > 0 ? `<span class="fin-cal-pill-in">+${formatMoneyShort(data.income)}</span>`  : ''}
       ${data && data.expense > 0 ? `<span class="fin-cal-pill-out">-${formatMoneyShort(data.expense)}</span>` : ''}
+      ${data?.cardClose?.length  ? `<span class="fin-cal-pill-card-close" title="${cardCloseTitle}">✂ Fecha</span>` : ''}
+      ${data?.cardDue?.length    ? `<span class="fin-cal-pill-card-due"   title="${cardDueTitle}">💳 Vence</span>` : ''}
+      ${data?.fixedEvents?.length ? `<span class="fin-cal-pill-fixed" title="${fixedTitle}">⚡${data.fixedEvents.length}</span>` : ''}
     </div>`;
   }
 

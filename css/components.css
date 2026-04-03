@@ -1188,6 +1188,41 @@
   line-height: 1.4;
 }
 
+/* Calendário — pills de eventos de cartão e despesas fixas */
+.fin-cal-pill-card-close {
+  display: inline-block;
+  font-size: .50rem;
+  font-weight: 800;
+  background: rgba(251,191,36,.14);
+  color: #fbbf24;
+  border-radius: 3px;
+  padding: 1px 4px;
+  line-height: 1.4;
+  cursor: default;
+}
+.fin-cal-pill-card-due {
+  display: inline-block;
+  font-size: .50rem;
+  font-weight: 800;
+  background: rgba(248,113,113,.16);
+  color: #f87171;
+  border-radius: 3px;
+  padding: 1px 4px;
+  line-height: 1.4;
+  cursor: default;
+}
+.fin-cal-pill-fixed {
+  display: inline-block;
+  font-size: .50rem;
+  font-weight: 800;
+  background: rgba(139,92,246,.16);
+  color: #a78bfa;
+  border-radius: 3px;
+  padding: 1px 4px;
+  line-height: 1.4;
+  cursor: default;
+}
+
 /* ══════════════════════════════════════════════════════
    COMPARISON CARDS — colored accent variant
 ══════════════════════════════════════════════════════ */

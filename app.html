@@ -956,7 +956,17 @@
                 <p class="text-xs font-bold uppercase tracking-[.18em] text-white/35">Lançamentos do cartão</p>
                 <p class="font-semibold text-white mt-1" id="card-invoice-title">Selecione um cartão</p>
               </div>
-              <button id="card-invoice-close" class="text-xs font-bold text-white/50 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10"><i class="fa-solid fa-xmark mr-1"></i> Fechar Fatura</button>
+              <div class="flex items-center gap-2">
+                <button id="card-tx-add-btn" class="hidden text-xs font-bold text-white/70 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
+                  <i class="fa-solid fa-plus mr-1"></i> Lançamento
+                </button>
+                <button id="card-pay-btn" class="hidden text-xs font-bold text-black px-3 py-1.5 rounded-lg transition-all hover:opacity-90 active:scale-95" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+                  <i class="fa-solid fa-money-bill-wave mr-1"></i> Pagar Fatura
+                </button>
+                <button id="card-invoice-close" class="text-xs font-bold text-white/50 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
+                  <i class="fa-solid fa-xmark mr-1"></i> Fechar
+                </button>
+              </div>
             </div>
             <div id="card-invoice-list" class="space-y-3">
               <p class="text-white/40 text-sm">Nenhum lançamento encontrado.</p>
@@ -2283,7 +2293,8 @@
             <h3 class="text-[15px] font-bold text-white tracking-tight leading-tight">Flox AI</h3>
             <span id="ai-active-indicator" class="hidden items-center gap-1 rounded-full px-1.5 py-[2px] text-[9px] font-bold text-black bg-emerald-400 tracking-wider uppercase"></span>
           </div>
-          <p class="text-[11px] text-white/50 tracking-wide mt-0.5">Assistente Financeiro</p>
+          <p id="ai-mode-label" class="text-[11px] text-white/50 tracking-wide mt-0.5">Assistente Financeiro</p>
+          <p id="ai-chat-subtitle" class="hidden text-[10px] text-white/35 tracking-wide"></p>
         </div>
       </div>
       <button id="ai-panel-close" class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-colors">
@@ -2317,7 +2328,7 @@
       <div class="flex items-center gap-2.5 relative">
         <label class="flex h-[46px] w-[46px] shrink-0 cursor-pointer items-center justify-center rounded-xl bg-white/5 text-white/60 transition-colors hover:bg-white/10 hover:text-emerald-400 border border-transparent">
           <i class="fa-solid fa-paperclip text-[15px]"></i>
-          <input accept="image/*" class="hidden" id="file-upload" type="file"/>
+          <input accept="image/*" class="hidden" id="chat-file-upload" type="file"/>
         </label>
         
         <button id="chat-mic-btn" title="Gravar áudio" class="flex h-[46px] w-[46px] shrink-0 cursor-pointer items-center justify-center rounded-xl bg-white/5 text-white/60 transition-colors hover:bg-white/10 hover:text-emerald-400 border border-transparent">
@@ -2335,6 +2346,51 @@
       <p class="mt-3 text-center text-[9px] text-white/30 font-medium tracking-wide">A Inteligência Artificial pode cometer erros. Considere verificar as respostas.</p>
     </div>
   </aside>
+
+  <!-- ═══ MODAL: PAGAR FATURA DO CARTÃO ═══ -->
+  <div id="pay-invoice-modal-overlay" class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.78);backdrop-filter:blur(8px)">
+    <div class="w-full max-w-sm rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
+         style="background:#0f1829">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <div>
+          <h3 class="text-lg font-bold text-white">Pagar Fatura</h3>
+          <p class="text-xs text-white/40 mt-0.5" id="pay-invoice-card-name">—</p>
+        </div>
+        <button id="pay-invoice-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <!-- Body -->
+      <div class="px-6 py-5 flex flex-col gap-5">
+        <!-- Total da fatura -->
+        <div class="rounded-2xl border border-white/8 bg-white/4 px-5 py-4 flex items-center justify-between">
+          <span class="text-sm text-white/55">Total da fatura</span>
+          <span class="text-2xl font-black text-white" id="pay-invoice-total">R$ 0,00</span>
+        </div>
+        <!-- Selecionar conta -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold uppercase tracking-widest text-white/40">Debitar da conta</label>
+          <select id="pay-invoice-account"
+            class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50 transition-colors appearance-none cursor-pointer"
+            style="background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,.4)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 1rem center">
+            <option value="">— Selecione a conta —</option>
+          </select>
+        </div>
+        <p id="pay-invoice-error" class="hidden text-xs font-semibold text-rose-400 -mt-2"></p>
+      </div>
+      <!-- Footer -->
+      <div class="flex gap-3 px-6 pb-6">
+        <button id="pay-invoice-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white/70 hover:bg-white/10 transition-colors">
+          Cancelar
+        </button>
+        <button id="pay-invoice-confirm" class="flex-1 rounded-2xl py-3 text-sm font-bold text-black transition-all hover:opacity-90 active:scale-95" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+          <i class="fa-solid fa-check mr-1.5"></i> Confirmar Pagamento
+        </button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

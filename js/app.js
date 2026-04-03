@@ -132,7 +132,7 @@ async function initApp() {
         indicator.style.background = 'linear-gradient(135deg,#00f5ff,#00ff85)';
       }
       if (modeLabel) modeLabel.textContent = 'Gemini conectado';
-      if (subtitle)  subtitle.textContent  = 'IA Gemini ativa · Lê saldo, metas, categorias, câmbio e comprovantes';
+      if (subtitle)  { subtitle.textContent = 'IA Gemini ativa · Lê saldo, metas, categorias, câmbio e comprovantes'; subtitle.classList.remove('hidden'); }
     } else if (provider === 'claude') {
       if (indicator) {
         indicator.textContent = '✦ Claude ativo';
@@ -140,7 +140,7 @@ async function initApp() {
         indicator.style.background = 'linear-gradient(135deg,#a855f7,#6366f1)';
       }
       if (modeLabel) modeLabel.textContent = 'Claude conectado';
-      if (subtitle)  subtitle.textContent  = 'IA Claude ativa · Lê saldo, metas, categorias, câmbio e comprovantes';
+      if (subtitle)  { subtitle.textContent = 'IA Claude ativa · Lê saldo, metas, categorias, câmbio e comprovantes'; subtitle.classList.remove('hidden'); }
     } else {
       if (indicator) indicator.style.display = 'none';
       if (modeLabel) modeLabel.textContent = 'Modo básico';
