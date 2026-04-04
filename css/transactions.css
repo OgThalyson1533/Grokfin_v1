@@ -313,6 +313,39 @@
     .modal .btn-save { background: var(--accent-cyan); color: #000; box-shadow: 0 4px 14px rgba(0, 242, 195, 0.3); }
     .modal .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 242, 195, 0.4); }
 
+/* ── Pills de Parcelamento ── */
+.install-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.55);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+  white-space: nowrap;
+}
+.install-pill:hover {
+  border-color: rgba(0,245,255,.35);
+  color: rgba(255,255,255,.85);
+  background: rgba(0,245,255,.06);
+}
+.install-pill.active {
+  border-color: rgba(0,245,255,.55);
+  background: rgba(0,245,255,.12);
+  color: #00f5ff;
+}
+
+/* Contextual sections — transição suave */
+#card-section, #recorrente-section {
+  overflow: hidden;
+  transition: opacity .22s ease, transform .22s ease;
+}
+#card-section.hidden, #recorrente-section.hidden {
+  display: none;
+}
+
     /* MEDIA QUERIES MOBILE */
     @media (max-width: 600px) {
       .form-grid-2 { grid-template-columns: 1fr; gap: 20px; }

@@ -1645,6 +1645,8 @@
     </div>
 
     <div class="modal-body" id="modal-body-scroll">
+
+      <!-- Tipo -->
       <div class="form-group">
         <label>Tipo *</label>
         <div class="type-selector">
@@ -1654,6 +1656,7 @@
         </div>
       </div>
 
+      <!-- Conta/Cartão + Valor -->
       <div class="form-grid-2">
         <div class="form-group">
           <label>Conta ou Cartão *</label>
@@ -1667,66 +1670,85 @@
             </div>
             <div class="select-dropdown" role="listbox">
               <div class="select-search"><i data-lucide="search"></i><input type="text" placeholder="Busque a conta..." class="search-input-field"></div>
-              <div class="select-options" id="tx-account-options-list">
-                <!-- Populado dinamicamente por populateAccountSelect() em transactions-ui.js -->
-              </div>
+              <div class="select-options" id="tx-account-options-list"></div>
             </div>
           </div>
         </div>
         <div class="form-group"><label>Valor *</label><input type="text" class="form-control" placeholder="R$ 0,00" id="input-valor"></div>
       </div>
 
+      <!-- ── SEÇÃO CARTÃO: aparece só quando cartão de crédito + saída ── -->
+      <div id="card-section" class="hidden" style="transition:all .25s ease">
+        <div style="background:rgba(0,245,255,.04);border:1px solid rgba(0,245,255,.16);border-radius:var(--radius-md);padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <i data-lucide="credit-card" style="color:#00f5ff;width:14px;height:14px"></i>
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45)">Parcelamento</span>
+          </div>
+          <input type="hidden" id="input-parcelas" value="1">
+          <div style="display:flex;flex-wrap:wrap;gap:8px" id="installments-pills">
+            <button type="button" class="install-pill active" data-n="1">À vista</button>
+            <button type="button" class="install-pill" data-n="2">2×</button>
+            <button type="button" class="install-pill" data-n="3">3×</button>
+            <button type="button" class="install-pill" data-n="4">4×</button>
+            <button type="button" class="install-pill" data-n="6">6×</button>
+            <button type="button" class="install-pill" data-n="10">10×</button>
+            <button type="button" class="install-pill" data-n="12">12×</button>
+          </div>
+          <!-- Preview de parcelas -->
+          <div id="installments-preview" class="hidden" style="margin-top:10px;background:rgba(0,245,255,.06);border:1px solid rgba(0,245,255,.14);border-radius:8px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,.65)">
+            <i class="fa-solid fa-layer-group" style="color:#00f5ff;margin-right:6px"></i>
+            <span id="installments-preview-text"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descrição + Categoria -->
       <div class="form-grid-2">
         <div class="form-group"><label>Descrição *</label><input type="text" class="form-control" placeholder="Ex: Pagamento fornecedor" id="input-descricao"></div>
-        
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between;">
+          <div style="display:flex;justify-content:space-between">
             <label>Categoria *</label>
-            <span style="color: var(--accent-cyan); font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px;">Auto <i data-lucide="wand-2" style="width:10px; height:10px;"></i></span>
+            <span style="color:var(--accent-cyan);font-size:10px;font-weight:700;display:flex;align-items:center;gap:4px">Auto <i data-lucide="wand-2" style="width:10px;height:10px"></i></span>
           </div>
-          
           <div class="custom-select" id="categoria-select">
             <input type="hidden" name="categoria" id="categoria-input" value="alimentacao" required>
-            <div class="select-trigger" style="padding: 10px 16px 10px 10px;" tabindex="0" role="combobox" aria-expanded="false">
+            <div class="select-trigger" style="padding:10px 16px 10px 10px" tabindex="0" role="combobox" aria-expanded="false">
               <div class="select-trigger-content">
                 <div class="cat-icon bg-food" id="cat-trigger-icon"><i data-lucide="utensils"></i></div>
                 <input type="text" class="combo-input" id="cat-combo-input" value="Alimentação" placeholder="Selecione ou digite..." autocomplete="off">
               </div>
               <div class="select-icon"><i data-lucide="chevron-down"></i></div>
             </div>
-            
             <div class="select-dropdown" role="listbox">
               <div class="select-options" id="cat-options-list">
                 <div class="select-option is-selected" role="option" data-value="alimentacao">
-                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-food"><i data-lucide="utensils"></i></div><span class="option-title">Alimentação</span></div>
+                  <div style="display:flex;align-items:center;gap:12px;flex:1"><div class="cat-icon bg-food"><i data-lucide="utensils"></i></div><span class="option-title">Alimentação</span></div>
                   <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
                 </div>
                 <div class="select-option" role="option" data-value="energia">
-                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-power"><i data-lucide="zap"></i></div><span class="option-title">Energia Elétrica</span></div>
+                  <div style="display:flex;align-items:center;gap:12px;flex:1"><div class="cat-icon bg-power"><i data-lucide="zap"></i></div><span class="option-title">Energia Elétrica</span></div>
                   <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
                 </div>
                 <div class="select-option" role="option" data-value="transporte">
-                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-transport"><i data-lucide="car"></i></div><span class="option-title">Transporte</span></div>
+                  <div style="display:flex;align-items:center;gap:12px;flex:1"><div class="cat-icon bg-transport"><i data-lucide="car"></i></div><span class="option-title">Transporte</span></div>
                   <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
                 </div>
                 <div class="select-option" role="option" data-value="cannabis">
-                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;"><div class="cat-icon bg-weed"><i data-lucide="cannabis"></i></div><span class="option-title">Cannabis</span></div>
+                  <div style="display:flex;align-items:center;gap:12px;flex:1"><div class="cat-icon bg-weed"><i data-lucide="cannabis"></i></div><span class="option-title">Cannabis</span></div>
                   <button class="delete-cat-btn" title="Excluir Categoria"><i data-lucide="trash-2"></i></button>
                 </div>
               </div>
-              
               <div class="select-action-btn" id="btn-open-builder"><i data-lucide="plus"></i> Nova Categoria</div>
-
               <div class="category-builder-form" id="builder-form">
-                <label style="margin: 0; font-size: 10px;">Criar Nova Categoria</label>
+                <label style="margin:0;font-size:10px">Criar Nova Categoria</label>
                 <input type="text" class="form-control builder-input" id="new-cat-name" placeholder="Ex: Internet">
                 <div class="builder-row">
                   <input type="text" class="form-control builder-input" id="new-cat-icon" placeholder="Ícone (ex: wifi)">
                   <input type="color" class="color-picker-btn" id="new-cat-color" value="#3b82f6" title="Cor de fundo">
                 </div>
-                <div class="builder-row" style="margin-top: 4px;">
-                  <button class="btn btn-cancel" id="btn-cancel-cat" style="padding: 10px; font-size: 12px;">Cancelar</button>
-                  <button class="btn btn-save" id="btn-save-cat" style="padding: 10px; font-size: 12px;">Salvar</button>
+                <div class="builder-row" style="margin-top:4px">
+                  <button class="btn btn-cancel" id="btn-cancel-cat" style="padding:10px;font-size:12px">Cancelar</button>
+                  <button class="btn btn-save" id="btn-save-cat" style="padding:10px;font-size:12px">Salvar</button>
                 </div>
               </div>
             </div>
@@ -1734,57 +1756,47 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Contato</label>
-        <div class="input-wrapper">
-          <input type="text" class="form-control" placeholder="Contato (opcional)" id="input-contato"><i data-lucide="refresh-cw" class="input-icon-right"></i>
+      <!-- Data -->
+      <div class="form-group"><label>Data *</label><div class="input-wrapper"><input type="text" class="form-control date-picker" value="" id="input-data"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
+
+      <!-- ── SEÇÃO RECORRENTE: aparece só quando conta bancária + saída ── -->
+      <div id="recorrente-section" class="hidden">
+        <div style="background-color:var(--bg-input);padding:14px 16px;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;gap:12px;align-items:center">
+            <i data-lucide="repeat" style="color:var(--accent-purple)"></i>
+            <div><span class="toggle-label">Despesa recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
+          </div>
+          <div class="toggle-wrapper" id="toggle-recorrente-wrap"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
+        </div>
+        <div id="recurring-info-box" class="hidden" style="margin-top:8px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.22);border-radius:var(--radius-md);padding:12px 14px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <i class="fa-solid fa-circle-info" style="color:#a78bfa;margin-top:2px;flex-shrink:0"></i>
+            <div>
+              <p style="font-weight:700;color:#c4b5fd;margin:0 0 4px;font-size:12px">O que vai acontecer?</p>
+              <p style="color:rgba(255,255,255,.60);font-size:12px;line-height:1.5;margin:0">Esta despesa vira um <strong style="color:#c4b5fd">compromisso mensal</strong>. Todo mês, no dia <strong id="recurring-day-label" style="color:#fff">—</strong>, ela é lançada automaticamente no extrato.</p>
+              <p style="color:rgba(255,255,255,.35);font-size:11px;margin:6px 0 0">Gerencie em <span style="color:rgba(0,245,255,.75);font-weight:600">Fluxo de Caixa → Compromissos Recorrentes</span></p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="form-grid-2">
-        <div class="form-group"><label>Data de Competência</label><div class="input-wrapper"><input type="text" class="form-control date-picker" value="" id="input-data"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
-        <div class="form-group"><label>Data de Vencimento</label><div class="input-wrapper"><input type="text" class="form-control date-picker" placeholder="DD/MM/AAAA" id="input-vencimento"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
-      </div>
-
+      <!-- Pagamento realizado -->
       <div class="toggle-wrapper active" id="toggle-pagamento"><input type="checkbox" id="tx-modal-realized" class="hidden" checked>
         <div class="toggle-switch"></div><span class="toggle-label" id="tx-realized-label">Pagamento Realizado</span>
       </div>
 
+      <!-- Accordion — apenas campos verdadeiramente opcionais -->
       <button class="btn-accordion" id="btn-mais-detalhes">Mais detalhes <i data-lucide="chevron-down"></i></button>
-
       <div class="accordion-content" id="content-mais-detalhes">
-        <div style="background-color: var(--bg-input); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <i data-lucide="repeat" style="color: var(--accent-purple);"></i>
-            <div><span class="toggle-label">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
-          </div>
-          <div class="toggle-wrapper" id="toggle-recorrente-wrap"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
-        </div>
-        <!-- Notificação explicativa — aparece ao ativar o toggle recorrente -->
-        <div id="recurring-info-box" class="hidden rounded-2xl p-3.5 text-xs" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.22)">
-          <div class="flex gap-2.5 items-start">
-            <i class="fa-solid fa-circle-info text-violet-400 mt-0.5 shrink-0"></i>
-            <div>
-              <p class="font-bold text-violet-200 mb-1">O que vai acontecer?</p>
-              <p class="text-white/60 leading-relaxed">Esta despesa será cadastrada como <strong class="text-violet-300">compromisso mensal</strong>. Todo mês, no dia <strong id="recurring-day-label" class="text-white">—</strong>, ela será lançada automaticamente no extrato.</p>
-              <p class="text-white/35 mt-2">Para pausar ou editar: <span class="text-cyan-400/80 font-medium">Fluxo de Caixa → Compromissos Recorrentes</span></p>
-            </div>
-          </div>
-        </div>
+        <div class="form-group"><label>Data de Vencimento</label><div class="input-wrapper"><input type="text" class="form-control date-picker" placeholder="DD/MM/AAAA" id="input-vencimento"><i data-lucide="calendar" class="input-icon-right"></i></div></div>
         <div class="form-group">
-          <label>Parcelas (Opcional)</label>
-          <input type="text" class="form-control" placeholder="1 = à vista, 3 = 3x, 12 = 12x…" id="input-parcelas" inputmode="numeric"/>
-          <!-- Preview de parcelas -->
-          <div id="installments-preview" class="hidden mt-2 rounded-xl px-3 py-2 text-xs" style="background:rgba(0,245,255,.05);border:1px solid rgba(0,245,255,.14)">
-            <i class="fa-solid fa-layer-group text-cyan-400 mr-1.5"></i>
-            <span id="installments-preview-text" class="text-white/65"></span>
-          </div>
+          <label>Contato</label>
+          <div class="input-wrapper"><input type="text" class="form-control" placeholder="Contato (opcional)" id="input-contato"><i data-lucide="refresh-cw" class="input-icon-right"></i></div>
         </div>
         <div class="form-group"><label>Observações</label><textarea class="form-control" rows="3" placeholder="Informações adicionais sobre esta transação..." id="input-observacoes"></textarea></div>
-        
         <div class="form-group">
           <label>Anexos</label>
-          <input type="file" id="file-upload" accept="image/*,.pdf" style="display: none;">
+          <input type="file" id="file-upload" accept="image/*,.pdf" style="display:none">
           <div class="upload-area" id="upload-box" onclick="document.getElementById('file-upload').click()">
             <i data-lucide="paperclip"></i>
             <span id="file-name-display">Clique para anexar imagem ou PDF</span>

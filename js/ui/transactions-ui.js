@@ -188,8 +188,46 @@ function _syncTypeTabs(type) {
   if (tabSaida) tabSaida.classList.toggle('active', type === 'saida');
 
   const labelEl = document.getElementById('tx-realized-label');
-  if (labelEl) {
-    labelEl.textContent = type === 'entrada' ? 'Recebimento Realizado' : 'Pagamento Realizado';
+  if (labelEl) labelEl.textContent = type === 'entrada' ? 'Recebimento Realizado' : 'Pagamento Realizado';
+
+  _updateFormContext();
+}
+
+/** Atualiza seções contextuais do formulário conforme tipo e conta selecionada */
+function _updateFormContext() {
+  const tipo = document.getElementById('tipo-transacao')?.value || 'entrada';
+  const contaId = document.getElementById('conta-input')?.value || '';
+  const isCard = !!(contaId && window._state?.cards?.some(c => c.id === contaId));
+  const isSaida = tipo === 'saida';
+
+  const cardSection = document.getElementById('card-section');
+  const recorrenteSection = document.getElementById('recorrente-section');
+
+  // Parcelamento: só aparece para cartão de crédito + saída
+  if (cardSection) cardSection.classList.toggle('hidden', !(isCard && isSaida));
+
+  // Recorrente: só aparece para conta bancária + saída
+  if (recorrenteSection) recorrenteSection.classList.toggle('hidden', !((!isCard && contaId) && isSaida));
+
+  // Se mudou de cartão → conta, reseta parcelas para 1
+  if (!isCard) {
+    const pill1 = document.querySelector('.install-pill[data-n="1"]');
+    document.querySelectorAll('.install-pill').forEach(p => p.classList.remove('active'));
+    if (pill1) pill1.classList.add('active');
+    const input = document.getElementById('input-parcelas');
+    if (input) input.value = '1';
+    document.getElementById('installments-preview')?.classList.add('hidden');
+  }
+
+  // Se mudou para entrada, esconde e reseta recorrente
+  if (!isSaida) {
+    const wrap = document.getElementById('toggle-recorrente-wrap');
+    if (wrap?.classList.contains('active')) {
+      wrap.classList.remove('active');
+      const chk = document.getElementById('tx-modal-recurring');
+      if (chk) chk.checked = false;
+      document.getElementById('recurring-info-box')?.classList.add('hidden');
+    }
   }
 }
 
@@ -848,10 +886,23 @@ export function openTxModal() {
   document.getElementById('modal-title-text').textContent = 'Nova Transação';
   
   // Limpa campos básicos
-  ['input-descricao', 'input-valor', 'input-parcelas', 'input-observacoes', 'input-contato'].forEach(id => {
+  ['input-descricao', 'input-valor', 'input-observacoes', 'input-contato'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+
+  // Reseta pills de parcelamento para "À vista"
+  document.querySelectorAll('.install-pill').forEach(p => p.classList.remove('active'));
+  const pill1 = document.querySelector('.install-pill[data-n="1"]');
+  if (pill1) pill1.classList.add('active');
+  const inputParcelas = document.getElementById('input-parcelas');
+  if (inputParcelas) inputParcelas.value = '1';
+  document.getElementById('installments-preview')?.classList.add('hidden');
+
+  // Reseta seções contextuais
+  document.getElementById('card-section')?.classList.add('hidden');
+  document.getElementById('recorrente-section')?.classList.add('hidden');
+  document.getElementById('recurring-info-box')?.classList.add('hidden');
   
   const bdDate = document.getElementById('input-data');
   if (bdDate) bdDate.value = new Date().toLocaleDateString('pt-BR');
@@ -1395,6 +1446,26 @@ export function bindTxEvents() {
   if (el('conta-select')) window.txAccountInstance = new ModernFloxSelect(el('conta-select'));
   if (el('categoria-select')) window.txCategoryInstance = new ModernFloxSelect(el('categoria-select'));
 
+  // Expõe state para _updateFormContext (leitura de cards)
+  window._state = state;
+
+  // Hook onSelect da conta → atualiza seções contextuais
+  if (window.txAccountInstance) {
+    window.txAccountInstance.onSelect = () => _updateFormContext();
+  }
+
+  // Pills de parcelamento
+  document.getElementById('installments-pills')?.addEventListener('click', e => {
+    const pill = e.target.closest('.install-pill');
+    if (!pill) return;
+    document.querySelectorAll('.install-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    const n = parseInt(pill.dataset.n) || 1;
+    const input = document.getElementById('input-parcelas');
+    if (input) input.value = String(n);
+    _updateInstallmentsPreview();
+  });
+
   el('tx-add-btn')?.addEventListener('click', openTxModal);
   el('tx-modal-close')?.addEventListener('click', () => el('tx-modal-overlay')?.classList.add('hidden'));
   el('btn-cancel-tx')?.addEventListener('click', () => el('tx-modal-overlay')?.classList.add('hidden'));
@@ -1475,7 +1546,6 @@ export function bindTxEvents() {
     previewText.textContent = `${n}x de R$\u00A0${installValue} — ${labels.join(', ')}${rest}`;
     preview.classList.remove('hidden');
   }
-  el('input-parcelas')?.addEventListener('input', _updateInstallmentsPreview);
   el('input-valor')?.addEventListener('input', _updateInstallmentsPreview);
   el('input-data')?.addEventListener('change', () => {
     _updateInstallmentsPreview();
