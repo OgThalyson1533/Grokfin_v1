@@ -471,6 +471,16 @@
             </div>
           </div>
 
+          <!-- Campo editável para meta de saúde financeira -->
+          <div class="gauge-target-input-wrap">
+            <span class="gauge-target-label">Meta:</span>
+            <input id="gauge-target-edit" type="number" min="1" max="100" value="70"
+              class="gauge-target-input"
+              title="Ajuste a meta de saúde financeira"
+              oninput="(function(){const v=parseInt(this.value)||70;if(v>=1&&v<=100)window.dispatchEvent(new Event('grokfin:gauge-target-changed'))}).call(this)">
+            <span class="gauge-target-label">%</span>
+          </div>
+
           <!-- Breakdown bars (IDs mantidos) -->
           <div class="w-full space-y-2" id="home-gauge-breakdown">
             <div class="gauge-breakdown-row">
@@ -547,8 +557,8 @@
             <p class="home-section-title">Metas</p>
             <button class="text-xs text-cyan-300/60 hover:text-cyan-300 transition-colors" onclick="switchTab(4)">Ver todas →</button>
           </div>
-          <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
-            <div class="flex gap-3 pb-2 w-max" id="home-goals-rings">
+          <div class="home-goals-scroll-wrap">
+            <div id="home-goals-rings">
               <div class="flex flex-col items-center gap-1.5 w-[68px]">
                 <div class="w-[68px] h-[68px] rounded-full border-2 border-dashed border-white/12 flex items-center justify-center">
                   <i class="fa-solid fa-plus text-white/20 text-lg"></i>
@@ -608,7 +618,7 @@
     </div>
 
     <!-- Calendário Financeiro -->
-    <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex flex-col">
+    <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex flex-col overflow-hidden relative">
       <div class="flex items-center justify-between mb-4">
         <p class="home-section-title">Calendário Financeiro</p>
         <div class="flex items-center gap-2">
@@ -617,7 +627,7 @@
           <button onclick="if(window.changeCalendarMonth) window.changeCalendarMonth(1)" class="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"><i class="fa-solid fa-chevron-right text-[10px] text-white/50"></i></button>
         </div>
       </div>
-      <div id="home-financial-calendar" class="flex-1">
+      <div id="home-financial-calendar" class="flex-1 min-h-0 overflow-auto">
         <!-- Renderizado via JS -->
       </div>
     </div>
@@ -2480,6 +2490,12 @@
         root.setAttribute('data-theme', next);
         localStorage.setItem(LS_KEY, next);
         applyThemeIcon(next);
+        // Re-render chart with new theme colors
+        setTimeout(function() {
+          import('./js/ui/dashboard-ui.js').then(function(m) {
+            if (m.renderHomeLineChart) m.renderHomeLineChart();
+          }).catch(function(){});
+        }, 50);
       }
 
       // Wire button

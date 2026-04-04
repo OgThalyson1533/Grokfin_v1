@@ -340,9 +340,14 @@ export function renderReport(analytics) {
 
 export function bindDashboardEvents() {
   const el = id => document.getElementById(id);
-  
+
   el('refresh-btn')?.addEventListener('click', () => {
     if (window.renderAll) window.renderAll();
+  });
+
+  // Re-render gauge when user edits the health target input
+  window.addEventListener('grokfin:gauge-target-changed', () => {
+    if (_lastGaugeArgs) renderHealthGauge(..._lastGaugeArgs);
   });
 
   // [FIX #4] Listener de manage-budgets-btn removido daqui.
@@ -596,12 +601,23 @@ export function renderHomeWidgets(analytics) {
 
 // ── Instância do gráfico de linha do home (evita leak) ──
 let _homeLineChart = null;
+let _homeLineChartTheme = null; // theme the chart was built with
 
 /** Gráfico de linha: Receita vs Despesa (últimos 6 meses) */
 export function renderHomeLineChart() {
   const canvas = document.getElementById('home-line-chart');
   const emptyEl = document.getElementById('home-line-chart-empty');
   if (!canvas || !window.Chart) return;
+
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'ocean-glass';
+  const isLight = currentTheme === 'light';
+
+  // Destroy and recreate when theme changes so axis/tooltip colors update
+  if (_homeLineChart && _homeLineChartTheme !== currentTheme) {
+    _homeLineChart.destroy();
+    _homeLineChart = null;
+    _homeLineChartTheme = null;
+  }
 
   const today = new Date();
   const months = [];
@@ -640,6 +656,11 @@ export function renderHomeLineChart() {
   }
 
   const ctx = canvas.getContext('2d');
+
+  const tickColor    = isLight ? 'rgba(0,0,0,.45)'   : 'rgba(255,255,255,.40)';
+  const gridColor    = isLight ? 'rgba(0,0,0,.06)'   : 'rgba(255,255,255,.04)';
+  const tooltipBg    = isLight ? 'rgba(255,255,255,.97)' : 'rgba(6,9,17,.92)';
+  const tooltipBrd   = isLight ? 'rgba(0,0,0,.12)'   : 'rgba(255,255,255,.08)';
 
   const gradientHeight = Math.max(300, canvas.height || 300);
 
@@ -690,10 +711,12 @@ export function renderHomeLineChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'rgba(6,9,17,.92)',
-          borderColor: 'rgba(255,255,255,.08)',
+          backgroundColor: tooltipBg,
+          borderColor: tooltipBrd,
           borderWidth: 1,
           padding: 12,
+          titleColor: isLight ? '#111' : '#fff',
+          bodyColor:  isLight ? '#374151' : 'rgba(255,255,255,.75)',
           callbacks: {
             label: ctx => ` ${ctx.dataset.label}: ${formatMoney(ctx.parsed.y)}`
           }
@@ -701,13 +724,13 @@ export function renderHomeLineChart() {
       },
       scales: {
         x: {
-          grid: { color: 'rgba(255,255,255,.04)' },
-          ticks: { color: 'rgba(255,255,255,.40)', font: { size: 10 } }
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { size: 10 } }
         },
         y: {
-          grid: { color: 'rgba(255,255,255,.04)' },
+          grid: { color: gridColor },
           ticks: {
-            color: 'rgba(255,255,255,.40)',
+            color: tickColor,
             font: { size: 10 },
             callback: v => formatMoneyShort(v)
           }
@@ -715,6 +738,7 @@ export function renderHomeLineChart() {
       }
     }
   });
+  _homeLineChartTheme = currentTheme;
 }
 
 /** Auxiliar: parseia data BR (dd/mm/yyyy) sem importar módulo */
@@ -920,8 +944,9 @@ function _bindCalendarInteractions(container) {
       }
 
       // Position: centred above cursor (CSS transform: translate(-50%,-110%) handles centering)
-      tip.style.left = e.pageX + 'px';
-      tip.style.top  = (e.pageY - 15) + 'px';
+      // Use clientX/clientY because tooltip is position:fixed
+      tip.style.left = e.clientX + 'px';
+      tip.style.top  = (e.clientY - 15) + 'px';
       tip.classList.add('visible');
     });
 
@@ -1088,8 +1113,12 @@ export function renderPeriodFilter(activeFilter) {
   if (chipLabel) chipLabel.textContent = PERIOD_LABELS[activeFilter] || 'no período';
 }
 
+// Cache last args so the gauge can re-render when target changes
+let _lastGaugeArgs = null;
+
 /** Gauge High Fidelity — Medidor de Saúde Financeira */
 export function renderHealthGauge(periodData, filter, analytics) {
+  _lastGaugeArgs = [periodData, filter, analytics];
   const completedBar  = document.getElementById('gauge-hf-completed-bar');
   const plannedBar    = document.getElementById('gauge-hf-planned-bar');
   const pointerGroup  = document.getElementById('gauge-hf-pointer');
@@ -1104,8 +1133,9 @@ export function renderHealthGauge(periodData, filter, analytics) {
 
   // healthScore: 100 = perfeito (sem gastos), 0 = gasto total da renda
   const healthScore = Math.round(clamp(100 - riskRatio, 0, 100));
-  // Meta: score >= 70 é considerado saudável (gastar no máx 30% da renda)
-  const TARGET_HEALTH = 70;
+  // Meta: lida do input editável; padrão 70
+  const targetInput = document.getElementById('gauge-target-edit');
+  const TARGET_HEALTH = targetInput ? (parseInt(targetInput.value) || 70) : 70;
 
   const circumference = Math.PI * 80; // ~251.32
 
