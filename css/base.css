@@ -366,92 +366,201 @@ body::after { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   LIGHT THEME — OVERRIDE de classes Tailwind hardcoded
+   LIGHT THEME — OVERRIDE de classes Tailwind hardcoded (completo)
    ══════════════════════════════════════════════════════════════════ */
 
-/* Body selection */
-[data-theme="light"] body {
-  color: var(--text-main);
-}
+/* ── Body ── */
+[data-theme="light"] body { color: var(--text-main); }
 
-/* Override Tailwind arbitrary BG classes */
-[data-theme="light"] [class*="bg-\[rgba(255,255,255,0.0"],
-[data-theme="light"] [class*="bg-white\/4"],
-[data-theme="light"] [class*="bg-white\/5"],
-[data-theme="light"] [class*="bg-white\/6"] {
-  background-color: #ffffff !important;
-}
+/* ── text-white/* → tons de cinza ── */
+/* Broad catch-all: qualquer classe que contenha "text-white" */
+[data-theme="light"] [class*="text-white"] { color: #374151 !important; }
 
-[data-theme="light"] [class*="bg-white\/8"],
-[data-theme="light"] [class*="bg-white\/10"] {
-  background-color: #f8f9fa !important;
-}
+/* Divisão por faixas de opacidade usando prefixo do dígito */
+[data-theme="light"] [class*="text-white\/1"],
+[data-theme="light"] [class*="text-white\/2"],
+[data-theme="light"] [class*="text-white\/3"] { color: #9ca3af !important; }
 
-/* Override Tailwind arbitrary BORDER classes */
-[data-theme="light"] [class*="border-white\/8"],
-[data-theme="light"] [class*="border-white\/10"],
-[data-theme="light"] [class*="border-\[rgba(255,255,255,0.08"],
-[data-theme="light"] [class*="border-\[rgba(255,255,255,0.06"] {
-  border-color: #e2e4e8 !important;
-}
+[data-theme="light"] [class*="text-white\/4"],
+[data-theme="light"] [class*="text-white\/5"] { color: #6b7280 !important; }
 
-[data-theme="light"] [class*="border-\[rgba(255,255,255,0.1"] {
-  border-color: #d1d5db !important;
-}
+[data-theme="light"] [class*="text-white\/6"],
+[data-theme="light"] [class*="text-white\/7"],
+[data-theme="light"] [class*="text-white\/8"],
+[data-theme="light"] [class*="text-white\/9"] { color: #374151 !important; }
 
-/* Override Tailwind TEXT white utilities */
-[data-theme="light"] .text-white,
-[data-theme="light"] [class*="text-white"]:not([class*="text-white/30"]):not([class*="text-white/35"]):not([class*="text-white/40"]):not([class*="text-white/50"]) {
-  color: #111111 !important;
-}
-[data-theme="light"] [class*="text-white\/30"],
-[data-theme="light"] [class*="text-white\/35"],
-[data-theme="light"] [class*="text-white\/40"] { color: #9ca3af !important; }
-[data-theme="light"] [class*="text-white\/50"],
-[data-theme="light"] [class*="text-white\/55"],
-[data-theme="light"] [class*="text-white\/45"] { color: #6b7280 !important; }
-[data-theme="light"] [class*="text-white\/60"],
-[data-theme="light"] [class*="text-white\/65"],
-[data-theme="light"] [class*="text-white\/70"],
-[data-theme="light"] [class*="text-white\/75"],
-[data-theme="light"] [class*="text-white\/80"],
-[data-theme="light"] [class*="text-white\/85"],
-[data-theme="light"] [class*="text-white\/90"] { color: #374151 !important; }
+/* Texto branco puro → quase preto */
+[data-theme="light"] .text-white { color: #111111 !important; }
 
-/* Semantic accent colors: keep them but adjust saturation for light */
+/* ── Cores semânticas: ajuste para light ── */
+[data-theme="light"] [class*="text-emerald-"],
 [data-theme="light"] .text-emerald-300,
 [data-theme="light"] .text-emerald-400 { color: #16a34a !important; }
-[data-theme="light"] .text-cyan-200,
-[data-theme="light"] .text-cyan-300,
-[data-theme="light"] .text-cyan-400 { color: #0e7490 !important; }
-[data-theme="light"] .text-rose-300,
-[data-theme="light"] .text-rose-400 { color: #dc2626 !important; }
-[data-theme="light"] .text-violet-200,
-[data-theme="light"] .text-violet-400 { color: #7c3aed !important; }
 
-/* Override backdrop-blur for light theme */
+/* Cyan → mapeia para accent do tema (verde ou teal) */
+[data-theme="light"] [class*="text-cyan-"]  { color: #0e7490 !important; }
+
+[data-theme="light"] [class*="text-rose-"],
+[data-theme="light"] .text-rose-300,
+[data-theme="light"] .text-rose-400         { color: #dc2626 !important; }
+
+[data-theme="light"] [class*="text-violet-"],
+[data-theme="light"] .text-violet-200,
+[data-theme="light"] .text-violet-400       { color: #7c3aed !important; }
+
+/* ── border-white/* → cinza claro ── */
+[data-theme="light"] [class*="border-white\/"]           { border-color: #e2e4e8 !important; }
+[data-theme="light"] [class*="border-\[rgba(255,255,255"] { border-color: #e2e4e8 !important; }
+
+/* ── bg-white/* → branco/cinza claro ── */
+[data-theme="light"] [class*="bg-white\/1"],
+[data-theme="light"] [class*="bg-white\/2"],
+[data-theme="light"] [class*="bg-white\/3"],
+[data-theme="light"] [class*="bg-white\/4"],
+[data-theme="light"] [class*="bg-white\/5"],
+[data-theme="light"] [class*="bg-white\/6"] { background-color: #ffffff !important; }
+
+[data-theme="light"] [class*="bg-white\/7"],
+[data-theme="light"] [class*="bg-white\/8"],
+[data-theme="light"] [class*="bg-white\/9"],
+[data-theme="light"] [class*="bg-white\/10"] { background-color: #f8f9fa !important; }
+
+[data-theme="light"] [class*="bg-\[rgba(255,255,255"]    { background-color: #ffffff !important; }
+
+/* ── bg com hex escuro (hardcoded no HTML) → branco ── */
+[data-theme="light"] [class*="bg-\[#0d"],
+[data-theme="light"] [class*="bg-\[#0e"],
+[data-theme="light"] [class*="bg-\[#0f"],
+[data-theme="light"] [class*="bg-\[#10"],
+[data-theme="light"] [class*="bg-\[#11"],
+[data-theme="light"] [class*="bg-\[#12"],
+[data-theme="light"] [class*="bg-\[#13"],
+[data-theme="light"] [class*="bg-\[#14"],
+[data-theme="light"] [class*="bg-\[#15"],
+[data-theme="light"] [class*="bg-\[#16"],
+[data-theme="light"] [class*="bg-\[#17"],
+[data-theme="light"] [class*="bg-\[#18"],
+[data-theme="light"] [class*="bg-\[#19"],
+[data-theme="light"] [class*="bg-\[#1a"],
+[data-theme="light"] [class*="bg-\[#1b"],
+[data-theme="light"] [class*="bg-\[#1c"] { background-color: #f8f9fa !important; }
+
+/* ── Modais: override inline style="background:#..." via ID ── */
+[data-theme="light"] #goal-modal-overlay > div   { background: #ffffff !important; border-color: #e2e4e8 !important; }
+[data-theme="light"] #bank-modal-overlay > div   { background: #ffffff !important; border-color: #e2e4e8 !important; }
+[data-theme="light"] #card-modal-overlay > div   { background: #ffffff !important; border-color: #e2e4e8 !important; }
+[data-theme="light"] #pay-invoice-modal-overlay > div { background: #ffffff !important; border-color: #e2e4e8 !important; }
+
+/* Cabeçalho e divisores dos modais */
+[data-theme="light"] #bank-modal-overlay  [class*="border-b"],
+[data-theme="light"] #card-modal-overlay  [class*="border-b"],
+[data-theme="light"] #goal-modal-overlay  [class*="border-b"],
+[data-theme="light"] #pay-invoice-modal-overlay [class*="border-b"] { border-color: #e2e4e8 !important; }
+
+/* Inputs/selects dentro dos modais */
+[data-theme="light"] #goal-modal-overlay input,
+[data-theme="light"] #goal-modal-overlay select,
+[data-theme="light"] #bank-modal-overlay input,
+[data-theme="light"] #bank-modal-overlay select,
+[data-theme="light"] #card-modal-overlay input,
+[data-theme="light"] #card-modal-overlay select,
+[data-theme="light"] #pay-invoice-modal-overlay select {
+  background: #f8f9fa !important;
+  border-color: #e2e4e8 !important;
+  color: #111111 !important;
+}
+
+/* Botões Cancel nos modais */
+[data-theme="light"] #goal-modal-cancel,
+[data-theme="light"] #bank-modal-cancel,
+[data-theme="light"] #card-modal-cancel,
+[data-theme="light"] #pay-invoice-cancel {
+  background: #f2f3f5 !important;
+  border-color: #e2e4e8 !important;
+  color: #374151 !important;
+}
+
+/* Botões Save/Confirm: cyan gradient → escuro no light, verde no dark ── */
+[data-theme="light"] #goal-modal-save,
+[data-theme="light"] #card-modal-save,
+[data-theme="light"] #bank-modal-save,
+[data-theme="light"] #pay-invoice-confirm {
+  background: #111111 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] #goal-modal-save,
+[data-theme="dark"] #card-modal-save,
+[data-theme="dark"] #pay-invoice-confirm {
+  background: linear-gradient(135deg, #63ffab, #36f1c8) !important;
+  color: #0e0e0e !important;
+}
+
+/* Botão Nova Meta ── */
+[data-theme="light"] #goal-add-btn {
+  background: #111111 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] #goal-add-btn {
+  background: linear-gradient(135deg, #63ffab, #36f1c8) !important;
+  color: #0e0e0e !important;
+}
+
+/* ── Tabela de transações (tab-2) ── */
+[data-theme="light"] #tab-2 .rounded-xl { background: #ffffff !important; border-color: #e2e4e8 !important; }
+[data-theme="light"] #tab-2 thead       { background: #f8f9fa !important; }
+[data-theme="light"] #tab-2 table tbody tr:hover { background: #f8f9fa !important; }
+[data-theme="light"] #tab-2 [class*="divide-white\/"] > * + * { border-color: #f0f1f3 !important; }
+
+/* Botões banco/cartão no filtro de origem */
+[data-theme="light"] #tx-filter-bank {
+  background: var(--success-bg) !important;
+  border-color: var(--success-border) !important;
+  color: var(--success) !important;
+}
+[data-theme="light"] #tx-filter-card {
+  background: #f8f9fa !important;
+  border-color: #e2e4e8 !important;
+  color: #6b7280 !important;
+}
+
+/* Select de paginação */
+[data-theme="light"] #tx-page-size-select { background: #ffffff !important; color: #374151 !important; border-color: #e2e4e8 !important; }
+
+/* ── Backdrop blur: desabilitar para light ── */
 [data-theme="light"] [class*="backdrop-blur-"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-/* Override shadow for light theme */
-[data-theme="light"] [class*="shadow-\[0_8px_32px"] {
+/* ── Sombras inline ── */
+[data-theme="light"] [class*="shadow-\[0_8px_32px"],
+[data-theme="light"] [class*="shadow-\[0_28px"] {
   box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
 }
 
-/* Input/select backgrounds for light */
-[data-theme="light"] select option {
-  background: #ffffff;
-  color: #111111;
-}
+/* ── select option ── */
+[data-theme="light"] select option { background: #ffffff; color: #111111; }
 
-/* Header chip / pill adjustments */
-[data-theme="light"] .pill {
-  background: #f2f3f5;
-  border-color: #e2e4e8;
-  color: #374151;
-}
+/* ── Pill / chip ── */
+[data-theme="light"] .pill { background: #f2f3f5; border-color: #e2e4e8; color: #374151; }
+
+/* ══════════════════════════════════════════════════════════════════
+   DARK THEME — Reduzir cyan legacy → neutro/verde
+   ══════════════════════════════════════════════════════════════════ */
+/* Em dark, cyan Tailwind hardcoded → branco suave (já usamos verde como accent) */
+[data-theme="dark"] [class*="text-cyan-"]  { color: rgba(255,255,255,0.60) !important; }
+
+/* ── Dark mode modais: normalizar backgrounds ── */
+[data-theme="dark"] #goal-modal-overlay > div   { background: #1a1a1a !important; border-color: rgba(255,255,255,0.08) !important; }
+[data-theme="dark"] #bank-modal-overlay > div   { background: #161616 !important; border-color: rgba(255,255,255,0.08) !important; }
+[data-theme="dark"] #card-modal-overlay > div   { background: #161616 !important; border-color: rgba(255,255,255,0.08) !important; }
+[data-theme="dark"] #pay-invoice-modal-overlay > div { background: #161616 !important; border-color: rgba(255,255,255,0.08) !important; }
+[data-theme="dark"] #bank-modal-type,
+[data-theme="dark"] #card-modal-flag            { background: #1c1c1c !important; }
+
+/* ── select option base (dark) ── */
+select option { background: #0c111b; color: white; }
 
 /* ══════════════════════════════════════════════════════════════════
    OCEAN-GLASS THEME — Tailwind class enhancements
@@ -463,8 +572,23 @@ body::after { display: none; }
   -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
+/* Cyan → success green em ocean-glass */
+[data-theme="ocean-glass"] [class*="text-cyan-"] { color: var(--success) !important; }
+
+/* ── Modais em ocean-glass ── */
+[data-theme="ocean-glass"] #goal-modal-overlay > div,
+[data-theme="ocean-glass"] #bank-modal-overlay > div,
+[data-theme="ocean-glass"] #card-modal-overlay > div,
+[data-theme="ocean-glass"] #pay-invoice-modal-overlay > div {
+  background: rgba(8,14,26,0.96) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+}
+[data-theme="ocean-glass"] #bank-modal-type,
+[data-theme="ocean-glass"] #card-modal-flag { background: rgba(255,255,255,0.06) !important; }
+
 /* ══════════════════════════════════════════════════════════════════
-   DARK THEME — Remove glassmorphism from Tailwind classes
+   DARK THEME — Remove glassmorphism de classes Tailwind
    ══════════════════════════════════════════════════════════════════ */
 :root [class*="backdrop-blur-"]:not(.glass-panel):not(.bottom-nav):not(.nav-rail) {
   backdrop-filter: none;
@@ -472,13 +596,7 @@ body::after { display: none; }
 }
 
 [data-theme="ocean-glass"] [class*="backdrop-blur-"] {
-  /* Re-enable for ocean-glass */
-}
-
-/* Select option base */
-select option {
-  background: #0c111b;
-  color: white;
+  /* Re-enable for ocean-glass — não sobrescrever */
 }
 
 /* ══════════════════════════════════════════════════════════════════

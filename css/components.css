@@ -416,32 +416,99 @@
 
 /* ══════════════════════════════════════════════════════════════════
    CALENDÁRIO FINANCEIRO (fin-cal)
+   Estrutura gerada pelo JS:
+     .fin-cal-header  → linha de dias da semana (Dom Seg Ter...)
+     .fin-cal-grid    → grade 7 colunas com os dias
+     .fin-cal-day     → célula de cada dia
+     .fin-cal-day.other-month → dias de outro mês
+     .fin-cal-day.today → dia de hoje
+     .fin-cal-day-num → número do dia
+     .fin-cal-pill-in/out/card-close/card-due/fixed → eventos no dia
    ══════════════════════════════════════════════════════════════════ */
-.fin-cal {
+
+/* Cabeçalho (Dom Seg Ter Qua Qui Sex Sáb) */
+.fin-cal-header {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 3px; margin-bottom: 4px;
+}
+.fin-cal-header span {
+  text-align: center;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--text-faint);
+  padding: 3px 0;
+  text-transform: uppercase;
+}
+
+/* Grade 7 colunas */
+.fin-cal-grid {
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
 }
+
+/* Célula de cada dia */
 .fin-cal-day {
   min-height: 52px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 4px;
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-  font-size: 10px; font-weight: 500; color: var(--text-faint);
   background: transparent;
   min-width: 0; overflow: hidden; box-sizing: border-box;
+  cursor: default;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
-.fin-cal-day.today { border-color: var(--success); }
-.fin-cal-day.active-month { color: var(--text-main); }
-.fin-cal-day.selected { border-color: var(--success); background: var(--success-bg); }
 
+/* Dias de outro mês: apagados */
+.fin-cal-day.other-month {
+  opacity: 0.28;
+  border-color: transparent;
+}
+
+/* Hoje */
+.fin-cal-day.today {
+  border-color: var(--success) !important;
+  background: var(--success-bg);
+}
+
+/* Selecionado */
+.fin-cal-day.selected {
+  border-color: var(--success);
+  background: var(--success-bg);
+}
+
+/* Hover em dias válidos */
+.fin-cal-day:not(.other-month):hover {
+  border-color: var(--border-focus);
+  background: var(--bg-card-hover, rgba(255,255,255,0.04));
+}
+
+/* Número do dia */
+.fin-cal-day-num {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-main);
+  line-height: 1; display: block;
+}
+.fin-cal-day.other-month .fin-cal-day-num { color: var(--text-faint); }
+
+/* Pills de eventos dentro dos dias */
+.fin-cal-pill-in,
+.fin-cal-pill-out,
+.fin-cal-pill-card-close,
+.fin-cal-pill-card-due,
+.fin-cal-pill-fixed,
 .fin-cal-tag {
   font-size: 8px; padding: 2px 4px; border-radius: 4px;
   font-weight: 600; width: 100%;
   display: block; max-width: 100%;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  line-height: 1.4;
 }
-.fin-cal-tag--in  { background: var(--success-bg); color: var(--success); }
-.fin-cal-tag--out { background: var(--danger-bg);  color: var(--danger);  }
+.fin-cal-pill-in,
+.fin-cal-tag--in  { background: var(--success-bg);  color: var(--success);  }
+.fin-cal-pill-out,
+.fin-cal-tag--out  { background: var(--danger-bg);   color: var(--danger);   }
+.fin-cal-pill-card-close { background: var(--warning-bg); color: var(--warning); }
+.fin-cal-pill-card-due   { background: var(--purple-bg);  color: var(--purple);  }
+.fin-cal-pill-fixed      { background: var(--warning-bg); color: var(--warning); }
 
 @media (max-width: 400px) {
   .fin-cal-day { min-height: 44px; }
