@@ -726,12 +726,25 @@ window.changeCalendarMonth = (offset) => {
 
 // ── Calendar Tooltip + Modal helpers ──────────────────────────────────────
 
-const _isMobile = () => window.matchMedia('(hover: none)').matches;
+// Touch detection — same heuristic as the reference implementation
+const _isTouchDevice = () => ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
 function _fmtMoney(v) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 }
 
+// ── Category → emoji icon ──────────────────────────────────────────────────
+function _iconForCat(cat = '') {
+  const map = {
+    'Alimentação': '🛒', 'Moradia': '🏠', 'Transporte': '🚗',
+    'Lazer': '🎬', 'Saúde': '💊', 'Investimentos': '📈',
+    'Assinaturas': '📡', 'Metas': '🎯', 'Receita': '💰',
+    'Cartão': '💳', 'Educação': '📚', 'Roupas': '👗',
+  };
+  return map[cat] || (cat ? '📌' : '💸');
+}
+
+// ── Tooltip singleton ──────────────────────────────────────────────────────
 function _getTooltip() {
   if (!_calTooltip) {
     _calTooltip = document.createElement('div');
@@ -742,6 +755,7 @@ function _getTooltip() {
   return _calTooltip;
 }
 
+// ── Modal singleton ────────────────────────────────────────────────────────
 function _getModal() {
   if (!_calModal) {
     _calModal = document.createElement('div');
@@ -753,7 +767,7 @@ function _getModal() {
         <div class="cal-modal-drag-handle"></div>
         <div class="cal-modal-header">
           <span class="cal-modal-title" id="cal-modal-title"></span>
-          <button class="cal-modal-close" aria-label="Fechar">✕</button>
+          <button class="cal-modal-close" aria-label="Fechar">&times;</button>
         </div>
         <div class="cal-modal-body" id="cal-modal-body"></div>
       </div>`;
@@ -766,42 +780,28 @@ function _getModal() {
 
 function _closeModal() {
   if (!_calModal) return;
-  _calModal.classList.remove('open');
+  _calModal.classList.remove('active');
 }
 
 function _hideTooltip() {
   if (_calTooltip) _calTooltip.classList.remove('visible');
 }
 
-function _positionTooltip(tip, anchorRect) {
-  const tw = tip.offsetWidth  || 260;
-  const th = tip.offsetHeight || 180;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  let left = anchorRect.left + anchorRect.width / 2 - tw / 2;
-  let top  = anchorRect.top - th - 8;
-  if (left < 6)       left = 6;
-  if (left + tw > vw - 6) left = vw - tw - 6;
-  if (top < 6)        top  = anchorRect.bottom + 8;
-  tip.style.left = left + 'px';
-  tip.style.top  = top  + 'px';
-}
-
+// ── Tooltip content builder ────────────────────────────────────────────────
 function _buildTooltipHtml(data) {
   if (!data) return '';
   const net = data.income - data.expense;
-  const netColor = net >= 0 ? '#34d399' : '#fb7185';
+  const netColor = net >= 0 ? '#66fcf1' : '#ff4b4b';
 
-  // Top 3 receitas e Top 3 despesas
-  const txs = data.transactions || [];
-  const income3  = [...txs].filter(t => t.value > 0).sort((a,b) => b.value - a.value).slice(0,3);
-  const expense3 = [...txs].filter(t => t.value < 0).sort((a,b) => a.value - b.value).slice(0,3);
+  const txs     = data.transactions || [];
+  const income3 = [...txs].filter(t => t.value > 0).sort((a, b) => b.value - a.value).slice(0, 3);
+  const expense3= [...txs].filter(t => t.value < 0).sort((a, b) => a.value - b.value).slice(0, 3);
 
   const txRows = (arr, cls) => arr.map(t =>
     `<div class="cal-tip-row">
-      <span class="cal-tip-desc">${escapeHtml(t.desc || t.cat || '')}</span>
-      <span class="cal-tip-val ${cls}">${_fmtMoney(Math.abs(t.value))}</span>
-    </div>`
+       <span class="cal-tip-desc">${escapeHtml(t.desc || t.cat || '')}</span>
+       <span class="cal-tip-val ${cls}">${_fmtMoney(Math.abs(t.value))}</span>
+     </div>`
   ).join('');
 
   const cardBadges = [
@@ -815,28 +815,32 @@ function _buildTooltipHtml(data) {
 
   return `
     <div class="cal-tip-net" style="color:${netColor}">${net >= 0 ? '+' : ''}${_fmtMoney(net)}</div>
-    ${income3.length  ? `<div class="cal-tip-section">Receitas</div>${txRows(income3, 'tip-in')}`  : ''}
+    ${income3.length  ? `<div class="cal-tip-section">Receitas</div>${txRows(income3, 'tip-in')}`   : ''}
     ${expense3.length ? `<div class="cal-tip-section">Despesas</div>${txRows(expense3, 'tip-out')}` : ''}
     ${cardBadges || fixedBadges ? `<div class="cal-tip-badges">${cardBadges}${fixedBadges}</div>` : ''}`;
 }
 
-function _buildModalHtml(data, dayNum) {
-  if (!data) return '<p style="opacity:.5;font-size:.85rem;text-align:center;padding:2rem">Nenhum evento neste dia.</p>';
+// ── Modal content builder ──────────────────────────────────────────────────
+function _buildModalHtml(data) {
+  if (!data) return '<p style="opacity:.5;font-size:.85rem;text-align:center;padding:2rem 0">Nenhum evento neste dia.</p>';
 
-  const txs = data.transactions || [];
-  const incomes  = txs.filter(t => t.value > 0).sort((a,b) => b.value - a.value);
-  const expenses = txs.filter(t => t.value < 0).sort((a,b) => a.value - b.value);
+  const txs     = data.transactions || [];
+  const incomes = txs.filter(t => t.value > 0).sort((a, b) => b.value - a.value);
+  const expenses= txs.filter(t => t.value < 0).sort((a, b) => a.value - b.value);
 
-  const txBlock = (arr, label, cls) => {
+  const txBlock = (arr, label, cls, sign) => {
     if (!arr.length) return '';
     return `<div class="cal-modal-section">${label}</div>` +
       arr.map(t => `
         <div class="cal-modal-tx-row">
-          <div class="cal-modal-tx-info">
-            <span class="cal-modal-tx-desc">${escapeHtml(t.desc || '—')}</span>
-            <span class="cal-modal-tx-cat">${escapeHtml(t.cat || '')}</span>
+          <div class="cal-modal-tx-left">
+            <span class="cal-modal-tx-icon">${_iconForCat(t.cat)}</span>
+            <div class="cal-modal-tx-info">
+              <span class="cal-modal-tx-desc">${escapeHtml(t.desc || '—')}</span>
+              <span class="cal-modal-tx-cat">${escapeHtml(t.cat || '')}</span>
+            </div>
           </div>
-          <span class="cal-modal-tx-val ${cls}">${t.value >= 0 ? '+' : ''}${_fmtMoney(t.value)}</span>
+          <span class="cal-modal-tx-val ${cls}">${sign}${_fmtMoney(Math.abs(t.value))}</span>
         </div>`).join('');
   };
 
@@ -850,65 +854,81 @@ function _buildModalHtml(data, dayNum) {
   ).join('');
 
   const net = data.income - data.expense;
-  const netColor = net >= 0 ? '#34d399' : '#fb7185';
+  const netColor = net >= 0 ? '#66fcf1' : '#ff4b4b';
 
   return `
     <div class="cal-modal-summary">
-      <span style="color:#34d399">+${_fmtMoney(data.income)}</span>
-      <span style="color:#64748b">·</span>
-      <span style="color:#fb7185">-${_fmtMoney(data.expense)}</span>
-      <span style="color:#64748b">·</span>
+      <span style="color:#66fcf1">+ ${_fmtMoney(data.income)}</span>
+      <span style="color:#888">·</span>
+      <span style="color:#ff4b4b">- ${_fmtMoney(data.expense)}</span>
+      <span style="color:#888">·</span>
       <span style="color:${netColor};font-weight:800">Líquido: ${net >= 0 ? '+' : ''}${_fmtMoney(net)}</span>
     </div>
     ${cardLines}${fixedLines}
-    ${txBlock(incomes,  'Receitas',  'tip-in')}
-    ${txBlock(expenses, 'Despesas', 'tip-out')}
-    ${!txs.length && !cardLines && !fixedLines ? '<p style="opacity:.5;font-size:.85rem;text-align:center;padding:1rem">Nenhuma transação.</p>' : ''}`;
+    ${txBlock(incomes,  'Receitas', 'tip-in',  '+ ')}
+    ${txBlock(expenses, 'Despesas', 'tip-out', '- ')}
+    ${!txs.length && !cardLines && !fixedLines
+      ? '<p style="opacity:.5;font-size:.85rem;text-align:center;padding:1rem 0">Nenhuma transação.</p>'
+      : ''}`;
 }
 
+// ── Open modal ─────────────────────────────────────────────────────────────
 function _openModal(dayNum) {
   const data = _calByDay ? _calByDay[dayNum] : null;
   const modal = _getModal();
   const dateStr = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
     .format(new Date(_calYear, _calMonth, dayNum));
   modal.querySelector('#cal-modal-title').textContent = dateStr;
-  modal.querySelector('#cal-modal-body').innerHTML = _buildModalHtml(data, dayNum);
-  modal.classList.add('open');
+  modal.querySelector('#cal-modal-body').innerHTML = _buildModalHtml(data);
+  modal.classList.add('active');
 }
 
+// ── Bind calendar interactions (event delegation) ──────────────────────────
 function _bindCalendarInteractions(container) {
-  // Remove previous listeners by cloning (event delegation on container itself)
+  // Clone to flush any stale listeners from previous render
   const fresh = container.cloneNode(true);
   container.parentNode.replaceChild(fresh, container);
 
-  const isMobile = _isMobile();
+  const isTouch = _isTouchDevice();
+  let _lastHoveredDay = null;
 
-  if (!isMobile) {
-    // Desktop: mouseenter for tooltip, mouseleave to hide, click for modal
-    fresh.addEventListener('mouseover', e => {
+  if (!isTouch) {
+    // --- Tooltip: follows the cursor via mousemove ---
+    fresh.addEventListener('mousemove', e => {
       const cell = e.target.closest('[data-day]');
-      if (!cell) return;
-      const day = Number(cell.dataset.day);
+      if (!cell) { _hideTooltip(); _lastHoveredDay = null; return; }
+
+      const day  = Number(cell.dataset.day);
       const data = _calByDay?.[day];
-      // Only show tooltip if there's something to show
-      if (!data || (!data.transactions?.length && !data.cardClose?.length && !data.cardDue?.length && !data.fixedEvents?.length)) return;
+      if (!data || (!data.transactions?.length && !data.cardClose?.length && !data.cardDue?.length && !data.fixedEvents?.length)) {
+        _hideTooltip(); _lastHoveredDay = null; return;
+      }
+
       const tip = _getTooltip();
-      tip.innerHTML = _buildTooltipHtml(data);
+
+      // Rebuild HTML only when we enter a new day
+      if (day !== _lastHoveredDay) {
+        tip.innerHTML = _buildTooltipHtml(data);
+        _lastHoveredDay = day;
+      }
+
+      // Position: centred above cursor (CSS transform: translate(-50%,-110%) handles centering)
+      tip.style.left = e.pageX + 'px';
+      tip.style.top  = (e.pageY - 15) + 'px';
       tip.classList.add('visible');
-      // Position after content is set so dimensions are available
-      requestAnimationFrame(() => _positionTooltip(tip, cell.getBoundingClientRect()));
     });
 
-    fresh.addEventListener('mouseout', e => {
-      const cell = e.target.closest('[data-day]');
-      if (!cell) return;
-      if (!cell.contains(e.relatedTarget)) _hideTooltip();
+    fresh.addEventListener('mouseleave', () => {
+      _hideTooltip();
+      _lastHoveredDay = null;
     });
   }
 
+  // --- Modal / Bottom-sheet: click on any device ---
   fresh.addEventListener('click', e => {
     const cell = e.target.closest('[data-day]');
     if (!cell) return;
+    if (isTouch) e.preventDefault(); // prevent ghost hover on mobile
     _hideTooltip();
     _openModal(Number(cell.dataset.day));
   });
