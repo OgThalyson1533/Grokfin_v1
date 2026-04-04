@@ -201,13 +201,13 @@
         <p class="text-[10px] font-bold uppercase tracking-widest text-white/35">SALDO ATUAL</p>
         <button id="btnOlho" aria-label="Ocultar/Mostrar saldo" class="flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-white/40 hover:text-white pb-0.5">
           <!-- Olho Aberto (Escondido por padrão) -->
-          <svg id="olhoAberto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+          <svg id="olhoAberto" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
 
           <!-- Olho Fechado (Visível por padrão) -->
-          <svg id="olhoFechado" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="olhoFechado" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
             <line x1="1" y1="1" x2="23" y2="23"/>
           </svg>
@@ -217,12 +217,27 @@
       
       <style>
         body.hide-values .sensitive-value {
-          filter: blur(8px) !important;
-          opacity: 0.5 !important;
+          color: transparent !important;
           user-select: none !important;
         }
+        body.hide-values .sensitive-value::after {
+          content: '••••••';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          display: flex;
+          align-items: center;
+          color: #555;
+          letter-spacing: -2px;
+          font-weight: 600;
+          pointer-events: none;
+        }
         .sensitive-value {
-          transition: filter 0.3s ease, opacity 0.3s ease;
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          transition: opacity 0.2s ease, color 0.1s ease;
         }
 
         /* ── Estilos das abas do Modal de Transação ── */
