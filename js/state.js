@@ -168,7 +168,10 @@ export function saveState() {
         t.payment === 'cartao_credito' ||
         (t.cardId && !t.accountId)
       );
-      const txSum       = state.transactions.filter(t => !isCcExpense(t)).reduce((s, t) => s + (t.value || 0), 0);
+      // Transações pendentes não afetam o saldo disponível — só entram quando efetivadas
+      const txSum       = state.transactions
+        .filter(t => !isCcExpense(t) && t.status !== 'pendente')
+        .reduce((s, t) => s + (t.value || 0), 0);
       const initialSum  = (state.accounts || []).reduce((s, a) => s + (a.initialBalance || 0), 0);
       state.balance     = Number((txSum + initialSum).toFixed(2));
     }

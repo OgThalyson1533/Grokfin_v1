@@ -512,9 +512,9 @@ export function processRecurrences(state) {
         cat: exp.cat || exp.category || (exp.isIncome ? 'Receita' : 'Rotina'),
         date: txDate,
         payment: 'conta',
+        status: 'efetivado', // recorrências são lançadas como efetivadas
         recurringTemplate: true
       });
-      state.balance += val;
       changesMade = true;
     }
   });

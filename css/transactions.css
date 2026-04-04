@@ -337,11 +337,7 @@
   color: #00f5ff;
 }
 
-/* Contextual sections — transição suave */
-#card-section, #recorrente-section {
-  overflow: hidden;
-  transition: opacity .22s ease, transform .22s ease;
-}
+/* Contextual sections */
 #card-section.hidden, #recorrente-section.hidden {
   display: none;
 }

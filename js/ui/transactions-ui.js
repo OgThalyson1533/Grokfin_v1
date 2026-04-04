@@ -206,8 +206,16 @@ function _updateFormContext() {
   // Parcelamento: só aparece para cartão de crédito + saída
   if (cardSection) cardSection.classList.toggle('hidden', !(isCard && isSaida));
 
-  // Recorrente: só aparece para conta bancária + saída
-  if (recorrenteSection) recorrenteSection.classList.toggle('hidden', !((!isCard && contaId) && isSaida));
+  // Recorrente: aparece para qualquer conta bancária (entrada ou saída)
+  if (recorrenteSection) recorrenteSection.classList.toggle('hidden', !((!isCard) && !!contaId));
+
+  // Ajusta label e texto da notificação conforme tipo
+  const toggleLabel = recorrenteSection?.querySelector('.toggle-label');
+  const infoText = document.getElementById('recurring-info-text-main');
+  if (toggleLabel) toggleLabel.textContent = isSaida ? 'Despesa recorrente' : 'Receita recorrente';
+  if (infoText) infoText.textContent = isSaida
+    ? 'Esta despesa vira um compromisso mensal. Todo mês, no dia'
+    : 'Esta receita vira um lançamento mensal automático. Todo mês, no dia';
 
   // Se mudou de cartão → conta, reseta parcelas para 1
   if (!isCard) {
@@ -860,9 +868,11 @@ export function renderTransactions() {
 
         <td class="px-4 py-4 text-center">
           <div class="flex items-center justify-center">
-            <span class="inline-flex items-center justify-center rounded px-3 py-1 border text-[11px] font-bold ${statClass}">
-                ${statLabel}
-            </span>
+            <button onclick="toggleTxStatus('${item.id}')"
+                    title="Clique para alternar entre Pendente e Concluído"
+                    class="inline-flex items-center justify-center rounded px-3 py-1 border text-[11px] font-bold transition-opacity hover:opacity-70 cursor-pointer ${statClass}">
+              ${statLabel}
+            </button>
           </div>
         </td>
 
@@ -898,6 +908,9 @@ export function openTxModal() {
   const inputParcelas = document.getElementById('input-parcelas');
   if (inputParcelas) inputParcelas.value = '1';
   document.getElementById('installments-preview')?.classList.add('hidden');
+  document.getElementById('installments-manual-wrap') && (document.getElementById('installments-manual-wrap').style.display = 'none');
+  const manualInput = document.getElementById('installments-manual-input');
+  if (manualInput) manualInput.value = '';
 
   // Reseta seções contextuais
   document.getElementById('card-section')?.classList.add('hidden');
@@ -1297,12 +1310,12 @@ export function saveTxModal() {
     saveState();
 
     // Se recorrente, registra em fixedExpenses para auto-lançamento mensal
-    if (isRecurring && !isIncome && installments === 1) {
+    if (isRecurring && installments === 1) {
       if (!state.fixedExpenses) state.fixedExpenses = [];
       const alreadyFixed = state.fixedExpenses.some(f => f.name.toLowerCase() === desc.toLowerCase());
       if (!alreadyFixed) {
         const txDay = parseDateBR(dateStr)?.getDate() || 1;
-        state.fixedExpenses.push({ id: uid('fx'), name: desc, cat, value: rawValue, day: txDay, active: true, isIncome: false });
+        state.fixedExpenses.push({ id: uid('fx'), name: desc, cat, value: rawValue, day: txDay, active: true, isIncome: !!isIncome });
         saveState();
       }
     }
@@ -1460,9 +1473,28 @@ export function bindTxEvents() {
     if (!pill) return;
     document.querySelectorAll('.install-pill').forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
-    const n = parseInt(pill.dataset.n) || 1;
-    const input = document.getElementById('input-parcelas');
-    if (input) input.value = String(n);
+
+    const manualWrap = document.getElementById('installments-manual-wrap');
+    const manualInput = document.getElementById('installments-manual-input');
+    const hiddenInput = document.getElementById('input-parcelas');
+
+    if (pill.dataset.n === 'manual') {
+      if (manualWrap) manualWrap.style.display = 'block';
+      if (manualInput) { manualInput.value = ''; manualInput.focus(); }
+      if (hiddenInput) hiddenInput.value = '1';
+    } else {
+      if (manualWrap) manualWrap.style.display = 'none';
+      const n = parseInt(pill.dataset.n) || 1;
+      if (hiddenInput) hiddenInput.value = String(n);
+      _updateInstallmentsPreview();
+    }
+  });
+
+  // Input manual de parcelas
+  document.getElementById('installments-manual-input')?.addEventListener('input', e => {
+    const n = parseInt(e.target.value) || 1;
+    const hiddenInput = document.getElementById('input-parcelas');
+    if (hiddenInput) hiddenInput.value = String(Math.max(1, n));
     _updateInstallmentsPreview();
   });
 
@@ -1681,4 +1713,18 @@ export function bindTxEvents() {
   };
 
   window.openEditTx = openEditTx; window.confirmDeleteTx = confirmDeleteTx; window.loadMoreTransactions = loadMoreTransactions;
+
+  window.toggleTxStatus = function(id) {
+    const tx = state.transactions.find(t => t.id === id);
+    if (!tx) return;
+    const wasPending = tx.status === 'pendente';
+    tx.status = wasPending ? 'efetivado' : 'pendente';
+    saveState(); // recalcula saldo excluindo/incluindo conforme novo status
+    renderTransactions();
+    if (window.appRenderAll) window.appRenderAll();
+    showToast(
+      wasPending ? 'Lançamento efetivado — saldo atualizado.' : 'Marcado como pendente — removido do saldo.',
+      wasPending ? 'success' : 'info'
+    );
+  };
 }

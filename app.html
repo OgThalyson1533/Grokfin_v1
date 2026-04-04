@@ -1685,14 +1685,17 @@
             <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45)">Parcelamento</span>
           </div>
           <input type="hidden" id="input-parcelas" value="1">
-          <div style="display:flex;flex-wrap:wrap;gap:8px" id="installments-pills">
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px" id="installments-pills">
             <button type="button" class="install-pill active" data-n="1">À vista</button>
             <button type="button" class="install-pill" data-n="2">2×</button>
             <button type="button" class="install-pill" data-n="3">3×</button>
             <button type="button" class="install-pill" data-n="4">4×</button>
-            <button type="button" class="install-pill" data-n="6">6×</button>
-            <button type="button" class="install-pill" data-n="10">10×</button>
-            <button type="button" class="install-pill" data-n="12">12×</button>
+            <button type="button" class="install-pill" data-n="manual">Manual</button>
+          </div>
+          <!-- Campo manual — aparece apenas quando "Manual" está selecionado -->
+          <div id="installments-manual-wrap" style="display:none;margin-top:8px">
+            <input type="number" id="installments-manual-input" min="2" max="60" placeholder="Quantas parcelas?" inputmode="numeric"
+                   style="width:100%;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-main);font-size:14px;padding:12px 16px;border-radius:var(--radius-md);outline:none;font-family:inherit"/>
           </div>
           <!-- Preview de parcelas -->
           <div id="installments-preview" class="hidden" style="margin-top:10px;background:rgba(0,245,255,.06);border:1px solid rgba(0,245,255,.14);border-radius:8px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,.65)">
@@ -1764,7 +1767,7 @@
         <div style="background-color:var(--bg-input);padding:14px 16px;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center">
           <div style="display:flex;gap:12px;align-items:center">
             <i data-lucide="repeat" style="color:var(--accent-purple)"></i>
-            <div><span class="toggle-label">Despesa recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
+            <div><span class="toggle-label">Transação recorrente</span><span class="toggle-subtext">Lançada automaticamente todo mês</span></div>
           </div>
           <div class="toggle-wrapper" id="toggle-recorrente-wrap"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
         </div>
@@ -1773,7 +1776,7 @@
             <i class="fa-solid fa-circle-info" style="color:#a78bfa;margin-top:2px;flex-shrink:0"></i>
             <div>
               <p style="font-weight:700;color:#c4b5fd;margin:0 0 4px;font-size:12px">O que vai acontecer?</p>
-              <p style="color:rgba(255,255,255,.60);font-size:12px;line-height:1.5;margin:0">Esta despesa vira um <strong style="color:#c4b5fd">compromisso mensal</strong>. Todo mês, no dia <strong id="recurring-day-label" style="color:#fff">—</strong>, ela é lançada automaticamente no extrato.</p>
+              <p style="color:rgba(255,255,255,.60);font-size:12px;line-height:1.5;margin:0"><span id="recurring-info-text-main">Esta transação vira um lançamento mensal automático. Todo mês, no dia</span> <strong id="recurring-day-label" style="color:#fff">—</strong>, ela é lançada automaticamente no extrato.</p>
               <p style="color:rgba(255,255,255,.35);font-size:11px;margin:6px 0 0">Gerencie em <span style="color:rgba(0,245,255,.75);font-weight:600">Fluxo de Caixa → Compromissos Recorrentes</span></p>
             </div>
           </div>
