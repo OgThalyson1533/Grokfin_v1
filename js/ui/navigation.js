@@ -99,7 +99,7 @@ export function switchTab(index, { force = false, skipHistory = false } = {}) {
 
   // Fechar o painel 'Mais' em telas menores, se aplicável
   const mwContainer = document.getElementById('main-workspace');
-  if (mwContainer && window.innerWidth < 1024) mwContainer.scrollTo(0, 0);
+  if (mwContainer) mwContainer.scrollTo(0, 0);
   closeSidebar();
   
   // Tratar abas que exigem render no mount

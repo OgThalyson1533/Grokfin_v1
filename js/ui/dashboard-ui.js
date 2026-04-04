@@ -603,9 +603,6 @@ export function renderHomeLineChart() {
   const emptyEl = document.getElementById('home-line-chart-empty');
   if (!canvas || !window.Chart) return;
 
-  // Destruir instância anterior
-  if (_homeLineChart) { try { _homeLineChart.destroy(); } catch {} _homeLineChart = null; }
-
   const today = new Date();
   const months = [];
   for (let i = 5; i >= 0; i--) {
@@ -632,10 +629,20 @@ export function renderHomeLineChart() {
   canvas.style.display = '';
   if (emptyEl) emptyEl.classList.add('hidden');
 
+  // Se o gráfico já existe, apenas atualiza os dados — evita destroy/recreate
+  // que causa colapso do canvas e scroll indesejado para o final da página.
+  if (_homeLineChart) {
+    _homeLineChart.data.labels = months.map(m => m.label);
+    _homeLineChart.data.datasets[0].data = months.map(m => m.income);
+    _homeLineChart.data.datasets[1].data = months.map(m => m.expense);
+    _homeLineChart.update('active');
+    return;
+  }
+
   const ctx = canvas.getContext('2d');
 
   const gradientHeight = Math.max(300, canvas.height || 300);
-  
+
   const gradIncome = ctx.createLinearGradient(0, 0, 0, gradientHeight);
   gradIncome.addColorStop(0, 'rgba(52,211,153,.30)');
   gradIncome.addColorStop(1, 'rgba(52,211,153,0)');
