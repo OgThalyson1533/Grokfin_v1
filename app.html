@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="ocean-glass">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,7 +54,7 @@
   <link rel="stylesheet" href="./css/components.css">
   <link rel="stylesheet" href="./css/transactions.css">
 </head>
-<body class="selection:bg-cyan-300 selection:text-black">
+<body class="selection:bg-emerald-300 selection:text-black">
   <div class="pointer-events-none fixed inset-0 overflow-hidden" id="app-glow-container">
     <div id="app-glow-1" class="absolute -top-24 left-[8%] h-72 w-72 rounded-full bg-cyan-400/10 blur-[120px] transition-colors duration-1000"></div>
     <div id="app-glow-2" class="absolute top-28 right-[10%] h-72 w-72 rounded-full bg-violet-500/12 blur-[120px] transition-colors duration-1000"></div>
@@ -146,6 +146,10 @@
             </div>
             <!-- Data de referência (desktop) -->
             <span class="hidden xl:inline-flex pill text-xs shrink-0"><i class="fa-regular fa-clock text-cyan-300"></i> <span id="header-ref-date">--</span></span>
+            <!-- Theme Toggle -->
+            <button id="theme-cycle-btn" class="theme-cycle-btn" title="Alternar tema" aria-label="Alternar tema">
+              <i class="fa-solid fa-circle-half-stroke"></i>
+            </button>
             <!-- Fingu AI Trigger -->
             <button id="ai-panel-trigger" title="Assistente IA"
                     class="relative shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-400/40 transition-colors">
@@ -187,6 +191,7 @@
 <div class="flex flex-col gap-5">
   <!-- Linha 1: Header / Resumo Executivo -->
   <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5 lg:p-6 flex flex-col lg:flex-row gap-6 items-center lg:items-end justify-between relative overflow-hidden">
+    <div class="shimmer-sweep"></div>
     <!-- Glow effect behind balance -->
     <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-[60px] pointer-events-none" style="background:radial-gradient(circle,rgba(0,245,255,.15),transparent 70%)"></div>
     
@@ -2446,6 +2451,48 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══ THEME CYCLE ═══ -->
+  <script>
+    (function() {
+      const THEMES = ['ocean-glass', 'dark', 'light'];
+      const ICONS  = { 'ocean-glass': 'fa-droplet', 'dark': 'fa-moon', 'light': 'fa-sun' };
+      const LS_KEY = 'grokfin_theme';
+      const root   = document.documentElement;
+
+      // Restore saved theme
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved && THEMES.includes(saved)) root.setAttribute('data-theme', saved);
+
+      function currentTheme() { return root.getAttribute('data-theme') || 'ocean-glass'; }
+
+      function applyThemeIcon(theme) {
+        const btn = document.getElementById('theme-cycle-btn');
+        if (!btn) return;
+        const icon = btn.querySelector('i');
+        if (!icon) return;
+        icon.className = 'fa-solid ' + (ICONS[theme] || 'fa-circle-half-stroke');
+      }
+
+      function cycleTheme() {
+        const idx  = THEMES.indexOf(currentTheme());
+        const next = THEMES[(idx + 1) % THEMES.length];
+        root.setAttribute('data-theme', next);
+        localStorage.setItem(LS_KEY, next);
+        applyThemeIcon(next);
+      }
+
+      // Wire button
+      document.addEventListener('DOMContentLoaded', function() {
+        applyThemeIcon(currentTheme());
+        const btn = document.getElementById('theme-cycle-btn');
+        if (btn) btn.addEventListener('click', cycleTheme);
+      });
+
+      // Run immediately if DOM already ready
+      if (document.readyState !== 'loading') applyThemeIcon(currentTheme());
+    })();
+  </script>
 
 </body>
 </html>

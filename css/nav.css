@@ -1,66 +1,108 @@
-/* ── GrokFin Elite v6 · nav.css ──────────────────────────────────────────────
-   Navegação: sidebar rail (desktop) + bottom nav (mobile) + sidebar link.
-   ──────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   GrokFin Elite v6 · nav.css
+   Sidebar rail (desktop) + Bottom nav (mobile) — 3 temas
+   ══════════════════════════════════════════════════════════════════ */
 
-/* ── Sidebar rail (desktop) ── */
+/* ══════════════════════════════════════════════════════════════════
+   SIDEBAR RAIL (desktop)
+   ══════════════════════════════════════════════════════════════════ */
 .nav-rail {
+  background: var(--nav-bg);
+  border-right: 1px solid var(--nav-border);
   width: 6.5rem;
-  background: rgba(7,10,19,.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-right: 1px solid rgba(255,255,255,.06);
-  box-shadow: 14px 0 45px rgba(0,0,0,.22);
 }
 
+[data-theme="ocean-glass"] .nav-rail {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 14px 0 45px rgba(0,0,0,0.22);
+}
+
+[data-theme="light"] .nav-rail {
+  box-shadow: 2px 0 8px rgba(0,0,0,0.06);
+}
+
+/* ── Botão do rail ── */
 .nav-rail-button {
   width: 100%;
   display: flex;
   justify-content: center;
   position: relative;
-  color: rgba(255,255,255,.56);
-  transition: transform .28s ease, color .28s ease;
+  color: var(--text-muted);
+  transition: transform 0.26s ease, color 0.26s ease;
 }
 
 .nav-rail-button:hover { transform: translateY(-1px); }
 
 .nav-rail-icon {
   width: 3.25rem; height: 3.25rem;
-  border-radius: 1.35rem;
+  border-radius: 1.2rem;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.045);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
-  transition: all .28s ease;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  transition: all 0.26s ease;
+  font-size: 1rem;
+}
+
+[data-theme="ocean-glass"] .nav-rail-icon {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
 .nav-rail-button:hover .nav-rail-icon,
 .nav-rail-button.active .nav-rail-icon {
-  background: rgba(255,255,255,.08);
-  border-color: rgba(0,245,255,.22);
-  box-shadow: 0 0 0 1px rgba(0,245,255,.08), 0 16px 36px rgba(0,0,0,.28);
+  background: var(--bg-card-hover, rgba(255,255,255,0.08));
+  border-color: var(--border-focus);
 }
 
-.nav-rail-button.active { color: #e6fdff; }
+[data-theme="ocean-glass"] .nav-rail-button:hover .nav-rail-icon,
+[data-theme="ocean-glass"] .nav-rail-button.active .nav-rail-icon {
+  box-shadow: 0 0 0 1px rgba(99,255,171,0.08), 0 14px 32px rgba(0,0,0,0.28);
+  border-color: rgba(99,255,171,0.22);
+}
+
+[data-theme="light"] .nav-rail-button.active .nav-rail-icon {
+  background: #f0fdf4;
+  border-color: #16a34a;
+}
+
+.nav-rail-button.active {
+  color: var(--text-main);
+}
+
 .nav-rail-button.active i {
-  color: var(--brand);
-  text-shadow: 0 0 16px rgba(0,245,255,.32);
+  color: var(--success);
 }
 
+[data-theme="ocean-glass"] .nav-rail-button.active i {
+  text-shadow: 0 0 16px rgba(99,255,171,0.32);
+}
+
+[data-theme="light"] .nav-rail-button.active i {
+  color: #16a34a;
+}
+
+/* ── Tooltip ── */
 .nav-rail-tooltip {
   position: absolute;
-  left: calc(100% + .95rem);
+  left: calc(100% + 0.95rem);
   top: 50%;
   transform: translateY(-50%) translateX(-8px);
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(9,12,21,.94);
-  padding: .45rem .8rem;
-  color: rgba(255,255,255,.84);
-  font-size: .75rem; font-weight: 700; letter-spacing: .04em;
+  border: 1px solid var(--border-color);
+  background: var(--nav-bg);
+  padding: 0.45rem 0.8rem;
+  color: var(--text-main);
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
   opacity: 0; pointer-events: none;
-  transition: all .24s ease;
+  transition: all 0.22s ease;
   white-space: nowrap;
-  box-shadow: 0 14px 40px rgba(0,0,0,.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.20);
+  z-index: 50;
+}
+
+[data-theme="ocean-glass"] .nav-rail-tooltip {
+  backdrop-filter: blur(16px);
+  background: rgba(9,12,21,0.94);
 }
 
 .nav-rail-button:hover .nav-rail-tooltip,
@@ -69,122 +111,189 @@
   transform: translateY(-50%) translateX(0);
 }
 
-/* ── Install button (sidebar) ── */
+/* ── Install button ── */
 .install-icon-button {
   width: 3.25rem; height: 3.25rem;
-  border-radius: 1.35rem;
+  border-radius: 1.2rem;
   display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.04);
-  color: rgba(255,255,255,.76);
-  transition: all .28s ease;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  transition: all 0.26s ease;
 }
 
 .install-icon-button:hover {
-  background: rgba(255,255,255,.08);
-  border-color: rgba(0,245,255,.22);
-  color: white;
+  background: var(--bg-card-hover, rgba(255,255,255,0.08));
+  border-color: var(--border-focus);
+  color: var(--text-main);
   transform: translateY(-1px);
 }
 
-/* ── Bottom nav (mobile) ── */
-.bottom-nav {
-  background: rgba(7,10,19,.82);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-top: 1px solid rgba(255,255,255,.10);
-  box-shadow:
-    0 -18px 42px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.04);
-  padding: .55rem 0 calc(.55rem + env(safe-area-inset-bottom));
-  /* Extra top space to allow FAB to float above */
-  padding-top: .55rem;
+/* ── Sidebar avatar card ── */
+[data-theme="light"] .nav-rail .rounded-\[26px\] {
+  background: #f2f3f5 !important;
+  border-color: #e2e4e8 !important;
 }
 
-/* ── Grid layout: 1fr 1fr [auto] 1fr 1fr ── */
+[data-theme="light"] .nav-rail [class*="rounded-2xl"][class*="border-white"] {
+  background: #ffffff !important;
+  border-color: #e2e4e8 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BOTTOM NAV (mobile)
+   ══════════════════════════════════════════════════════════════════ */
+.bottom-nav {
+  background: var(--nav-bg);
+  border-top: 1px solid var(--nav-border);
+  border-radius: 20px 20px 0 0;
+  padding: 0.55rem 0 calc(0.55rem + env(safe-area-inset-bottom));
+}
+
+[data-theme="ocean-glass"] .bottom-nav {
+  backdrop-filter: blur(36px) saturate(190%) brightness(1.04);
+  -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(1.04);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.18),
+    0 -12px 40px rgba(0,0,0,0.40);
+}
+
+[data-theme="light"] .bottom-nav {
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+}
+
+/* ── Grid 5 colunas ── */
 .bottom-nav-grid {
   display: grid;
   grid-template-columns: 1fr 1fr auto 1fr 1fr;
   align-items: center;
 }
 
+/* ── Botão do nav ── */
 .bottom-nav-button {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 0;
-  color: rgba(255,255,255,.54);
-  transition: color .26s ease, transform .26s ease;
-  padding: .25rem 0;
+  color: var(--text-muted);
+  transition: color 0.24s ease, transform 0.24s ease;
+  padding: 0.25rem 0;
 }
 
 .bottom-nav-button:hover { transform: translateY(-1px); }
 
 .bottom-nav-icon {
   width: 2.6rem; height: 2.6rem;
-  border-radius: .9rem;
+  border-radius: 0.9rem;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(255,255,255,.07);
-  background: rgba(255,255,255,.045);
-  transition: all .26s ease;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  transition: all 0.24s ease;
   font-size: 1rem;
+  position: relative;
 }
 
-.bottom-nav-button.active { color: #ecfeff; }
+.bottom-nav-button.active {
+  color: var(--text-main);
+}
+
 .bottom-nav-button.active .bottom-nav-icon {
-  background: rgba(255,255,255,.08);
-  border-color: rgba(0,245,255,.24);
-  box-shadow: 0 0 0 1px rgba(0,245,255,.08), 0 14px 30px rgba(0,0,0,.24);
+  background: var(--bg-card-hover, rgba(255,255,255,0.08));
+  border-color: var(--border-focus);
+}
+
+[data-theme="ocean-glass"] .bottom-nav-button.active .bottom-nav-icon {
+  border-color: rgba(99,255,171,0.24);
+  box-shadow: 0 0 0 1px rgba(99,255,171,0.08), 0 12px 28px rgba(0,0,0,0.24);
+}
+
+[data-theme="light"] .bottom-nav-button.active .bottom-nav-icon {
+  background: #f0fdf4;
+  border-color: #16a34a;
 }
 
 .bottom-nav-button.active i {
-  color: var(--brand);
-  text-shadow: 0 0 16px rgba(0,245,255,.30);
+  color: var(--success);
 }
 
-/* ── FAB wrapper: centers the floating button ── */
+[data-theme="ocean-glass"] .bottom-nav-button.active i {
+  text-shadow: 0 0 14px rgba(99,255,171,0.30);
+}
+
+[data-theme="light"] .bottom-nav-button.active i {
+  color: #16a34a;
+}
+
+/* ── FAB wrapper ── */
 .bottom-nav-fab-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* negative margin to pop the FAB above the bar */
   margin-top: -1.75rem;
-  padding: 0 .5rem;
+  padding: 0 0.5rem;
 }
 
-/* ── FAB: Floating Action Button (+) ── */
+/* ── FAB ── */
 .bottom-nav-fab {
   width: 3.4rem; height: 3.4rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00f5ff, #00ff85);
-  color: #07090d;
+  background: var(--accent-primary);
+  color: var(--accent-on-primary);
   font-size: 1.35rem;
   display: flex; align-items: center; justify-content: center;
-  box-shadow:
-    0 0 0 4px rgba(7,10,19,.85),
-    0 8px 28px rgba(0,245,255,.35),
-    0 4px 12px rgba(0,0,0,.4);
   border: none;
-  transition: transform .22s ease, box-shadow .22s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
   position: relative;
   z-index: 10;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
+[data-theme="ocean-glass"] .bottom-nav-fab {
+  background: linear-gradient(135deg, #63ffab, #36f1c8);
+  color: #07090d;
+  box-shadow:
+    0 0 0 4px rgba(6,18,28,0.85),
+    0 8px 28px rgba(99,255,171,0.30),
+    0 4px 12px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .bottom-nav-fab,
+:root .bottom-nav-fab {
+  box-shadow:
+    0 0 0 4px var(--bg-base),
+    0 6px 20px rgba(0,0,0,0.30);
+}
+
+[data-theme="light"] .bottom-nav-fab {
+  box-shadow:
+    0 0 0 4px #f2f3f5,
+    0 6px 20px rgba(0,0,0,0.15);
 }
 
 .bottom-nav-fab:hover {
   transform: scale(1.08) translateY(-2px);
-  box-shadow:
-    0 0 0 4px rgba(7,10,19,.85),
-    0 12px 36px rgba(0,245,255,.45),
-    0 6px 16px rgba(0,0,0,.5);
 }
 
 .bottom-nav-fab:active {
-  transform: scale(.96);
+  transform: scale(0.96);
 }
 
-/* ── Sidebar link (legacy mobile sidebar) ── */
+/* ── Badge de aba ativa no botão Mais ── */
+#mais-btn.active .bottom-nav-icon::after {
+  content: '';
+  position: absolute;
+  top: -3px; right: -3px;
+  width: 9px; height: 9px;
+  background: var(--success);
+  border-radius: 50%;
+  border: 2px solid var(--nav-bg);
+  box-shadow: 0 0 6px rgba(99,255,171,0.5);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SIDEBAR LINK (mobile drawer legacy)
+   ══════════════════════════════════════════════════════════════════ */
 .sidebar-link {
-  transition: all .28s ease;
-  color: rgba(255,255,255,.68);
+  transition: all 0.26s ease;
+  color: var(--text-muted);
   position: relative;
   overflow: hidden;
 }
@@ -193,26 +302,34 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0,245,255,.10), transparent 70%);
+  background: linear-gradient(90deg, var(--success-bg), transparent 70%);
   opacity: 0;
-  transition: opacity .25s ease;
+  transition: opacity 0.24s ease;
 }
 
 .sidebar-link:hover::after,
 .sidebar-link.active::after { opacity: 1; }
 
 .sidebar-link.active {
-  color: #d9feff;
-  background: rgba(255,255,255,.06);
-  box-shadow: inset 4px 0 0 var(--brand), 0 0 0 1px rgba(255,255,255,.04);
+  color: var(--text-main);
+  background: var(--card-bg);
+  box-shadow: inset 4px 0 0 var(--success);
 }
 
 .sidebar-link.active i {
-  color: var(--brand);
-  text-shadow: 0 0 18px rgba(0,245,255,.35);
+  color: var(--success);
 }
 
-/* ── Mobile overlay ── */
+/* ══════════════════════════════════════════════════════════════════
+   MAIS SHEET PANEL
+   ══════════════════════════════════════════════════════════════════ */
+#mais-sheet-panel {
+  transition: transform 0.28s cubic-bezier(0.32, 0, 0.67, 0);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE OVERLAY
+   ══════════════════════════════════════════════════════════════════ */
 @media (max-width: 1023px) {
   .mobile-overlay.show { display: block; }
   .mobile-sidebar.open { transform: translateX(0); }
@@ -224,35 +341,63 @@
   }
 }
 
-/* ── Mais sheet ── */
-#mais-sheet-panel { transition: transform .28s cubic-bezier(.32,0,.67,0); }
-
-.mais-tab-btn { cursor: pointer; }
-
-.mais-tab-btn:hover {
-  border-color: rgba(255,255,255,.16) !important;
-  background: rgba(255,255,255,.08) !important;
+/* ══════════════════════════════════════════════════════════════════
+   THEME TOGGLE BUTTON (tema cicler no header)
+   ══════════════════════════════════════════════════════════════════ */
+.theme-cycle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem; height: 2.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.24s ease;
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
-.mais-tab-btn[data-tab].active {
-  border-color: rgba(0,245,255,.32) !important;
-  background: rgba(0,245,255,.10) !important;
-  box-shadow: 0 0 0 1px rgba(0,245,255,.12) inset !important;
+.theme-cycle-btn:hover {
+  border-color: var(--border-focus);
+  color: var(--text-main);
+  background: var(--bg-card-hover, rgba(255,255,255,0.08));
 }
 
-.mais-tab-btn[data-tab].active span:first-child {
-  border-color: rgba(0,245,255,.28);
-  box-shadow: 0 0 16px rgba(0,245,255,.20);
+/* ══════════════════════════════════════════════════════════════════
+   DESKTOP — melhorias de layout
+   ══════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  /* Sidebar avatar/score card em light */
+  [data-theme="light"] .nav-rail [class*="bg-black\/20"] {
+    background: #f2f3f5 !important;
+  }
+
+  [data-theme="light"] .nav-rail [class*="text-white\/30"] {
+    color: #9ca3af !important;
+  }
 }
 
-/* ── Badge de aba ativa no botão Mais ── */
-#mais-btn.active .bottom-nav-icon::after {
-  content: '';
-  position: absolute;
-  top: -3px; right: -3px;
-  width: 9px; height: 9px;
-  background: var(--brand);
-  border-radius: 50%;
-  border: 2px solid #0a0d16;
-  box-shadow: 0 0 6px rgba(0,245,255,.5);
+/* ══════════════════════════════════════════════════════════════════
+   CHIP DE VISÃO ATUAL (header)
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] #current-view-chip {
+  background: #f2f3f5;
+  border-color: #e2e4e8;
+  color: #374151;
+}
+
+[data-theme="light"] #current-view-chip i { color: #16a34a; }
+
+/* ══════════════════════════════════════════════════════════════════
+   AI PANEL TRIGGER BUTTON
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] #ai-panel-trigger {
+  background: #f2f3f5 !important;
+  border-color: #e2e4e8 !important;
+}
+[data-theme="light"] #ai-panel-trigger:hover {
+  background: #ecfdf5 !important;
+  border-color: #16a34a !important;
 }

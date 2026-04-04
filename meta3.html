@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-PT" data-theme="ocean-glass">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro Fnx</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ============================================
+           TEMA BASE: DARK (minimalista flat, sem glass)
+           ============================================ */
+        :root {
+            --bg-base: #0e0e0e;
+            --bg-gradient: #0e0e0e;
+            --bg-card: #161616;
+            --border-color: rgba(255,255,255,0.07);
+            --text-main: #ffffff;
+            --text-muted: rgba(255,255,255,0.45);
+            --accent-primary: #ffffff;
+            --accent-on-primary: #0e0e0e;
+            --nav-bg: #0e0e0e;
+            --nav-border: rgba(255,255,255,0.07);
+            --input-bg: #161616;
+
+            --success: #63ffab;
+            --success-bg: rgba(99,255,171,0.1);
+            --danger: #ff6b81;
+            --danger-bg: rgba(255,107,129,0.1);
+            --warning: #ffdc73;
+            --warning-bg: rgba(255,220,115,0.1);
+            --purple: #b685ff;
+            --chart-grid: rgba(255,255,255,0.06);
+
+            /* DARK: flat, sem glass, sem sombra */
+            --card-bg: #161616;
+            --card-border: rgba(255,255,255,0.07);
+            --card-blur: none;
+            --card-shadow: none;
+            --card-inset: none;
+        }
+
+        /* ============================================
+           TEMA: LIGHT (sem glass, flat)
+           ============================================ */
+        [data-theme="light"] {
+            --bg-base: #f2f3f5;
+            --bg-gradient: #f2f3f5;
+            --bg-card: #ffffff;
+            --border-color: #e2e4e8;
+            --text-main: #111111;
+            --text-muted: #6b7280;
+            --accent-primary: #111111;
+            --accent-on-primary: #ffffff;
+            --nav-bg: #ffffff;
+            --nav-border: #e2e4e8;
+            --input-bg: #f2f3f5;
+
+            --success: #16a34a;
+            --success-bg: rgba(22,163,74,0.08);
+            --danger: #dc2626;
+            --danger-bg: rgba(220,38,38,0.08);
+            --warning: #d97706;
+            --warning-bg: rgba(217,119,6,0.08);
+            --purple: #7c3aed;
+            --chart-grid: #e2e4e8;
+
+            /* LIGHT: sem glass */
+            --card-bg: #ffffff;
+            --card-border: #e2e4e8;
+            --card-blur: none;
+            --card-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            --card-inset: none;
+        }
+
+        /* ============================================
+           TEMA: OCEAN GLASS (glass premium ativo)
+           ============================================ */
+        [data-theme="ocean-glass"] {
+            --bg-base: #060d14;
+            --bg-gradient:
+                radial-gradient(ellipse 75% 55% at 12% 12%, rgba(6,45,62,0.95) 0%, transparent 58%),
+                radial-gradient(ellipse 65% 50% at 88% 88%, rgba(26,11,8,0.9) 0%, transparent 58%),
+                radial-gradient(ellipse 50% 35% at 68% 18%, rgba(255,107,129,0.055) 0%, transparent 48%),
+                linear-gradient(180deg, #060d14 0%, #030810 100%);
+            --bg-card: rgba(255,255,255,0.03);
+            --border-color: rgba(255,255,255,0.13);
+            --text-main: #ffffff;
+            --text-muted: rgba(255,255,255,0.52);
+            --accent-primary: #ffffff;
+            --accent-on-primary: #060d14;
+            --nav-bg: rgba(6,18,28,0.82);
+            --nav-border: rgba(255,255,255,0.1);
+            --input-bg: rgba(255,255,255,0.05);
+
+            --success: #63ffab;
+            --success-bg: rgba(99,255,171,0.09);
+            --danger: #ff6b81;
+            --danger-bg: rgba(255,107,129,0.09);
+            --warning: #ffdc73;
+            --warning-bg: rgba(255,220,115,0.09);
+            --purple: #b685ff;
+            --chart-grid: rgba(255,255,255,0.07);
+
+            /* OCEAN GLASS: glass premium */
+            --card-bg: rgba(255,255,255,0.03);
+            --card-border: rgba(255,255,255,0.13);
+            --card-blur: blur(36px) saturate(190%) brightness(1.04);
+            --card-shadow:
+                0 28px 56px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(255,255,255,0.04),
+                inset 0 -1px 1px rgba(0,0,0,0.3);
+            --card-inset: inset 0 1.5px 0 rgba(255,255,255,0.2);
+        }
+
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s, backdrop-filter 0.3s;
+        }
+        body {
+            background-color: var(--bg-base);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+        .app-container {
+            width: 100%; max-width: 414px;
+            background: var(--bg-gradient);
+            position: relative;
+            height: 100vh;
+            overflow-y: auto; overflow-x: hidden;
+            padding-bottom: 100px;
+        }
+
+        /* Grain apenas no ocean-glass */
+        [data-theme="ocean-glass"] .app-container::before {
+            content: '';
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.035"/></svg>');
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ============================================
+           VIEWS
+           ============================================ */
+        .view { position: relative; z-index: 1; display: none; opacity: 0; transform: translateY(10px); }
+        .view.active { display: block; animation: fadeSlideIn 0.4s forwards; }
+        @keyframes fadeSlideIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* ============================================
+           HEADER & LAYOUT
+           ============================================ */
+        .header { padding: 40px 20px 20px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .logo-area { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .user-actions { display: flex; gap: 16px; align-items: center; }
+        .action-icon { font-size: 20px; cursor: pointer; }
+        .avatar-gradiente {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #a7c7e7 0%, #ffcdca 100%);
+            display: flex; justify-content: center; align-items: center;
+            color: rgba(255,255,255,0.85); font-weight: 700; font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .content { padding: 0 20px; display: flex; flex-direction: column; gap: 16px; }
+
+        /* ============================================
+           CARD — usa variáveis do tema
+           ============================================ */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Linha de luz especular — APENAS ocean-glass */
+        [data-theme="ocean-glass"] .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 8%; right: 8%; height: 1px;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255,255,255,0.42) 30%,
+                rgba(255,255,255,0.52) 50%,
+                rgba(255,255,255,0.42) 70%,
+                transparent
+            );
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Noise texture no card — APENAS ocean-glass */
+        [data-theme="ocean-glass"] .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.022;
+            border-radius: inherit;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 128px 128px;
+        }
+
+        /* Shimmer sweep — APENAS ocean-glass */
+        .shimmer-sweep {
+            display: none;
+            position: absolute;
+            top: 0; left: 0;
+            width: 38%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.032) 50%, transparent);
+            pointer-events: none;
+            border-radius: inherit;
+        }
+        [data-theme="ocean-glass"] .shimmer-sweep {
+            display: block;
+            animation: glassShimmer 9s ease-in-out infinite;
+        }
+        [data-theme="ocean-glass"] .card:nth-child(2) .shimmer-sweep { animation-delay: 2s; }
+        [data-theme="ocean-glass"] .card:nth-child(3) .shimmer-sweep { animation-delay: 4s; }
+        [data-theme="ocean-glass"] .card:nth-child(4) .shimmer-sweep { animation-delay: 6s; }
+        [data-theme="ocean-glass"] .card:nth-child(5) .shimmer-sweep { animation-delay: 1s; }
+        [data-theme="ocean-glass"] .card:nth-child(6) .shimmer-sweep { animation-delay: 3s; }
+
+        @keyframes glassShimmer {
+            0%   { opacity: 0; transform: translateX(-120%) skewX(-18deg); }
+            40%  { opacity: 1; }
+            100% { opacity: 0; transform: translateX(380%) skewX(-18deg); }
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .card-title { font-size: 14px; font-weight: 600; }
+        .card-link { color: var(--text-muted); font-size: 12px; text-decoration: none; }
+
+        /* ============================================
+           TIME FILTERS
+           ============================================ */
+        .greeting { font-size: 32px; font-weight: 400; letter-spacing: -1.5px; }
+        .greeting strong { font-weight: 600; }
+        .time-filters {
+            display: flex; gap: 8px; padding: 10px 20px 20px;
+            overflow-x: auto; scrollbar-width: none; position: relative; z-index: 1;
+        }
+        .time-filters::-webkit-scrollbar { display: none; }
+        .filter-chip {
+            padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 500;
+            color: var(--text-muted); border: 1px solid var(--border-color);
+            background: var(--input-bg); white-space: nowrap; cursor: pointer;
+        }
+        .filter-chip.active {
+            background-color: var(--text-main); color: var(--accent-on-primary);
+            border-color: var(--text-main);
+        }
+        [data-theme="ocean-glass"] .filter-chip.active { box-shadow: 0 0 14px rgba(255,255,255,0.22); }
+
+        /* ============================================
+           SALDO & METRICS
+           ============================================ */
+        .balance-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; }
+        .balance-amount { font-size: 42px; font-weight: 600; letter-spacing: -2px; margin-bottom: 4px; }
+        .balance-sub { font-size: 12px; color: var(--text-muted); display: flex; gap: 8px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+        .badge-green { background: var(--success-bg); color: var(--success); padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; text-align: center; }
+        .metric-title { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+        .metric-value { font-size: 18px; font-weight: 600; }
+        .metric-value.success { color: var(--success); }
+        .tx-bar { display: flex; align-items: center; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px; gap: 12px; }
+        .tx-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 14px; }
+        .tx-bar.in .tx-icon { background: var(--success-bg); color: var(--success); }
+        .tx-bar.out .tx-icon { background: var(--danger-bg); color: var(--danger); }
+        .tx-info { display: flex; flex-direction: column; }
+        .tx-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .tx-val { font-size: 14px; font-weight: 600; }
+
+        /* ============================================
+           COMPARATIVO
+           ============================================ */
+        .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .comp-card {
+            padding: 16px; border: 1px solid var(--border-color); border-radius: 12px;
+            background: var(--card-bg);
+        }
+        [data-theme="ocean-glass"] .comp-card {
+            backdrop-filter: blur(20px) saturate(160%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 16px rgba(0,0,0,0.25);
+        }
+        .comp-card.green { border-left: 3px solid var(--success); }
+        .comp-card.orange { border-left: 3px solid var(--warning); }
+        .comp-title { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; display: flex; gap: 6px; align-items: center; }
+        .comp-val { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+        .comp-sub { font-size: 10px; color: var(--text-muted); }
+
+        /* ============================================
+           GAUGE / SAÚDE
+           ============================================ */
+        .gauge-wrapper { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; }
+        .gauge { width: 180px; height: 90px; position: relative; overflow: hidden; margin-bottom: 10px; }
+        .gauge-track { position: absolute; top: 0; left: 0; width: 180px; height: 180px; border-radius: 50%; border: 15px solid var(--border-color); box-sizing: border-box; }
+        .gauge-fill { position: absolute; top: 0; left: 0; width: 180px; height: 180px; border-radius: 50%; border: 15px solid transparent; border-top-color: var(--success); border-right-color: var(--warning); box-sizing: border-box; transform: rotate(-30deg); }
+        .gauge-text { position: absolute; bottom: 0; width: 100%; text-align: center; font-size: 32px; font-weight: 600; line-height: 1; }
+        .gauge-text span { font-size: 14px; color: var(--text-muted); }
+        .gauge-legend { display: flex; gap: 16px; font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: 24px; }
+        .gauge-legend span { display: flex; align-items: center; gap: 6px; }
+        .progress-list { display: flex; flex-direction: column; gap: 14px; }
+        .prog-item { display: flex; flex-direction: column; gap: 6px; }
+        .prog-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; }
+        .prog-label { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .prog-bar-bg { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; }
+        .prog-bar-fill { height: 100%; border-radius: 2px; }
+
+        /* ============================================
+           CHART
+           ============================================ */
+        .chart-container { position: relative; width: 100%; height: 180px; margin-top: 10px; }
+        .chart-svg { width: 100%; height: 100%; overflow: visible; }
+        [data-theme="ocean-glass"] .chart-svg path { filter: drop-shadow(0 0 8px currentColor); }
+
+        .chart-tooltip {
+            position: absolute; top: 10px; right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px; border-radius: 12px;
+            font-size: 11px; z-index: 10;
+        }
+        [data-theme="ocean-glass"] .chart-tooltip {
+            backdrop-filter: blur(18px) saturate(160%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 8px 28px rgba(0,0,0,0.35);
+        }
+        .chart-tooltip-title { font-weight: 600; margin-bottom: 8px; color: var(--text-main); font-size: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
+        .chart-tooltip-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; color: var(--text-muted); font-weight: 500; }
+
+        /* ============================================
+           DONUT
+           ============================================ */
+        .donut-wrapper { display: flex; flex-direction: column; align-items: center; gap: 24px; margin-top: 10px; }
+        .donut { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(var(--purple) 100%, transparent 0); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 22px rgba(182,133,255,0.14); }
+        .donut-inner {
+            width: 110px; height: 110px; border-radius: 50%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+        [data-theme="ocean-glass"] .donut-inner {
+            backdrop-filter: blur(28px) saturate(170%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .donut-inner span { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .donut-inner strong { font-size: 20px; font-weight: 600; }
+        .donut-legend {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; border: 1px solid var(--border-color); border-radius: 12px;
+            background: var(--card-bg);
+        }
+        [data-theme="ocean-glass"] .donut-legend {
+            backdrop-filter: blur(20px) saturate(160%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 16px rgba(0,0,0,0.25);
+        }
+
+        /* ============================================
+           CALENDÁRIO
+           ============================================ */
+        .cal-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 12px; font-weight: 500; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+        .cal-day-name { text-align: center; font-size: 9px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; padding-bottom: 8px; }
+        .cal-cell { aspect-ratio: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.25); background: rgba(0,0,0,0.04); }
+        [data-theme="light"] .cal-cell { color: var(--text-muted); }
+        .cal-cell.active-month { color: var(--text-main); background: transparent; }
+        .cal-cell.selected { border-color: var(--success); background: var(--success-bg); }
+        .cal-tag { font-size: 8px; padding: 2px 4px; border-radius: 4px; font-weight: 600; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* ============================================
+           AÇÕES
+           ============================================ */
+        .empty-schedule { margin: 10px 0 20px; }
+        .empty-schedule p { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+        .action-buttons { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border-radius: 30px; border: 1px solid transparent; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; font-family: inherit; }
+        .btn-ghost { background: var(--input-bg); color: var(--text-main); border-color: var(--border-color); }
+        .btn-primary { background: var(--accent-primary); color: var(--accent-on-primary); font-weight: 600; }
+
+        /* ============================================
+           CONTA / ABAS
+           ============================================ */
+        .page-title { font-size: 36px; font-weight: 400; letter-spacing: -1.5px; margin-bottom: 8px; }
+        .page-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        .tabs-container { display: flex; gap: 10px; }
+        .tab-btn {
+            flex: 1; padding: 12px; border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-muted); font-size: 14px; font-weight: 500;
+            cursor: pointer; font-family: inherit;
+        }
+        [data-theme="ocean-glass"] .tab-btn {
+            backdrop-filter: blur(14px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .tab-btn.active {
+            background: var(--accent-primary); color: var(--accent-on-primary);
+            border-color: var(--accent-primary); font-weight: 600;
+        }
+        [data-theme="ocean-glass"] .tab-btn.active { box-shadow: 0 0 14px rgba(255,255,255,0.22); }
+
+        .btn-import {
+            width: 100%; padding: 14px; border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-main); font-size: 14px; font-weight: 500;
+            margin-bottom: 10px; cursor: pointer; font-family: inherit;
+        }
+        [data-theme="ocean-glass"] .btn-import { backdrop-filter: blur(14px); }
+
+        .search-bar { position: relative; margin-top: 10px; }
+        .search-icon {
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); pointer-events: none;
+            display: flex; align-items: center;
+        }
+        .search-input {
+            width: 100%; padding: 14px 14px 14px 44px;
+            border-radius: 12px; border: 1px solid var(--border-color);
+            background: var(--input-bg); color: var(--text-main);
+            font-size: 14px; outline: none; font-family: inherit;
+        }
+        [data-theme="ocean-glass"] .search-input {
+            backdrop-filter: blur(18px) saturate(160%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 16px rgba(0,0,0,0.25);
+        }
+        .search-input::placeholder { color: var(--text-muted); }
+
+        /* ============================================
+           TX TABLE
+           ============================================ */
+        .tx-table {
+            width: 100%; border: 1px solid var(--border-color); border-radius: 18px;
+            background: var(--card-bg); overflow: hidden; margin-bottom: 20px;
+            position: relative;
+        }
+        [data-theme="ocean-glass"] .tx-table {
+            backdrop-filter: blur(36px) saturate(190%) brightness(1.04);
+            box-shadow: 0 20px 44px rgba(0,0,0,0.45), inset 0 1.5px 0 rgba(255,255,255,0.18);
+        }
+        [data-theme="ocean-glass"] .tx-table::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 8%; right: 8%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38) 50%, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .tx-row { display: grid; grid-template-columns: 85px 1fr 80px; gap: 10px; align-items: center; padding: 16px; border-bottom: 1px solid var(--border-color); }
+        .tx-row:last-child { border-bottom: none; }
+        .tx-date { font-size: 12px; color: var(--text-muted); }
+        .tx-desc { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+        .tx-type { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+
+        /* ============================================
+           BOTTOM NAV — usa variáveis do tema
+           ============================================ */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 414px; height: 80px;
+            background: var(--nav-bg);
+            border-top: 1px solid var(--nav-border);
+            border-radius: 20px 20px 0 0;
+            display: flex; justify-content: space-around; align-items: center;
+            padding: 0 10px 10px; z-index: 100;
+        }
+        [data-theme="ocean-glass"] .bottom-nav {
+            backdrop-filter: blur(36px) saturate(190%) brightness(1.04);
+            -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(1.04);
+            box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.18), 0 -12px 40px rgba(0,0,0,0.45);
+        }
+        .nav-item { color: var(--text-muted); font-size: 20px; padding: 10px; text-decoration: none; }
+        .nav-item.active { color: var(--text-main); }
+        [data-theme="ocean-glass"] .nav-item.active { text-shadow: 0 0 12px rgba(255,255,255,0.4); }
+        .nav-fab {
+            width: 48px; height: 48px;
+            background: var(--accent-primary); border-radius: 24px;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--accent-on-primary); font-size: 18px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- VIEW: HOME -->
+    <div id="view-home" class="view active">
+        <header class="header">
+            <div class="top-bar">
+                <div class="logo-area">
+                    <i class="fa-solid fa-layer-group"></i> Fnx
+                </div>
+                <div class="user-actions">
+                    <i class="fa-solid fa-droplet action-icon theme-toggle"></i>
+                    <div class="avatar-gradiente">A</div>
+                </div>
+            </div>
+            <h1 class="greeting">Olá,<br><strong>Thalyson.</strong></h1>
+        </header>
+
+        <div class="time-filters">
+            <div class="filter-chip active">Este mês</div>
+            <div class="filter-chip">Mês anterior</div>
+            <div class="filter-chip">3 meses</div>
+            <div class="filter-chip">6 meses</div>
+        </div>
+
+        <main class="content">
+
+            <!-- Saldo -->
+            <section class="card">
+                <div class="shimmer-sweep"></div>
+                <div class="balance-label">Saldo Atual <i class="fa-regular fa-eye"></i></div>
+                <div class="balance-amount">R$ 108,00</div>
+                <div class="balance-sub">
+                    Média: R$ 604,25/dia
+                    <span class="badge-green"><i class="fa-solid fa-arrow-trend-up"></i> +R$ 782</span>
+                </div>
+                <div class="metrics-grid">
+                    <div><div class="metric-title">Score IA</div><div class="metric-value">74</div></div>
+                    <div><div class="metric-title">Runway</div><div class="metric-value">0,0 m</div></div>
+                    <div><div class="metric-title">Poupança</div><div class="metric-value success">24%</div></div>
+                </div>
+                <div class="tx-bar in">
+                    <div class="tx-icon"><i class="fa-solid fa-arrow-up"></i></div>
+                    <div class="tx-info"><span class="tx-label">Entrada</span><span class="tx-val">R$ 3.199,09</span></div>
+                </div>
+                <div class="tx-bar out">
+                    <div class="tx-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                    <div class="tx-info"><span class="tx-label">Saída</span><span class="tx-val">R$ 2.417,00</span></div>
+                </div>
+            </section>
+
+            <!-- Comparativo -->
+            <section class="card" style="padding:24px; display:flex; flex-direction:column;">
+                <div class="shimmer-sweep"></div>
+                <div class="card-header" style="margin-bottom:16px;">
+                    <h2 class="card-title">Comparativo de Desempenho</h2>
+                    <span class="card-link">Período atual</span>
+                </div>
+                <div class="comp-grid">
+                    <div class="comp-card green">
+                        <div class="comp-title"><i class="fa-solid fa-arrow-trend-up" style="color:var(--success)"></i> RECEITAS</div>
+                        <div class="comp-val">R$ 3 mil</div>
+                        <div class="comp-sub">Sem dados anteriores</div>
+                    </div>
+                    <div class="comp-card orange">
+                        <div class="comp-title"><i class="fa-solid fa-arrow-trend-down" style="color:var(--warning)"></i> GASTOS</div>
+                        <div class="comp-val">R$ 2 mil</div>
+                        <div class="comp-sub">Sem dados anteriores</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Saúde -->
+            <section class="card">
+                <div class="shimmer-sweep"></div>
+                <div class="card-header">
+                    <h2 class="card-title">Saúde Financeira</h2>
+                    <span class="card-link">Este mês</span>
+                </div>
+                <div class="gauge-wrapper">
+                    <div class="gauge">
+                        <div class="gauge-track"></div>
+                        <div class="gauge-fill"></div>
+                        <div class="gauge-text">24<span>/70</span></div>
+                    </div>
+                    <div class="gauge-legend">
+                        <span><div class="dot" style="background:var(--success)"></div> Realizado</span>
+                        <span><div class="dot" style="background:var(--warning)"></div> Meta</span>
+                    </div>
+                </div>
+                <div class="progress-list">
+                    <div class="prog-item">
+                        <div class="prog-header"><span class="prog-label"><div class="dot" style="background:var(--danger)"></div> Gastos Var.</span><span>R$ 417</span></div>
+                        <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:20%;background:var(--danger)"></div></div>
+                    </div>
+                    <div class="prog-item">
+                        <div class="prog-header"><span class="prog-label"><div class="dot" style="background:var(--warning)"></div> Fixos</span><span>R$ 2 mil</span></div>
+                        <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:60%;background:var(--warning)"></div></div>
+                    </div>
+                    <div class="prog-item">
+                        <div class="prog-header"><span class="prog-label"><div class="dot" style="background:var(--success)"></div> Poupança</span><span>R$ 782</span></div>
+                        <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:35%;background:var(--success)"></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chart -->
+            <section class="card">
+                <div class="shimmer-sweep"></div>
+                <div class="card-header">
+                    <h2 class="card-title">Receita vs Despesa</h2>
+                    <div style="display:flex;gap:10px;font-size:10px;color:var(--text-muted)">
+                        <span style="display:flex;align-items:center;gap:4px"><div class="dot" style="background:var(--success);width:6px;height:6px"></div> Receita</span>
+                        <span style="display:flex;align-items:center;gap:4px"><div class="dot" style="background:var(--danger);width:6px;height:6px"></div> Despesa</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-tooltip">
+                        <div class="chart-tooltip-title">abr.</div>
+                        <div class="chart-tooltip-row"><div class="dot" style="background:var(--success);border-radius:2px"></div> Receita: R$ 3.199,09</div>
+                        <div class="chart-tooltip-row"><div class="dot" style="background:var(--danger);border-radius:2px"></div> Despesa: R$ 2.417,00</div>
+                    </div>
+                    <svg class="chart-svg" viewBox="0 0 300 120">
+                        <line x1="0" y1="10" x2="300" y2="10" stroke="var(--chart-grid)" stroke-width="1"/>
+                        <line x1="0" y1="40" x2="300" y2="40" stroke="var(--chart-grid)" stroke-width="1"/>
+                        <line x1="0" y1="70" x2="300" y2="70" stroke="var(--chart-grid)" stroke-width="1"/>
+                        <line x1="0" y1="100" x2="300" y2="100" stroke="var(--chart-grid)" stroke-width="1"/>
+                        <path d="M 0 100 L 60 100 L 120 100 L 180 100 L 240 100 L 290 10" fill="none" stroke="var(--success)" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M 0 100 L 60 100 L 120 100 L 180 100 L 240 100 L 290 35" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linejoin="round"/>
+                        <circle cx="290" cy="10" r="4" fill="var(--bg-base)" stroke="var(--success)" stroke-width="2"/>
+                        <circle cx="290" cy="35" r="4" fill="var(--bg-base)" stroke="var(--danger)" stroke-width="2"/>
+                        <text x="0" y="115" fill="var(--text-muted)" font-size="8">nov.</text>
+                        <text x="60" y="115" fill="var(--text-muted)" font-size="8">dez.</text>
+                        <text x="120" y="115" fill="var(--text-muted)" font-size="8">jan.</text>
+                        <text x="180" y="115" fill="var(--text-muted)" font-size="8">fev.</text>
+                        <text x="240" y="115" fill="var(--text-muted)" font-size="8">mar.</text>
+                        <text x="290" y="115" fill="var(--text-muted)" font-size="8">abr.</text>
+                    </svg>
+                </div>
+            </section>
+
+            <!-- Donut -->
+            <section class="card">
+                <div class="shimmer-sweep"></div>
+                <div class="card-header">
+                    <h2 class="card-title">Gastos por Categoria</h2>
+                    <a href="#" class="card-link">Extrato →</a>
+                </div>
+                <div class="donut-wrapper">
+                    <div class="donut">
+                        <div class="donut-inner">
+                            <span>Total</span>
+                            <strong>R$ 2 mil</strong>
+                        </div>
+                    </div>
+                    <div class="donut-legend">
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div class="dot" style="background:var(--purple);width:12px;height:12px"></div>
+                            <span style="font-size:13px;font-weight:500">Metas</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <span style="font-size:13px;font-weight:600">R$ 2 mil</span>
+                            <span style="font-size:11px;color:var(--text-muted)">100%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Agenda -->
+            <section class="card" style="margin-bottom:20px">
+                <div class="shimmer-sweep"></div>
+                <div class="card-header">
+                    <h2 class="card-title">Próximos 7 Dias</h2>
+                    <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
+                        <span style="background:var(--input-bg);padding:2px 6px;border-radius:10px;border:1px solid var(--border-color)">0</span> Gerenciar
+                    </div>
+                </div>
+                <div class="empty-schedule">
+                    <p>Nenhum compromisso financeiro<br>agendado para os próximos 7 dias.</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-ghost">Lançamento manual</button>
+                    <button class="btn btn-primary"><i class="fa-solid fa-rotate"></i> Recorrente</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- VIEW: CONTA -->
+    <div id="view-conta" class="view">
+        <header class="header" style="padding-bottom:0">
+            <div class="top-bar">
+                <div class="logo-area"><i class="fa-solid fa-layer-group"></i> Fnx</div>
+                <div class="user-actions">
+                    <i class="fa-solid fa-droplet action-icon theme-toggle"></i>
+                    <div class="avatar-gradiente">A</div>
+                </div>
+            </div>
+            <h1 class="page-title">Movimentações</h1>
+            <p class="page-subtitle">Gerencie suas entradas, saídas e transferências</p>
+        </header>
+        <main class="content">
+            <div class="tabs-container">
+                <button class="tab-btn active"><i class="fa-solid fa-building-columns"></i> Banco</button>
+                <button class="tab-btn"><i class="fa-regular fa-credit-card"></i> Cartão</button>
+            </div>
+            <button class="btn-import"><i class="fa-solid fa-arrow-up-from-bracket"></i> Importar</button>
+
+            <div class="search-bar">
+                <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" class="search-input" placeholder="Buscar movimentações...">
+            </div>
+
+            <div class="tx-table" style="margin-top:12px">
+                <div style="display:grid;grid-template-columns:85px 1fr 80px;gap:10px;padding:16px;border-bottom:1px solid var(--border-color);font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">
+                    <span>Data</span><span>Descrição</span><span>Tipo</span>
+                </div>
+                <div class="tx-row">
+                    <span class="tx-date">15/04/2026</span>
+                    <span class="tx-desc">Pagamento, 15</span>
+                    <span class="tx-type" style="color:var(--text-main)"><i class="fa-solid fa-circle-arrow-up" style="color:var(--success)"></i> Entrada</span>
+                </div>
+                <div class="tx-row">
+                    <span class="tx-date">04/04/2026</span>
+                    <span class="tx-desc">Tráfico</span>
+                    <span class="tx-type" style="color:var(--text-main)"><i class="fa-solid fa-circle-arrow-up" style="color:var(--success)"></i> Entrada</span>
+                </div>
+                <div class="tx-row">
+                    <span class="tx-date">03/04/2026</span>
+                    <span class="tx-desc">Aporte: Maconha</span>
+                    <span class="tx-type" style="color:var(--text-main)"><i class="fa-solid fa-circle-arrow-down" style="color:var(--danger)"></i> Saída</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- NAV INFERIOR -->
+    <nav class="bottom-nav">
+        <a href="#" id="nav-btn-home" class="nav-item active"><i class="fa-solid fa-house"></i></a>
+        <a href="#" id="nav-btn-conta" class="nav-item"><i class="fa-solid fa-wallet"></i></a>
+        <a href="#" class="nav-fab"><i class="fa-solid fa-plus"></i></a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-bullseye"></i></a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-bars"></i></a>
+    </nav>
+
+</div>
+
+<script>
+    const btnHome  = document.getElementById('nav-btn-home');
+    const btnConta = document.getElementById('nav-btn-conta');
+    const viewHome  = document.getElementById('view-home');
+    const viewConta = document.getElementById('view-conta');
+
+    function switchView(viewToShow, btnToActivate) {
+        [viewHome, viewConta].forEach(v => v.classList.remove('active'));
+        [btnHome, btnConta].forEach(b => b.classList.remove('active'));
+        viewToShow.classList.add('active');
+        btnToActivate.classList.add('active');
+        document.querySelector('.app-container').scrollTop = 0;
+    }
+
+    btnHome.addEventListener('click',  e => { e.preventDefault(); switchView(viewHome,  btnHome);  });
+    btnConta.addEventListener('click', e => { e.preventDefault(); switchView(viewConta, btnConta); });
+
+    // Ciclo: ocean-glass → dark → light
+    const themes = ['ocean-glass', null, 'light'];
+    let themeIdx = 0;
+    const root = document.documentElement;
+
+    function cycleTheme() {
+        themeIdx = (themeIdx + 1) % themes.length;
+        const t = themes[themeIdx];
+        t ? root.setAttribute('data-theme', t) : root.removeAttribute('data-theme');
+        updateIcons(t);
+    }
+
+    function updateIcons(t) {
+        document.querySelectorAll('.theme-toggle').forEach(el => {
+            el.classList.remove('fa-moon','fa-sun','fa-droplet');
+            if (t === 'light')        el.classList.add('fa-sun');
+            else if (t === 'ocean-glass') el.classList.add('fa-droplet');
+            else                      el.classList.add('fa-moon');
+        });
+    }
+
+    document.querySelectorAll('.theme-toggle').forEach(el => el.addEventListener('click', cycleTheme));
+    updateIcons('ocean-glass');
+</script>
+</body>
+</html>

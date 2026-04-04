@@ -1,65 +1,319 @@
-/* ── GrokFin Elite v6 · glass.css ───────────────────────────────────────────
-   Componentes glassmorphism: panels, cards, gradients.
-   ──────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   GrokFin Elite v6 · glass.css
+   Cards, painéis, bubbles — todos temáticos
+   ══════════════════════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════════════════════
+   CARD BASE (usa variáveis do tema)
+   ══════════════════════════════════════════════════════════════════ */
+.gf-card,
 .glass-panel {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.035));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--line);
-  box-shadow: 0 18px 45px rgba(0,0,0,.25);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius, 20px);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.32s ease,
+    border-color 0.32s ease,
+    background 0.3s ease;
 }
 
-.overview-card {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+/* ── Linha de luz especular (ocean-glass) ── */
+[data-theme="ocean-glass"] .gf-card::before,
+[data-theme="ocean-glass"] .glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 8%; right: 8%; height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,0.42) 30%,
+    rgba(255,255,255,0.52) 50%,
+    rgba(255,255,255,0.42) 70%,
+    transparent);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
 }
 
-.glass-panel:hover, .overview-card:hover {
-  transform: translateY(-4px) scale(1.015);
-  box-shadow: 0 24px 64px rgba(0,245,255,.10), 0 0 0 1px rgba(0,245,255,.08) inset;
-  border-color: rgba(0,245,255,.25);
+/* ── Noise texture no card (ocean-glass) ── */
+[data-theme="ocean-glass"] .gf-card::after,
+[data-theme="ocean-glass"] .glass-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.022;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  z-index: 0;
 }
 
-.gradient-border {
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(0,245,255,.50), rgba(168,85,247,.45), rgba(0,255,133,.45));
-  box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset;
+/* ── Hover state ── */
+.gf-card:hover,
+.glass-panel:hover,
+.overview-card:hover {
+  transform: translateY(-3px);
 }
 
+[data-theme="ocean-glass"] .gf-card:hover,
+[data-theme="ocean-glass"] .glass-panel:hover {
+  box-shadow:
+    0 32px 64px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(255,255,255,0.07),
+    inset 0 -1px 1px rgba(0,0,0,0.3);
+  border-color: rgba(255,255,255,0.22);
+}
+
+[data-theme="dark"] .gf-card:hover,
+.gf-card:hover {
+  background: var(--bg-card-hover, #1c1c1c);
+  border-color: rgba(255,255,255,0.12);
+}
+
+[data-theme="light"] .gf-card:hover,
+[data-theme="light"] .glass-panel:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  border-color: #c9ccd2;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CARD-HOVER (tabs de transações, metas, etc.)
+   ══════════════════════════════════════════════════════════════════ */
 .card-hover {
-  transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease;
+  transition: transform 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease;
 }
 
 .card-hover:hover {
-  transform: translateY(-6px);
-  border-color: rgba(0,245,255,.18);
-  box-shadow: 0 26px 60px rgba(0,0,0,.32), 0 0 0 1px rgba(0,245,255,.06) inset;
+  transform: translateY(-4px);
+  border-color: var(--border-focus);
 }
 
+[data-theme="ocean-glass"] .card-hover:hover {
+  box-shadow: 0 20px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BENTO CARDS do dashboard (Tailwind inline → temáticos)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Ocean-glass: adiciona glass nas rounded-3xl cards do dashboard */
+[data-theme="ocean-glass"] #tab-0 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-2 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-3 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-4 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-5 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-6 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-7 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-8 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-9 .rounded-3xl,
+[data-theme="ocean-glass"] #tab-10 .rounded-3xl {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+  backdrop-filter: var(--card-blur) !important;
+  -webkit-backdrop-filter: var(--card-blur) !important;
+  box-shadow: var(--card-shadow) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="ocean-glass"] #tab-0 .rounded-3xl::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 8%; right: 8%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38) 50%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Light: cards claros */
+[data-theme="light"] #tab-0 .rounded-3xl,
+[data-theme="light"] #tab-2 .rounded-3xl,
+[data-theme="light"] #tab-3 .rounded-3xl,
+[data-theme="light"] #tab-4 .rounded-3xl,
+[data-theme="light"] #tab-5 .rounded-3xl,
+[data-theme="light"] #tab-6 .rounded-3xl,
+[data-theme="light"] #tab-7 .rounded-3xl,
+[data-theme="light"] #tab-8 .rounded-3xl,
+[data-theme="light"] #tab-9 .rounded-3xl,
+[data-theme="light"] #tab-10 .rounded-3xl {
+  background: #ffffff !important;
+  border-color: #e2e4e8 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+  backdrop-filter: none !important;
+}
+
+/* Dark: flat cards */
+#tab-0 .rounded-3xl,
+#tab-2 .rounded-3xl,
+#tab-3 .rounded-3xl,
+#tab-4 .rounded-3xl,
+#tab-5 .rounded-3xl,
+#tab-6 .rounded-3xl,
+#tab-7 .rounded-3xl,
+#tab-8 .rounded-3xl,
+#tab-9 .rounded-3xl,
+#tab-10 .rounded-3xl {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+  backdrop-filter: var(--card-blur) !important;
+  -webkit-backdrop-filter: var(--card-blur) !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   INNER CARDS (rounded-2xl dentro das cards principais)
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .rounded-2xl.border {
+  background-color: #f8f9fa !important;
+  border-color: #e2e4e8 !important;
+}
+
+[data-theme="light"] [class*="bg-emerald-400\/5"],
+[data-theme="light"] [class*="bg-emerald-400\/8"] {
+  background-color: rgba(22,163,74,0.08) !important;
+}
+[data-theme="light"] [class*="bg-rose-400\/5"],
+[data-theme="light"] [class*="bg-rose-400\/8"] {
+  background-color: rgba(220,38,38,0.08) !important;
+}
+
+[data-theme="light"] [class*="border-emerald-400\/15"],
+[data-theme="light"] [class*="border-emerald-400\/25"] {
+  border-color: rgba(22,163,74,0.25) !important;
+}
+[data-theme="light"] [class*="border-rose-400\/15"],
+[data-theme="light"] [class*="border-rose-400\/25"] {
+  border-color: rgba(220,38,38,0.25) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   HEADER STICKY
+   ══════════════════════════════════════════════════════════════════ */
+header .glass-panel {
+  background: var(--nav-bg) !important;
+  border-color: var(--nav-border) !important;
+}
+
+[data-theme="ocean-glass"] header .glass-panel {
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+}
+
+[data-theme="light"] header .glass-panel {
+  background: #ffffff !important;
+  border-color: #e2e4e8 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   GRADIENT BORDER
+   ══════════════════════════════════════════════════════════════════ */
+.gradient-border {
+  padding: 1px;
+  background: linear-gradient(135deg, var(--success), var(--purple), var(--warning));
+  border-radius: var(--card-radius, 20px);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   NEON TITLE
+   ══════════════════════════════════════════════════════════════════ */
 .neon-title {
+  color: var(--text-main);
+}
+[data-theme="ocean-glass"] .neon-title {
   color: #e6fdff;
-  text-shadow: 0 0 32px rgba(0,245,255,.20);
+  text-shadow: 0 0 32px rgba(99,255,171,0.20);
 }
 
-/* ── Message bubbles ── */
+/* ══════════════════════════════════════════════════════════════════
+   MESSAGE BUBBLES (Chat)
+   ══════════════════════════════════════════════════════════════════ */
 .message-bubble-user {
-  background: linear-gradient(135deg, #00f5ff 0%, #36f1c8 100%);
+  background: var(--accent-primary);
+  color: var(--accent-on-primary);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+[data-theme="ocean-glass"] .message-bubble-user {
+  background: linear-gradient(135deg, #63ffab 0%, #36f1c8 100%);
   color: #041219;
-  box-shadow: 0 12px 30px rgba(0,255,133,.16);
+  box-shadow: 0 12px 30px rgba(99,255,171,0.16);
 }
 
 .message-bubble-ai {
-  background: rgba(255,255,255,.065);
-  border: 1px solid rgba(255,255,255,.08);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
 }
 
-/* ── Goal card overlay ── */
+[data-theme="ocean-glass"] .message-bubble-ai {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   GOAL CARD OVERLAY
+   ══════════════════════════════════════════════════════════════════ */
 .goal-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(6,9,17,.15) 0%, rgba(6,9,17,.25) 30%, rgba(6,9,17,.90) 100%);
+  background: linear-gradient(180deg,
+    rgba(0,0,0,0.10) 0%,
+    rgba(0,0,0,0.20) 30%,
+    rgba(0,0,0,0.85) 100%);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   AI INSIGHT PANEL
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] #tab-0 .rounded-2xl[style*="backdrop-filter:blur(8px)"] {
+  backdrop-filter: none !important;
+  background: #f8f9fa !important;
+  border-color: #e2e4e8 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MAIS SHEET (bottom drawer)
+   ══════════════════════════════════════════════════════════════════ */
+#mais-sheet-panel {
+  background: var(--nav-bg);
+  border-top: 1px solid var(--nav-border);
+}
+
+[data-theme="ocean-glass"] #mais-sheet-panel {
+  backdrop-filter: blur(36px) saturate(190%);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
+}
+
+[data-theme="light"] #mais-sheet-panel {
+  background: #ffffff;
+  border-color: #e2e4e8;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MAIS SHEET — botão de aba
+   ══════════════════════════════════════════════════════════════════ */
+.mais-tab-btn {
+  cursor: pointer;
+  border-color: var(--border-color) !important;
+  background: var(--bg-input) !important;
+  color: var(--text-muted) !important;
+}
+
+.mais-tab-btn:hover {
+  border-color: var(--border-focus) !important;
+  background: var(--bg-card-hover, rgba(255,255,255,0.08)) !important;
+  color: var(--text-main) !important;
+}
+
+.mais-tab-btn[data-tab].active {
+  border-color: var(--success-border) !important;
+  background: var(--success-bg) !important;
+  color: var(--success) !important;
+  box-shadow: 0 0 0 1px var(--success-bg) inset !important;
 }
