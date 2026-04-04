@@ -504,17 +504,39 @@ export function processRecurrences(state) {
       const txMonth = String(now.getMonth() + 1).padStart(2, '0');
       const txDate  = `${txDay}/${txMonth}/${now.getFullYear()}`;
       const val     = exp.isIncome ? Math.abs(exp.value) : -Math.abs(exp.value);
+      const txId    = uid('tx');
+      const isCardRecurring = !!(exp.cardId && !exp.isIncome);
 
       state.transactions.push({
-        id: uid('tx'),
+        id: txId,
         desc: exp.name,
         value: val,
         cat: exp.cat || exp.category || (exp.isIncome ? 'Receita' : 'Rotina'),
         date: txDate,
-        payment: 'conta',
-        status: 'efetivado', // recorrências são lançadas como efetivadas
+        payment: isCardRecurring ? 'cartao_credito' : 'conta',
+        cardId: isCardRecurring ? exp.cardId : undefined,
+        accountId: isCardRecurring ? null : undefined,
+        status: 'efetivado',
         recurringTemplate: true
       });
+
+      // Se é assinatura no cartão, lança também na fatura do cartão
+      if (isCardRecurring) {
+        const card = (state.cards || []).find(c => c.id === exp.cardId);
+        if (card) {
+          if (!card.invoices) card.invoices = [];
+          card.invoices.unshift({
+            id: uid('ctx'),
+            txRefId: txId,
+            desc: exp.name,
+            cat: exp.cat || 'Assinaturas',
+            value: Math.abs(val),
+            date: txDate
+          });
+          card.used = Number((card.used + Math.abs(val)).toFixed(2));
+        }
+      }
+
       changesMade = true;
     }
   });

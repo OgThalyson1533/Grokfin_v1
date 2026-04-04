@@ -203,21 +203,33 @@ function _updateFormContext() {
   const cardSection = document.getElementById('card-section');
   const recorrenteSection = document.getElementById('recorrente-section');
 
-  // Parcelamento: só aparece para cartão de crédito + saída
-  if (cardSection) cardSection.classList.toggle('hidden', !(isCard && isSaida));
+  const isRecurringActive = document.getElementById('toggle-recorrente-wrap')?.classList.contains('active');
 
-  // Recorrente: aparece para qualquer conta bancária (entrada ou saída)
-  if (recorrenteSection) recorrenteSection.classList.toggle('hidden', !((!isCard) && !!contaId));
+  // Parcelamento: cartão + saída + NÃO recorrente (assinatura não é parcelamento)
+  if (cardSection) cardSection.classList.toggle('hidden', !(isCard && isSaida && !isRecurringActive));
 
-  // Ajusta label e texto da notificação conforme tipo
+  // Recorrente: qualquer conta ou cartão selecionado (entrada ou saída)
+  if (recorrenteSection) recorrenteSection.classList.toggle('hidden', !contaId);
+
+  // Ajusta label conforme tipo e origem
   const toggleLabel = recorrenteSection?.querySelector('.toggle-label');
   const infoText = document.getElementById('recurring-info-text-main');
-  if (toggleLabel) toggleLabel.textContent = isSaida ? 'Despesa recorrente' : 'Receita recorrente';
-  if (infoText) infoText.textContent = isSaida
-    ? 'Esta despesa vira um compromisso mensal. Todo mês, no dia'
-    : 'Esta receita vira um lançamento mensal automático. Todo mês, no dia';
+  const labelText = isCard
+    ? (isSaida ? 'Assinatura recorrente' : 'Crédito recorrente no cartão')
+    : (isSaida ? 'Despesa recorrente' : 'Receita recorrente');
+  if (toggleLabel) toggleLabel.textContent = labelText;
+  if (infoText) infoText.textContent = isCard
+    ? 'Esta cobrança será lançada todo mês na fatura do cartão. Todo mês, no dia'
+    : (isSaida
+        ? 'Esta despesa vira um compromisso mensal. Todo mês, no dia'
+        : 'Esta receita vira um lançamento mensal automático. Todo mês, no dia');
 
-  // Se mudou de cartão → conta, reseta parcelas para 1
+  // Se recorrente ativo no cartão, esconde parcelamento (são mutuamente exclusivos)
+  if (isRecurringActive && isCard) {
+    cardSection?.classList.add('hidden');
+  }
+
+  // Se não é cartão, reseta parcelas para 1 (evitar lixo no estado)
   if (!isCard) {
     const pill1 = document.querySelector('.install-pill[data-n="1"]');
     document.querySelectorAll('.install-pill').forEach(p => p.classList.remove('active'));
@@ -225,17 +237,6 @@ function _updateFormContext() {
     const input = document.getElementById('input-parcelas');
     if (input) input.value = '1';
     document.getElementById('installments-preview')?.classList.add('hidden');
-  }
-
-  // Se conta virou cartão, reseta o toggle recorrente (cartão não tem recorrência)
-  if (isCard) {
-    const wrap = document.getElementById('toggle-recorrente-wrap');
-    if (wrap?.classList.contains('active')) {
-      wrap.classList.remove('active');
-      const chk = document.getElementById('tx-modal-recurring');
-      if (chk) chk.checked = false;
-      document.getElementById('recurring-info-box')?.classList.add('hidden');
-    }
   }
 }
 
@@ -1318,7 +1319,16 @@ export function saveTxModal() {
       const alreadyFixed = state.fixedExpenses.some(f => f.name.toLowerCase() === desc.toLowerCase());
       if (!alreadyFixed) {
         const txDay = parseDateBR(dateStr)?.getDate() || 1;
-        state.fixedExpenses.push({ id: uid('fx'), name: desc, cat, value: rawValue, day: txDay, active: true, isIncome: !!isIncome });
+        state.fixedExpenses.push({
+          id: uid('fx'),
+          name: desc,
+          cat,
+          value: rawValue,
+          day: txDay,
+          active: true,
+          isIncome: !!isIncome,
+          cardId: isCardSelected ? cardId : undefined  // preserva vínculo com cartão
+        });
         saveState();
       }
     }
@@ -1538,19 +1548,25 @@ export function bindTxEvents() {
   el('toggle-pagamento')?.addEventListener('click', function() { this.classList.toggle('active'); const chk = el('tx-modal-realized'); if (chk) chk.checked = this.classList.contains('active'); });
   el('toggle-recorrente-wrap')?.addEventListener('click', function() {
     this.classList.toggle('active');
+    const isActive = this.classList.contains('active');
     const chk = el('tx-modal-recurring');
-    if (chk) chk.checked = this.classList.contains('active');
+    if (chk) chk.checked = isActive;
+
     const box = el('recurring-info-box');
-    if (!box) return;
-    if (this.classList.contains('active')) {
-      const dateVal = el('input-data')?.value || '';
-      const day = dateVal.split('/')[0]?.replace(/\D/g, '') || '—';
-      const dayLabel = el('recurring-day-label');
-      if (dayLabel) dayLabel.textContent = day !== '—' ? `${day} de cada mês` : '—';
-      box.classList.remove('hidden');
-    } else {
-      box.classList.add('hidden');
+    if (box) {
+      if (isActive) {
+        const dateVal = el('input-data')?.value || '';
+        const day = dateVal.split('/')[0]?.replace(/\D/g, '') || '—';
+        const dayLabel = el('recurring-day-label');
+        if (dayLabel) dayLabel.textContent = day !== '—' ? `${day} de cada mês` : '—';
+        box.classList.remove('hidden');
+      } else {
+        box.classList.add('hidden');
+      }
     }
+
+    // Ao alternar recorrente no cartão, mostra/esconde parcelamento
+    _updateFormContext();
   });
 
   // Preview de parcelas — atualiza ao digitar parcelas ou valor
