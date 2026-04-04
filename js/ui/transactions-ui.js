@@ -197,7 +197,7 @@ function _syncTypeTabs(type) {
 function _updateFormContext() {
   const tipo = document.getElementById('tipo-transacao')?.value || 'entrada';
   const contaId = document.getElementById('conta-input')?.value || '';
-  const isCard = !!(contaId && window._state?.cards?.some(c => c.id === contaId));
+  const isCard = !!(contaId && state.cards?.some(c => c.id === contaId));
   const isSaida = tipo === 'saida';
 
   const cardSection = document.getElementById('card-section');
@@ -227,8 +227,8 @@ function _updateFormContext() {
     document.getElementById('installments-preview')?.classList.add('hidden');
   }
 
-  // Se mudou para entrada, esconde e reseta recorrente
-  if (!isSaida) {
+  // Se conta virou cartão, reseta o toggle recorrente (cartão não tem recorrência)
+  if (isCard) {
     const wrap = document.getElementById('toggle-recorrente-wrap');
     if (wrap?.classList.contains('active')) {
       wrap.classList.remove('active');
@@ -1002,6 +1002,9 @@ export function openEditTx(id) {
   const typeInput = document.getElementById('tipo-transacao');
   if (typeInput) typeInput.value = typeValue;
 
+  // Atualiza seções contextuais com conta + tipo já definidos
+  _updateFormContext();
+
   // Sincroniza abas visuais
   const btnEntrada = document.getElementById('btn-entrada');
   const btnSaida = document.getElementById('btn-saida');
@@ -1458,9 +1461,6 @@ export function bindTxEvents() {
   // --- Funcionalidades do Modal "Nova Transação" ---
   if (el('conta-select')) window.txAccountInstance = new ModernFloxSelect(el('conta-select'));
   if (el('categoria-select')) window.txCategoryInstance = new ModernFloxSelect(el('categoria-select'));
-
-  // Expõe state para _updateFormContext (leitura de cards)
-  window._state = state;
 
   // Hook onSelect da conta → atualiza seções contextuais
   if (window.txAccountInstance) {
