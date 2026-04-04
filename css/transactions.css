@@ -18,7 +18,7 @@
 
 [data-theme="ocean-glass"] {
   --modal-bg:      rgba(6,13,20,0.95);
-  --modal-surface: rgba(255,255,255,0.05);
+  --modal-surface: rgba(6,14,26,0.93);
   --modal-input:   rgba(255,255,255,0.06);
   --modal-border:  rgba(255,255,255,0.13);
   --modal-shadow:  0 28px 56px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04);
@@ -44,6 +44,13 @@
 [data-theme="light"] [id*="modal"][class*="fixed"],
 [data-theme="light"] [id*="overlay"][class*="fixed"] {
   background: rgba(0,0,0,0.35) !important;
+}
+
+/* Backdrop-filter para os modais inline (bank, card, goal, pay-invoice) */
+[data-theme="ocean-glass"] [id$="-modal-overlay"] > div,
+[data-theme="ocean-glass"] [id$="-modal"] > div {
+  backdrop-filter: blur(36px) saturate(190%);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -689,6 +696,12 @@ span.flatpickr-weekday {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px var(--success-bg);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   DATE INPUT — color-scheme per theme
+   ══════════════════════════════════════════════════════════════════ */
+.date-input-themed               { color-scheme: dark; }
+[data-theme="light"] .date-input-themed { color-scheme: light; }
 
 /* ══════════════════════════════════════════════════════════════════
    MEDIA QUERIES MOBILE

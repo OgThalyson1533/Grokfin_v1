@@ -625,11 +625,84 @@ body.hide-values .sensitive-value {
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   BOTÃO NOVA TRANSAÇÃO
+   ══════════════════════════════════════════════════════════════════ */
+.btn-nova-transacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  background: var(--accent-primary);
+  color: var(--accent-on-primary);
+  white-space: nowrap;
+}
+.btn-nova-transacao:hover { opacity: 0.88; transform: scale(1.02); }
+
+[data-theme="ocean-glass"] .btn-nova-transacao {
+  background: linear-gradient(135deg, #63ffab, #36f1c8);
+  color: #060d14;
+  box-shadow: 0 4px 16px rgba(99,255,171,0.22);
+}
+
+/* ══════════════════════════════════════════════════════════════════
    MISC TAILWIND overrides para light
    ══════════════════════════════════════════════════════════════════ */
-[data-theme="light"] .text-cyan-200\/55,
-[data-theme="light"] [class*="text-cyan-200"] { color: #0e7490 !important; }
+[data-theme="light"] [class*="text-cyan-"] { color: #0e7490 !important; }
 [data-theme="light"] [class*="text-emerald-400\/50"] { color: #16a34a !important; opacity: 0.6; }
 
-/* Remove glow boxes in light/dark */
+/* bg-emerald e bg-violet/cyan dentro das overview cards (light) */
+[data-theme="light"] [class*="bg-emerald-400\/1"],
+[data-theme="light"] [class*="bg-cyan-400\/1"],
+[data-theme="light"] [class*="bg-violet-400\/1"] { background-color: rgba(0,0,0,0.04) !important; }
+
+[data-theme="light"] [class*="border-emerald-400\/2"],
+[data-theme="light"] [class*="border-cyan-400\/2"],
+[data-theme="light"] [class*="border-violet-400\/2"] { border-color: rgba(0,0,0,0.10) !important; }
+
+/* Remove glow boxes em light/dark */
 :not([data-theme="ocean-glass"]) #app-glow-container > div { opacity: 0; }
+
+/* ══════════════════════════════════════════════════════════════════
+   CASHFLOW CARDS (tab-7) — text muted fix
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] #tab-7 .glass-panel p[class*="text-white"],
+[data-theme="light"] #tab-7 .glass-panel p[class*="text-cyan-"],
+[data-theme="light"] #tab-7 .glass-panel p[class*="text-rose-"],
+[data-theme="light"] #tab-7 .glass-panel p[class*="text-emerald-"] {
+  /* Preserve semantic colors — already overridden by base.css broad rules */
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PILL — light mode icon colors
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] #current-view-chip i { color: #16a34a !important; }
+
+/* Sidebar label "Flox" */
+[data-theme="light"] .nav-rail p[class*="text-cyan-"] { color: #6b7280 !important; }
+
+/* Sidebar score */
+[data-theme="light"] #sidebar-score { color: #16a34a !important; }
+[data-theme="dark"]  #sidebar-score { color: var(--text-main) !important; }
+
+/* ══════════════════════════════════════════════════════════════════
+   TX FILTER BANK ACTIVE (inline bg hardcoded no HTML #2E5C41)
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] #tx-filter-bank[class*="bg-\[#2E5C41\]"],
+[data-theme="dark"]  #tx-filter-bank {
+  background: var(--success-bg) !important;
+  border-color: var(--success-border) !important;
+  color: var(--success) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MODAIS DE BANCO/CARTÃO — select options
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] #bank-modal-type option,
+[data-theme="light"] #card-modal-flag option,
+[data-theme="light"] #pay-invoice-account option { background: #ffffff; color: #111111; }

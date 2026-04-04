@@ -489,19 +489,47 @@ body::after { display: none; }
   color: #ffffff !important;
 }
 
+/* Dark mode: all save/confirm → green gradient */
 [data-theme="dark"] #goal-modal-save,
 [data-theme="dark"] #card-modal-save,
-[data-theme="dark"] #pay-invoice-confirm {
+[data-theme="dark"] #bank-modal-save,
+[data-theme="dark"] #card-tx-save,
+[data-theme="dark"] #inv-modal-save,
+[data-theme="dark"] #fixed-modal-save,
+[data-theme="dark"] #budget-modal-save,
+[data-theme="dark"] #ai-settings-save,
+[data-theme="dark"] #sim-calc-btn,
+[data-theme="dark"] #pay-invoice-confirm,
+[data-theme="dark"] #profile-save-btn {
   background: linear-gradient(135deg, #63ffab, #36f1c8) !important;
   color: #0e0e0e !important;
 }
 
+/* Ocean-glass: same green gradient */
+[data-theme="ocean-glass"] #goal-modal-save,
+[data-theme="ocean-glass"] #card-modal-save,
+[data-theme="ocean-glass"] #bank-modal-save,
+[data-theme="ocean-glass"] #card-tx-save,
+[data-theme="ocean-glass"] #inv-modal-save,
+[data-theme="ocean-glass"] #fixed-modal-save,
+[data-theme="ocean-glass"] #budget-modal-save,
+[data-theme="ocean-glass"] #ai-settings-save,
+[data-theme="ocean-glass"] #sim-calc-btn,
+[data-theme="ocean-glass"] #pay-invoice-confirm,
+[data-theme="ocean-glass"] #profile-save-btn {
+  background: linear-gradient(135deg, #63ffab, #36f1c8) !important;
+  color: #060d14 !important;
+  box-shadow: 0 4px 18px rgba(99,255,171,0.22) !important;
+}
+
 /* Botão Nova Meta ── */
-[data-theme="light"] #goal-add-btn {
+[data-theme="light"] #goal-add-btn,
+[data-theme="light"] #profile-save-btn {
   background: #111111 !important;
   color: #ffffff !important;
 }
-[data-theme="dark"] #goal-add-btn {
+[data-theme="dark"] #goal-add-btn,
+[data-theme="ocean-glass"] #goal-add-btn {
   background: linear-gradient(135deg, #63ffab, #36f1c8) !important;
   color: #0e0e0e !important;
 }

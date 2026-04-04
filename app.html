@@ -671,7 +671,7 @@
 
 <!-- Toggles Banco / Cartão -->
 <div class="flex items-center gap-2 mt-2">
-  <button id="tx-filter-bank" onclick="if(window.toggleTxFilterOrigin) window.toggleTxFilterOrigin('bank')" class="flex items-center gap-2 rounded bg-[#2E5C41] border border-transparent px-4 py-2.5 text-sm font-semibold text-white transition-colors">
+  <button id="tx-filter-bank" onclick="if(window.toggleTxFilterOrigin) window.toggleTxFilterOrigin('bank')" class="flex items-center gap-2 rounded border px-4 py-2.5 text-sm font-semibold transition-colors" style="background:var(--success-bg);border-color:var(--success-border);color:var(--success)">
     <i class="fa-solid fa-building-columns"></i> Banco
   </button>
   <button id="tx-filter-card" onclick="if(window.toggleTxFilterOrigin) window.toggleTxFilterOrigin('card')" class="flex items-center gap-2 rounded border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/50 hover:bg-white/5 transition-colors">
@@ -784,7 +784,7 @@
 </div>
 
 <div class="flex flex-col justify-end">
-  <button id="goal-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+  <button id="goal-add-btn" class="btn-nova-transacao">
     <i class="fa-solid fa-plus"></i> Nova Meta
   </button>
 </div>
@@ -911,8 +911,8 @@
                   </label>
                 </div>
 
-                <button id="profile-save-btn" class="w-full mt-4 rounded-xl relative overflow-hidden text-black py-4 font-bold shadow-[0_0_20px_rgba(0,255,133,.25)] hover:shadow-[0_0_30px_rgba(0,255,133,.45)] transition-all active:scale-[0.98]" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
-                   <i class="fa-solid fa-cloud-arrow-up mr-2 text-black/60"></i>Salvar e Sincronizar
+                <button id="profile-save-btn" class="w-full mt-4 rounded-xl relative overflow-hidden py-4 font-bold transition-all active:scale-[0.98]" style="background:var(--accent-primary);color:var(--accent-on-primary)">
+                   <i class="fa-solid fa-cloud-arrow-up mr-2 opacity-60"></i>Salvar e Sincronizar
                 </button>
               </div>
             </div>
@@ -929,11 +929,11 @@
             </div>
             <div class="flex flex-wrap gap-3">
               <button id="bank-account-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black shadow-lg shadow-cyan-500/10 transition-all active:scale-95 hover:shadow-[0_0_20px_rgba(0,245,255,0.4)]"
-                      style="background:linear-gradient(135deg,#e0f2fe,#bae6fd)">
+                      style="background:var(--accent-primary);color:var(--accent-on-primary)">
                 <i class="fa-solid fa-building-columns"></i> Nova Conta
               </button>
               <button id="card-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black shadow-lg shadow-emerald-500/10 transition-all active:scale-95 hover:shadow-[0_0_20px_rgba(0,255,133,0.4)]"
-                      style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+                      style="background:var(--accent-primary);color:var(--accent-on-primary)">
                 <i class="fa-solid fa-credit-card"></i> Novo Cartão
               </button>
             </div>
@@ -976,7 +976,7 @@
                 <button id="card-tx-add-btn" class="hidden text-xs font-bold text-white/70 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
                   <i class="fa-solid fa-plus mr-1"></i> Lançamento
                 </button>
-                <button id="card-pay-btn" class="hidden text-xs font-bold text-black px-3 py-1.5 rounded-lg transition-all hover:opacity-90 active:scale-95" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+                <button id="card-pay-btn" class="hidden text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-90 active:scale-95" style="background:var(--accent-primary);color:var(--accent-on-primary)">
                   <i class="fa-solid fa-money-bill-wave mr-1"></i> Pagar Fatura
                 </button>
                 <button id="card-invoice-close" class="text-xs font-bold text-white/50 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
@@ -1067,7 +1067,7 @@
               <p class="mt-3 max-w-2xl text-white/55">Rentabilidade real, alocação por classe, comparativo com CDI/IPCA e recomendações de rebalanceamento.</p>
             </div>
             <button id="inv-add-btn" class="flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-black"
-                    style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+                    style="background:var(--accent-primary);color:var(--accent-on-primary)">
               <i class="fa-solid fa-plus"></i> Novo ativo
             </button>
           </div>
@@ -1124,7 +1124,7 @@
                 <input id="sim-years" type="text" value="10" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/50"/>
               </div>
               <div class="flex flex-col gap-1 justify-end">
-                <button id="sim-calc-btn" class="rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Calcular</button>
+                <button id="sim-calc-btn" class="rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:var(--accent-primary);color:var(--accent-on-primary)">Calcular</button>
               </div>
             </div>
             <div class="grid grid-cols-3 gap-3 mb-5" id="sim-results" style="display:none">
@@ -1631,7 +1631,7 @@
       <button id="mais-btn" class="bottom-nav-button" onclick="openMaisSheet()">
         <span class="bottom-nav-icon" style="position:relative">
           <i class="fa-solid fa-ellipsis"></i>
-          <span id="mais-active-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-[#0a0d16]" style="background:#00f5ff"></span>
+          <span id="mais-active-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-[#0a0d16]" style="background:var(--success)"></span>
         </span>
       </button>
     </div>
@@ -1840,7 +1840,7 @@
   <div id="tx-delete-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.72);backdrop-filter:blur(8px)">
     <div class="w-full max-w-md rounded-2xl border border-white/10 p-7 shadow-2xl"
-         style="background:#1a1d24;box-shadow:0 32px 64px rgba(0,0,0,.6)">
+         style="background:var(--modal-surface);box-shadow:var(--modal-shadow)">
       <h3 class="text-xl font-bold text-white mb-2">Confirmar Exclusão</h3>
       <p class="text-sm text-white/55 mb-5">Tem certeza que deseja excluir permanentemente esta transação?</p>
       <p class="text-sm font-medium mb-7 leading-snug" style="color:#e84e58">
@@ -1864,7 +1864,7 @@
   <div id="tx-bulk-delete-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.72);backdrop-filter:blur(8px)">
     <div class="w-full max-w-md rounded-2xl border border-white/10 p-7 shadow-2xl"
-         style="background:#1a1d24;box-shadow:0 32px 64px rgba(0,0,0,.6)">
+         style="background:var(--modal-surface);box-shadow:var(--modal-shadow)">
       <h3 class="text-xl font-bold text-white mb-2">Confirmar Exclusão em Massa</h3>
       <p class="text-sm text-white/55 mb-5" id="bulk-delete-desc">Tem certeza que deseja excluir permanentemente as movimentações selecionadas?</p>
       <p class="text-sm font-medium mb-7 leading-snug" style="color:#e84e58">
@@ -1902,7 +1902,7 @@
       <div class="px-6 py-5 max-h-[60vh] overflow-y-auto space-y-3" id="budget-rows"></div>
       <div class="px-6 pb-6 pt-3 border-t border-white/8 flex gap-3">
         <button id="budget-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="budget-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar orçamentos</button>
+        <button id="budget-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90" style="background:var(--accent-primary);color:var(--accent-on-primary)">Salvar orçamentos</button>
       </div>
     </div>
   </div>
@@ -1911,7 +1911,7 @@
   <div id="goal-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.75);backdrop-filter:blur(8px)">
     <div class="w-full max-w-lg rounded-[28px] border border-white/10 overflow-hidden shadow-2xl"
-         style="background:linear-gradient(180deg,rgba(13,18,32,.99),rgba(8,11,22,.99))">
+         style="background:var(--modal-surface)">
 
       <!-- Preview de imagem do tema -->
       <div id="goal-modal-img-preview" class="relative h-36 bg-cover bg-center transition-all duration-500"
@@ -1955,7 +1955,7 @@
             <label class="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Prazo limite</label>
             <input id="goal-modal-deadline" type="date"
               class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400/40 transition-colors"
-              style="color-scheme:dark"/>
+              class="date-input-themed"/>
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Tema visual</label>
@@ -1986,8 +1986,8 @@
           Cancelar
         </button>
         <button id="goal-modal-save"
-          class="flex-1 rounded-2xl px-4 py-3.5 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-95"
-          style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+          class="flex-1 rounded-2xl px-4 py-3.5 text-sm font-bold transition-transform hover:scale-[1.02] active:scale-95"
+          style="background:var(--accent-primary);color:var(--accent-on-primary)">
           <i class="fa-solid fa-floppy-disk mr-2"></i>Salvar meta
         </button>
       </div>
@@ -1998,7 +1998,7 @@
   <div id="goal-delete-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.75);backdrop-filter:blur(8px)">
     <div class="w-full max-w-sm rounded-[28px] border border-white/10 p-7 text-center shadow-2xl"
-         style="background:linear-gradient(180deg,rgba(13,18,32,.99),rgba(8,11,22,.99))">
+         style="background:var(--modal-surface)">
       <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/12 border border-rose-400/20">
         <i class="fa-solid fa-trash-can text-rose-400 text-2xl"></i>
       </div>
@@ -2061,7 +2061,7 @@
       </div>
       <div class="px-6 pb-6 flex gap-3">
         <button id="ai-settings-clear" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Remover chave</button>
-        <button id="ai-settings-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar e ativar</button>
+        <button id="ai-settings-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90" style="background:var(--accent-primary);color:var(--accent-on-primary)">Salvar e ativar</button>
       </div>
     </div>
   </div>
@@ -2070,7 +2070,7 @@
   <div id="bank-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
     <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
-         style="background:#0f1829">
+         style="background:var(--modal-surface)">
       <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
         <h3 class="text-lg font-bold text-white" id="bank-modal-title">Nova Conta</h3>
         <button id="bank-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -2084,7 +2084,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1">
             <label class="text-xs font-bold uppercase tracking-widest text-white/40">Tipo de Conta</label>
-            <select id="bank-modal-type" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+            <select id="bank-modal-type" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:var(--modal-input)">
               <option value="corrente">Conta Corrente</option>
               <option value="poupanca">Poupança</option>
               <option value="investimento">Conta Investimento</option>
@@ -2106,7 +2106,7 @@
       </div>
       <div class="px-6 pb-6 flex gap-3">
         <button id="bank-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="bank-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd)">Salvar</button>
+        <button id="bank-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold" style="background:var(--accent-primary);color:var(--accent-on-primary)">Salvar</button>
       </div>
     </div>
   </div>
@@ -2115,7 +2115,7 @@
   <div id="card-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
     <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
-         style="background:#0f1829">
+         style="background:var(--modal-surface)">
       <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
         <h3 class="text-lg font-bold text-white" id="card-modal-title">Novo Cartão</h3>
         <button id="card-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -2148,7 +2148,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div class="flex flex-col gap-1">
               <label class="text-xs font-bold uppercase tracking-widest text-white/40">Bandeira</label>
-              <select id="card-modal-flag" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+              <select id="card-modal-flag" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:var(--modal-input)">
                 <option value="visa">Visa</option>
                 <option value="mastercard">Mastercard</option>
                 <option value="elo">Elo</option>
@@ -2180,7 +2180,7 @@
       </div>
       <div class="px-6 pb-6 flex gap-3">
         <button id="card-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="card-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+        <button id="card-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold" style="background:var(--accent-primary);color:var(--accent-on-primary)">Salvar</button>
       </div>
     </div>
   </div>
@@ -2189,7 +2189,7 @@
   <div id="card-tx-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
     <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
-         style="background:#0f1829">
+         style="background:var(--modal-surface)">
       <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
         <h3 class="text-lg font-bold text-white">Lançar no Cartão</h3>
         <button id="card-tx-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -2201,7 +2201,7 @@
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-xs font-bold uppercase tracking-widest text-white/40">Categoria</label>
-          <select id="card-tx-cat" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+          <select id="card-tx-cat" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:var(--modal-input)">
             <option>Alimentação</option><option>Assinaturas</option><option>Lazer</option>
             <option>Moradia</option><option>Saúde</option><option>Transporte</option><option>Rotina</option>
           </select>
@@ -2213,7 +2213,7 @@
           </div>
           <div class="flex flex-col gap-1">
             <label class="text-xs font-bold uppercase tracking-widest text-white/40">Parcelas</label>
-            <select id="card-tx-installments" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+            <select id="card-tx-installments" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:var(--modal-input)">
               <option value="1">À vista</option><option value="2">2x</option><option value="3">3x</option>
               <option value="4">4x</option><option value="6">6x</option><option value="10">10x</option>
               <option value="12">12x</option>
@@ -2231,7 +2231,7 @@
       </div>
       <div class="px-6 pb-6 flex gap-3">
         <button id="card-tx-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="card-tx-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Lançar</button>
+        <button id="card-tx-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:var(--accent-primary);color:var(--accent-on-primary)">Lançar</button>
       </div>
     </div>
   </div>
@@ -2240,7 +2240,7 @@
   <div id="inv-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
     <div class="w-full max-w-md rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
-         style="background:#0f1829">
+         style="background:var(--modal-surface)">
       <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
         <h3 class="text-lg font-bold text-white" id="inv-modal-title">Novo Ativo</h3>
         <button id="inv-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -2253,7 +2253,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1">
             <label class="text-xs font-bold uppercase tracking-widest text-white/40">Tipo</label>
-            <select id="inv-modal-type" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+            <select id="inv-modal-type" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:var(--modal-input)">
               <option value="renda_fixa">Renda Fixa</option>
               <option value="renda_variavel">Renda Variável</option>
               <option value="cripto">Cripto</option>
@@ -2262,7 +2262,7 @@
           </div>
           <div class="flex flex-col gap-1">
             <label class="text-xs font-bold uppercase tracking-widest text-white/40">Subtipo</label>
-            <select id="inv-modal-subtype" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:#1a2436">
+            <select id="inv-modal-subtype" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" style="background:var(--modal-input)">
               <option value="tesouro">Tesouro Direto</option>
               <option value="cdb">CDB</option>
               <option value="lci_lca">LCI/LCA</option>
@@ -2288,7 +2288,7 @@
       </div>
       <div class="px-6 pb-6 flex gap-3">
         <button id="inv-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="inv-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+        <button id="inv-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:var(--accent-primary);color:var(--accent-on-primary)">Salvar</button>
       </div>
     </div>
   </div>
@@ -2297,7 +2297,7 @@
   <div id="fixed-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.72);backdrop-filter:blur(6px)">
     <div class="w-full max-w-lg rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
-         style="background:#0f1829">
+         style="background:var(--modal-surface)">
       <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
         <div>
           <h3 class="text-lg font-bold text-white">Compromissos Recorrentes</h3>
@@ -2320,7 +2320,7 @@
       </div>
       <div class="px-6 pb-6 pt-2 flex gap-3">
         <button id="fixed-modal-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors">Cancelar</button>
-        <button id="fixed-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">Salvar</button>
+        <button id="fixed-modal-save" class="flex-1 rounded-2xl px-4 py-3 text-sm font-bold text-black" style="background:var(--accent-primary);color:var(--accent-on-primary)">Salvar</button>
       </div>
     </div>
   </div>
@@ -2411,7 +2411,7 @@
   <div id="pay-invoice-modal-overlay" class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4"
        style="background:rgba(0,0,0,.78);backdrop-filter:blur(8px)">
     <div class="w-full max-w-sm rounded-[24px] border border-white/10 overflow-hidden shadow-2xl"
-         style="background:#0f1829">
+         style="background:var(--modal-surface)">
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
         <div>
@@ -2445,7 +2445,7 @@
         <button id="pay-invoice-cancel" class="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white/70 hover:bg-white/10 transition-colors">
           Cancelar
         </button>
-        <button id="pay-invoice-confirm" class="flex-1 rounded-2xl py-3 text-sm font-bold text-black transition-all hover:opacity-90 active:scale-95" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">
+        <button id="pay-invoice-confirm" class="flex-1 rounded-2xl py-3 text-sm font-bold transition-all hover:opacity-90 active:scale-95" style="background:var(--accent-primary);color:var(--accent-on-primary)">
           <i class="fa-solid fa-check mr-1.5"></i> Confirmar Pagamento
         </button>
       </div>
