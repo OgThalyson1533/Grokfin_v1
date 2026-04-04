@@ -213,9 +213,17 @@
           </svg>
         </button>
       </div>
-      <p class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none sensitive-value" id="saldo-total">R$ 0,00</p>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl lg:text-4xl font-medium text-white/50">R$</span>
+        <span id="saldo-total" class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none">0,00</span>
+        <span id="saldo-oculto" class="text-4xl lg:text-5xl font-black" style="display:none; color:#555; letter-spacing:-3px;">••••••</span>
+      </div>
       
       <style>
+        /* Ocultar e exibir componentes de saldo especificamente */
+        body.hide-values #saldo-total { display: none !important; }
+        body.hide-values #saldo-oculto { display: inline-block !important; }
+
         body.hide-values .sensitive-value {
           color: transparent !important;
           user-select: none !important;

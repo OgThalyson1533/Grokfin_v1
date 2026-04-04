@@ -1,153 +1,211 @@
-# Known Fixes — Registro de Bugs Corrigidos
+---
+tipo: fixes
+tags: [fixes, correções, histórico]
+backlinks: [[MOC — GrokFin Elite v6]]
+---
 
-> Todos os comentários `[FIX]` encontrados no código-fonte, centralizados aqui.  
-> Atualizar sempre que um novo fix for aplicado.
+# ✅ Known Fixes — Correções Aplicadas
 
-#bug
+> **Navegar:** [[MOC — GrokFin Elite v6]] | ← [[07-bugs-fixes/known-issues|Known Issues]]
+> **Relacionados:** [[05-architecture/state-management]] · [[03-database/schema-reference]] · [[02-business-rules/functional-flows]]
 
 ---
 
-## SQL / Supabase
+## FIX-001 — Aba Mercado não renderizava no ciclo global {#FIX-001}
 
-### FIX SQL #1 — INSERT policy ausente em `profiles`
-**Arquivo**: `supabase/schema.sql`  
-**Sintoma**: novos usuários não conseguiam criar perfil. O upsert inicial falhava silenciosamente com RLS ativo.  
-**Causa**: apenas policies de SELECT e UPDATE existiam. INSERT estava bloqueado.  
-**Fix**:
-```sql
-CREATE POLICY "Users can insert own profile" ON public.profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
+**Data:** 2026-03 | **Status:** ✅ Resolvido
+
+**Sintoma:** `renderMarket()` não era chamada, aba Mercado mostrava conteúdo stale.
+
+**Causa raiz:** Esquecimento ao registrar o módulo no ciclo de render global de `app.js`.
+
+**Correção:**
+```javascript
+// app.js — appRenderAll()
++ renderMarket();  // adicionado
 ```
 
+**Arquivo:** `js/app.js`
+**Ciclo de render:** [[05-architecture/module-map#Padrão de Render Global]]
+
 ---
 
-### FIX SQL #2 — `updated_at` e trigger ausentes em `card_invoices`
-**Arquivo**: `supabase/schema.sql`  
-**Sintoma**: atualizações de faturas não podiam ser rastreadas. Upsert multi-device não detectava conflitos de tempo.  
-**Fix**:
-```sql
-ALTER TABLE public.card_invoices ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
-CREATE TRIGGER update_card_invoices_modtime
-  BEFORE UPDATE ON public.card_invoices FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+## FIX-002 — Saldo incluía despesas pendentes de cartão {#FIX-002}
+
+**Data:** 2026-03 | **Status:** ✅ Resolvido
+
+**Sintoma:** `state.balance` diminuía ao registrar gastos no cartão de crédito.
+
+**Causa raiz:** Falta de verificação `if (!tx.cardId)` antes de atualizar `state.balance`.
+
+**Correção:**
+```javascript
+// handleSubmitTransaction() — transactions-ui.js
+- state.balance += newTx.value;
++ if (!newTx.cardId) state.balance += newTx.value;
++ if (newTx.cardId) { const card = state.cards.find(c => c.id === newTx.cardId);
++   if (card) card.used += Math.abs(newTx.value); }
 ```
 
----
-
-### FIX SQL #3 — Campos ausentes em `transactions`
-**Arquivo**: `supabase/schema.sql`  
-**Campos adicionados**: `payment`, `card_id`, `recurring_template`, `installments`, `installment_current`
+**Arquivo:** `js/ui/transactions-ui.js`
+**ADR relacionado:** [[06-decisions/adrs#ADR-007]] (cartão como passivo)
+**Regra:** [[02-business-rules/domain-rules#Cartões de Crédito]]
 
 ---
 
-### FIX SQL #4 — `onboarding_completed` ausente em `profiles`
-**Arquivo**: `supabase/schema.sql`  
-**Fix**: `ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;`
+## FIX-003 — Foreign Keys inválidas em transactions para cards {#FIX-003}
 
----
+**Data:** 2026-03 | **Status:** ✅ Resolvido
 
-## Transações
+**Sintoma:** Erro de FK violation no Supabase ao salvar transações de cartão.
 
-### FIX TX #1 — Campo `notes` (observações livres)
-**Arquivo**: `supabase/schema.sql`, `js/services/sync.js`  
-**Adicionado**: campo `notes TEXT` em transactions para observações livres do usuário.
+**Causa raiz:** `card_id` era enviado para o Supabase antes de `cards` serem sincronizados, criando FK orphan.
 
-### FIX TX #2 — Campo `attachment_url` (comprovante)
-**Arquivo**: `supabase/schema.sql`, `js/services/sync.js`  
-**Adicionado**: campo `attachment_url TEXT` para URL do comprovante no Supabase Storage.
-
----
-
-## JavaScript / Frontend
-
-### FIX #1 — `saveState()` não persistia nada
-**Arquivo**: `js/state.js`  
-**Sintoma**: alterações no state nunca eram salvas no localStorage.  
-**Causa**: `saveState()` era chamado sem argumento por toda a app, mas a função esperava `state` como parâmetro — chegava como `undefined`.  
-**Fix**: removido o parâmetro. A função agora usa diretamente o `state` exportado do módulo.
-
----
-
-### FIX #2 — Tab Mercado nunca renderizava
-**Arquivo**: `js/app.js`  
-**Sintoma**: a aba Mercado (índice 9) sempre ficava em branco.  
-**Causa**: `renderMarketTab()` não estava no ciclo global `renderAll()`.  
-**Fix**:
-```js
-if (state.ui.activeTab === 9) renderMarketTab(false);
+**Correção:** Reordenada a sequência de sync em `syncToSupabase()`:
+```
+ANTES: transactions → cards → accounts
+DEPOIS: accounts → cards → transactions  ✅
 ```
 
----
-
-### FIX #3 — `fetchExchangeRates()` nunca chamado
-**Arquivo**: `js/app.js`  
-**Sintoma**: cotações de câmbio sempre mostravam valores estáticos do seed (USD 5.92, EUR 6.45).  
-**Causa**: a função existia mas nunca era invocada no boot.  
-**Fix**: adicionada chamada em `initApp()` com `.then()` para atualizar o state em background sem bloquear o boot.
+**Arquivo:** `js/services/sync.js`
+**Fluxo:** [[02-business-rules/functional-flows#Fluxo 3]]
+**Schema:** [[03-database/schema-reference#Estratégias de Sync]]
 
 ---
 
-### FIX #4 — `ensureChatSeed()` nunca chamado
-**Arquivo**: `js/app.js`  
-**Sintoma**: chat abria completamente vazio para novos usuários (sem mensagem de boas-vindas).  
-**Fix**: adicionada chamada a `ensureChatSeed()` após os binds de evento.
+## FIX-004 — Funções de navegação não acessíveis via onclick {#FIX-004}
 
----
+**Data:** 2026-03 | **Status:** ✅ Resolvido
 
-### FIX #5 — `mapCurrentActiveTab` limitava ao índice 5
-**Arquivo**: `js/state.js`  
-**Sintoma**: tabs 6, 7 e 8 (Cartões, Fluxo, Invest.) nunca eram restauradas após recarregar a página.  
-**Causa**: o mapeamento só cobria índices 0-5.  
-**Fix**: expandido para cobrir todos os 10 índices (0-9).
+**Sintoma:** Botões com `onclick="switchTab(N)"` geravam `ReferenceError` no console.
 
----
+**Causa raiz:** Funções definidas como `export function` em módulos ESM não são acessíveis no escopo global `window`.
 
-### FIX — Modelo de passivo CC no cálculo de saldo
-**Arquivo**: `js/state.js`, `js/services/sync.js`  
-**Contexto**: despesas de cartão de crédito não devem reduzir o saldo imediatamente.  
-**Fix**: implementada a condição `isCcExpense` que exclui transações CC do cálculo de `state.balance`.  
-Ver [[credit-card-liability-model]] e [[ADR-001-liability-model]].
-
----
-
-### FIX — Calendário financeiro não atualizava
-**Arquivo**: `js/app.js`  
-**Sintoma**: calendário embutido no HTML não refletia mudanças após interações.  
-**Fix**: adicionada chamada a `window.finCalRender()` no final de `renderAll()` (se a função existir).
-
----
-
-### FIX — AI indicator estático no header do chat
-**Arquivo**: `js/app.js`  
-**Sintoma**: badges `#ai-active-indicator` e `#ai-mode-label` sempre mostravam "Modo básico" independentemente do provider configurado.  
-**Fix**: adicionada função `updateAIIndicator()` chamada na inicialização para refletir o provider real.
-
----
-
-### FIX — Validação de FK em transactions antes do upsert
-**Arquivo**: `js/services/sync.js`  
-**Sintoma**: transações com `accountId` ou `cardId` legados causavam FK violation no Supabase, quebrando o sync inteiro.  
-**Fix**: validação dos IDs contra conjuntos de IDs reais cadastrados antes de montar o payload do upsert.
-```js
-const validAccountIds = new Set((state.accounts || []).map(a => cleanUUID(a.id)));
-const safeAccountId = validAccountIds.has(rawAccountId) ? rawAccountId : null;
+**Correção:**
+```javascript
+// navigation.js — após definição das funções
++ window.switchTab = switchTab;
++ window.toggleMaisPanel = toggleMaisPanel;
++ window.closeMaisPanel = closeMaisPanel;
 ```
 
----
-
-### FIX — Goals: upsert não removia metas deletadas
-**Arquivo**: `js/services/sync.js`  
-**Sintoma**: metas excluídas localmente reapareciam após sync com Supabase.  
-**Causa**: o upsert só insere/atualiza, nunca remove registros.  
-**Fix**: goals agora usam delete-then-insert. Ver [[sync-strategy]].
+**Arquivo:** `js/ui/navigation.js`
+**ADR:** [[06-decisions/adrs#ADR-001]] (ESM sem bundler — consequência esperada)
 
 ---
 
-## Como registrar novos fixes
+## FIX-005 — Calendário financeiro estourava layout em telas estreitas {#FIX-005}
 
-Ao corrigir um bug, adicionar aqui:
-1. **Nome do fix** (com referência ao arquivo)
-2. **Sintoma observado**
-3. **Causa raiz**
-4. **Fix aplicado** (código ou descrição)
-5. Link para nota relacionada se aplicável
+**Data:** 2026-04 | **Status:** ✅ Resolvido
+
+**Sintoma:** Tags de valor (`.fin-cal-tag`) transbordavam da célula do calendário em telas <400px.
+
+**Causa raiz:** Falta de `min-width: 0` e `overflow: hidden` nas células do grid CSS.
+
+**Correção:**
+```css
+/* css/components.css */
+.fin-cal-day {
++ min-width: 0;
++ overflow: hidden;
++ box-sizing: border-box;
+}
+.fin-cal-tag {
++ display: block;
++ max-width: 100%;
++ overflow: hidden;
++ text-overflow: ellipsis;
+}
+```
+
+**Arquivo:** `css/components.css`
+**Design:** [[04-design-system/design-tokens#Calendário Financeiro]]
+
+---
+
+## FIX-006 — Dados não persistiam ao criar conta bancária {#FIX-006}
+
+**Data:** 2026-03 | **Status:** ✅ Resolvido
+
+**Sintoma:** Contas criadas em `banks-ui.js` não apareciam após refresh.
+
+**Causa raiz:** `sync.js` não mapeava o campo `initial_balance` corretamente (camelCase → snake_case).
+
+**Correção:**
+```javascript
+// sync.js — upsert de accounts
+{
+  id: account.id,
+  user_id: userId,
+  name: account.name,
+- initialBalance: account.initialBalance,  // ❌ não existe no DB
++ initial_balance: account.initialBalance,  // ✅ snake_case
+  type: account.type,
+  color: account.color,
+}
+```
+
+**Arquivo:** `js/services/sync.js`
+**Schema:** [[03-database/schema-reference#accounts]]
+
+---
+
+## FIX-007 — Metas não carregavam do Supabase após sync {#FIX-007}
+
+**Data:** 2026-03 | **Status:** ✅ Resolvido
+
+**Sintoma:** Metas criadas em um dispositivo não apareciam ao abrir em outro.
+
+**Causa raiz:** `syncFromSupabase()` não mapeava corretamente `name→nome`, `target→total`, `current→atual`.
+
+**Correção:**
+```javascript
+// sync.js — pull de goals
+state.goals = goalsData.map(g => ({
+  id: g.id,
+- name: g.name,    // ❌ state usa 'nome'
++ nome: g.name,    // ✅
+- target: g.target, // ❌ state usa 'total'
++ total: g.target,  // ✅
+- current: g.current, // ❌ state usa 'atual'
++ atual: g.current,   // ✅
+  deadline: g.deadline,
+  icon: g.icon,
+  color: g.color,
+  imageUrl: g.image_url,
+}));
+```
+
+**Arquivo:** `js/services/sync.js`
+**Schema:** [[03-database/schema-reference#goals]]
+**Regras:** [[02-business-rules/domain-rules#Metas Financeiras]]
+
+---
+
+## FIX-008 — Busca de transações não normalizava acentos {#FIX-008}
+
+**Data:** 2026-04 | **Status:** ✅ Resolvido
+
+**Sintoma:** Buscar "alimentacao" não encontrava transações com categoria "Alimentação".
+
+**Causa raiz:** A busca comparava strings brutas sem remover diacríticos.
+
+**Correção:**
+```javascript
+// transactions-ui.js — getFilteredTransactions()
+function normalizeText(text) {
+  return (text || '').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+// Aplicar em ambos os lados da comparação:
+const searchNorm = normalizeText(state.ui.txSearch);
+const match = normalizeText(tx.desc + tx.cat + tx.date).includes(searchNorm);
+```
+
+**Arquivo:** `js/utils/dom.js` + `js/ui/transactions-ui.js`
+**Módulo:** [[05-architecture/module-map#dom.js]]
+
+---
+
+← [[MOC — GrokFin Elite v6|← Voltar ao MOC]] | ← [[07-bugs-fixes/known-issues|Known Issues]]

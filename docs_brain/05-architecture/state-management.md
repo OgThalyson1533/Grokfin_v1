@@ -1,161 +1,265 @@
-# State Management — Gerenciamento de Estado
+---
+tipo: arquitetura
+tags: [estado, persistência, sincronização, state]
+backlinks: [[MOC — GrokFin Elite v6]]
+---
 
-> Como o state único funciona, como é carregado, salvo e migrado.  
-> Fonte: `js/state.js`
+# 🔄 State Management — Gerenciamento de Estado
 
-#arquitetura
+> **Navegar:** [[MOC — GrokFin Elite v6]] | ← [[05-architecture/module-map|Module Map]] | Próximo: [[05-architecture/api-integrations|API Integrations →]]
+> **Relacionados:** [[03-database/schema-reference]] · [[02-business-rules/functional-flows]] · [[06-decisions/adrs#ADR-002]] · [[06-decisions/adrs#ADR-003]]
 
 ---
 
 ## Princípio Fundamental
 
-> O `state` exportado de `state.js` é a **única fonte de verdade** da aplicação inteira.
+> **"Single Source of Truth com persistência híbrida"**
 
-Todos os módulos de UI lêem e mutam diretamente este objeto. Não há Vuex, Redux ou Context — é um objeto JS simples compartilhado via módulo ES.
+```
+Mutação → state (RAM) → saveState() → localStorage (síncrono)
+                                     → syncToSupabase() (async, debounced 1.5s)
+```
 
-```js
-// state.js
-export const state = {};  // Mutado in-place por toda a app
+Decisão arquitetural: [[06-decisions/adrs#ADR-002]] | [[06-decisions/adrs#ADR-003]]
+
+**Regra de ouro:**
+```javascript
+// ✅ CORRETO — sempre muta state, depois salva e re-renderiza
+state.transactions.unshift(newTx);
+saveState();
+appRenderAll();
+
+// ❌ ERRADO — nunca DOM como fonte de dados
+const val = document.getElementById('saldo').textContent;
+
+// ❌ ERRADO — nunca chama sync diretamente
+await syncToSupabase();
 ```
 
 ---
 
-## Inicialização (Boot)
+## Estrutura Completa do `state`
 
-```
-1. buildSeedState()         → estado padrão (zerado, com dados demo)
-2. loadState()              → merge com localStorage (ou legado)
-3. Object.assign(state, …)  → popula o state exportado
-4. syncFromSupabase(state)  → sobrescreve com dados da nuvem (se autenticado)
-5. saveState()              → persiste o estado final
-6. renderAll()              → render inicial
-```
-
----
-
-## `buildSeedState()`
-
-Gera o estado inicial para novos usuários:
-
-```js
-{
-  isNewUser: true,
-  balance: 1550,                // Saldo demo
-  exchange: { usd: 5.92, eur: 6.45, btc: 312450, trend: {...} },
-  cards: [],
-  accounts: [],
-  investments: [],
-  fixedExpenses: [],
-  budgets: {
-    'Moradia': 0, 'Alimentação': 0, 'Transporte': 0,
-    'Lazer': 0, 'Investimentos': 0, 'Assinaturas': 0,
-    'Saúde': 0, 'Metas': 0
-  },
-  goals: [],
-  customCategories: [],
-  transactions: [/* 4 transações demo */],
-  profile: {
-    bannerImage: createDefaultBannerDataUrl(),  // SVG gerado inline
-    avatarImage: createDefaultAvatarDataUrl(),  // SVG com iniciais
-    nickname: 'Navigator',
-    displayName: 'GrokFin User',
-    handle: '@grokfin.user'
-  },
-  ui: { activeTab: 0, txSearch: '', txPage: 0, txPageSize: 10, homeFilter: 'this_month', ... },
-  chatHistory: [],
-  lastUpdated: new Date().toISOString()
+```typescript
+interface AppState {
+  // ─── Saldo ───────────────────────────────────────────────────────────────
+  balance: number;                    // conta principal (R$)
+  
+  // ─── Transações ──────────────────────────────────────────────────────────
+  transactions: Transaction[];
+  
+  // ─── Metas ───────────────────────────────────────────────────────────────
+  goals: Goal[];
+  
+  // ─── Investimentos ───────────────────────────────────────────────────────
+  investments: Investment[];
+  
+  // ─── Orçamentos ──────────────────────────────────────────────────────────
+  budgets: Record<string, number>;    // { "Alimentação": 1500 }
+  
+  // ─── Recorrências ────────────────────────────────────────────────────────
+  fixedExpenses: FixedExpense[];
+  
+  // ─── Contas Bancárias ────────────────────────────────────────────────────
+  accounts: Account[];
+  
+  // ─── Cartões ─────────────────────────────────────────────────────────────
+  cards: Card[];
+  invoices: Invoice[];
+  
+  // ─── Câmbio ──────────────────────────────────────────────────────────────
+  exchange: { usd, eur, btc, trend: {usd, eur, btc}, lastSync: string | null };
+  
+  // ─── Perfil ──────────────────────────────────────────────────────────────
+  profile: { displayName, nickname?, avatar?, email?, geminiKey?, claudeKey? };
+  
+  // ─── Chat AI ─────────────────────────────────────────────────────────────
+  chatHistory: ChatMessage[];         // limitado a 50 msgs
+  
+  // ─── Categorias Customizadas ─────────────────────────────────────────────
+  customCategories: string[];
+  
+  // ─── UI (NÃO sincronizado com Supabase) ──────────────────────────────────
+  ui: UiState;
+  
+  // ─── Flags ───────────────────────────────────────────────────────────────
+  isNewUser: boolean;
+  lastSync?: string;
 }
 ```
 
----
-
-## `loadState()` — Merge com localStorage
-
-```js
-// Chaves de localStorage consultadas:
-const STORAGE_KEY        = 'grokfin_hybrid_pwa_state'; // atual
-const LEGACY_STORAGE_KEY = 'grokfin_elite_v4_state';   // migração legado
-```
-
-Estratégia de merge:
-- Arrays: usa o salvo se não-vazio, senão seed
-- Objetos (exchange, ui, budgets, profile): spread seed + spread salvo
-- `isNewUser`: preserva o salvo se existir
-- `activeTab`: mapeado via `mapCurrentActiveTab()` ou `mapLegacyActiveTab()`
+Interfaces completas dos modelos: [[03-database/schema-reference]]
 
 ---
 
-## `saveState()` — Persistência
+## Interfaces dos Modelos
 
-```js
-export function saveState() {
-  // 1. Recalcula state.balance (exclui CC pendente)
-  // 2. Salva em localStorage (trunca chatHistory para 40 mensagens)
-  // 3. Dispara sync para Supabase com debounce de 2500ms
-  //    (apenas se !state.isNewUser)
+### Transaction
+```typescript
+interface Transaction {
+  id: string;                          // uid('tx...')
+  desc: string;
+  value: number;                       // + entrada | − saída
+  cat: string;                         // ver config.js
+  payment: 'pix'|'cartao_credito'|'cartao_debito'|'dinheiro'|'conta';
+  date: string;                        // 'dd/mm/yyyy'
+  status: 'concluido' | 'pendente';
+  accountId?: string;                  // FK accounts.id
+  cardId?: string;                     // FK cards.id
+  installments?: number;
+  installmentNumber?: number;
+  recurringId?: string;                // FK fixed_expenses.id
+  notes?: string;
+  receipt?: string;
 }
 ```
 
-**Fallback de localStorage cheio**: salva versão slim sem `chatHistory`, `bannerImage` e `avatarImage`.
+Regras: [[02-business-rules/domain-rules#Transações]]
+Schema DB: [[03-database/schema-reference#transactions]]
 
----
+### Account
+```typescript
+interface Account {
+  id: string;
+  name: string;
+  bank?: string;
+  initialBalance: number;
+  type: 'corrente' | 'poupanca' | 'digital';
+  color?: string;
+}
+// Saldo real = initialBalance + Σ transactions.filter(t.accountId === id).value
+```
 
-## `cleanUUID()` — Sanitização de IDs
+Regras: [[02-business-rules/domain-rules#Contas Bancárias]]
 
-IDs criados localmente no formato legado (`tx-abc123`, `goal-xyz`) são convertidos para UUID válido antes de qualquer upsert no Supabase:
-
-```js
-export function cleanUUID(idStr) {
-  // Caso 1: já é UUID válido (36 chars, 5 segmentos) → retorna como está
-  // Caso 2: tem prefixo conhecido → remove prefixo → re-testa
-  // Caso 3: ainda inválido → gera hash determinístico:
-  //   `00000000-0000-4000-8000-${hex12}`
-  //   (UUID v4 fake, mas estável para o mesmo input)
+### Card
+```typescript
+interface Card {
+  id: string;
+  name: string;
+  limit: number;
+  used: number;
+  cardType: 'VISA' | 'Mastercard' | 'Elo' | 'Amex';
+  closingDay: number;
+  dueDay: number;
+  color?: string;
 }
 ```
 
-Prefixos reconhecidos: `tx-`, `goal-`, `card-`, `inv-`, `fx-`, `ctx-`, `msg-`
+Regras: [[02-business-rules/domain-rules#Cartões de Crédito]]
 
 ---
 
-## Migração de Tabs (legado)
+## Estado da UI (`state.ui`)
 
-```js
-// Legado v4 tinha 5 tabs com índices diferentes
-function mapLegacyActiveTab(index) {
-  const mapping = { 0: 0, 1: 2, 2: 4, 3: 3, 4: 1 };
-  return mapping[index] ?? Math.min(Math.max(index, 0), 9);
+```typescript
+interface UiState {
+  activeTab: number;         // 0–10
+  txSearch: string;
+  txCategory: string;        // 'all' ou nome de categoria
+  txType: string;            // 'all'|'entrada'|'saida'
+  txStatus: string;          // 'all'|'concluido'|'pendente'
+  txSort: string;            // 'date-desc'|'date-asc'|'value-desc'|...
+  txOrigin: string;          // 'all'|'bank'|'card'
+  txPage: number;            // 0-indexed
+  txPageSize: number;        // default 20
+  txDateStart?: string;      // 'YYYY-MM-DD'
+  txDateEnd?: string;
+  maisSheetOpen: boolean;
 }
+```
 
-// Versão atual: mapeamento 1:1 até índice 9
-function mapCurrentActiveTab(index) {
-  return mapping[index] ?? Math.min(Math.max(index, 0), 9);
-}
+> **Importante:** `state.ui` é persistido apenas no `localStorage`. **Não é sincronizado com o Supabase** — é estado efêmero de sessão.
+
+---
+
+## `loadState()`
+
+```
+1. Tenta ler 'grokfinState' do localStorage
+2. Se encontrar: parse JSON + deep merge com buildSeedState() (garante campos novos)
+3. Se não encontrar: cria estado inicial com buildSeedState()
+4. Após autenticação: syncFromSupabase() sobrescreve com dados remotos
 ```
 
 ---
 
-## isNewUser — Lógica de Onboarding
+## `saveState()`
 
-```js
-// Marca como não-novo quando o usuário cria conteúdo real
-if (state.isNewUser && (state.goals.length > 0 || state.transactions.length > 0)) {
-  state.isNewUser = false;
-}
-
-// Do Supabase:
-state.isNewUser = !isOnboardingCompleted && !txs?.length && !goals?.length;
 ```
-
-O flag `isNewUser` também bloqueia o sync automático para o Supabase, evitando poluir o banco com dados demo.
+1. JSON.stringify(state) → localStorage['grokfinState'] (SÍNCRONO, ~0ms)
+2. clearTimeout(_saveTimer) — cancela debounce anterior
+3. setTimeout(syncToSupabase, 1500) — agenda sync assíncrono
+```
 
 ---
 
-## Avatar e Banner Padrão
+## `syncToSupabase()` — Push
 
-Gerados como SVG inline (não dependem de assets externos):
+```
+1. Verifica: supabaseClient && auth.user — se null, no-op silencioso
+2. Promise.allSettled (paralelo, erros não bloqueiam):
+   accounts → upsert por id          (ANTES das transactions — FK)
+   cards    → upsert por id          (ANTES das transactions — FK)
+   profiles → upsert por user_id
+   transactions → upsert + delete removidos
+   goals    → DELETE all + INSERT    (garantia de consistência)
+   invoices → upsert por (card_id, month)
+   fixed_expenses → upsert por id
+   budgets  → upsert por user_id
+3. Erros individuais: console.error sem bloquear
+```
 
-- **Banner**: gradiente `#09111c → #0a1322 → #071019` com glows ciano/violeta/verde + logo "G"
-- **Avatar**: fundo escuro `#08111C` + círculo gradiente ciano/verde + iniciais do nome
+Fluxo: [[02-business-rules/functional-flows#Fluxo 3]]
+Schema: [[03-database/schema-reference#Estratégias de Sync]]
+Bug histórico FK: [[07-bugs-fixes/known-fixes#FIX-003]]
 
-Quando o usuário faz upload via Supabase Storage, `avatarImageUrl` e `bannerImageUrl` substituem as versões SVG.
+---
+
+## `syncFromSupabase()` — Pull
+
+```
+1. SELECT de todos os dados (auth.uid() via RLS)
+2. Substitui state local pelos dados remotos
+3. appRenderAll() com dados atualizados
+```
+
+Executado em: inicialização do app + após login
+Fluxo: [[02-business-rules/functional-flows#Fluxo 1]]
+
+---
+
+## Cálculo de Saldo
+
+```javascript
+// ✅ Saldo da conta principal
+state.balance
+
+// ✅ Saldo real de uma conta bancária específica (DERIVADO)
+const realBalance = account.initialBalance +
+  state.transactions
+    .filter(t => t.accountId === account.id)
+    .reduce((sum, t) => sum + t.value, 0);
+
+// ✅ Limite disponível no cartão
+const available = card.limit - card.used;
+```
+
+Regras: [[02-business-rules/domain-rules#Saldo Calculado]]
+
+---
+
+## Sincronização Multi-Dispositivo
+
+```
+Dispositivo A → cria transação → saveState() → syncToSupabase() → Supabase
+Dispositivo B → abre app → syncFromSupabase() ← Supabase
+```
+
+**Modelo:** last-write-wins. Sem resolução de conflitos sofisticada.
+**Risco:** [[07-bugs-fixes/known-issues#RISCO-01]]
+Decisão: [[06-decisions/adrs#ADR-003]]
+
+---
+
+← [[MOC — GrokFin Elite v6|← Voltar ao MOC]] | ← [[05-architecture/module-map|Module Map]] | [[05-architecture/api-integrations|API Integrations →]]

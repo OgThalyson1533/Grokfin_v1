@@ -41,7 +41,7 @@ export function renderHeaderMeta(analytics) {
 export function renderDashboard(analytics) {
   const el = id => document.getElementById(id);
   
-  if (el('saldo-total')) animateValue(el('saldo-total'), 0, state.balance, 1500, formatMoney);
+  if (el('saldo-total')) animateValue(el('saldo-total'), 0, state.balance, 1500, formatNumber);
   if (el('dashboard-income')) animateValue(el('dashboard-income'), 0, analytics.incomes, 1500, formatMoney);
   if (el('dashboard-expense')) animateValue(el('dashboard-expense'), 0, analytics.expenses, 1500, formatMoney);
   if (el('dashboard-runway')) el('dashboard-runway').textContent = `${formatNumber(analytics.runwayMonths, 1)} meses`;
