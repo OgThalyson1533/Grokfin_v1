@@ -215,37 +215,17 @@
       </div>
       <div class="flex items-baseline gap-2">
         <span class="text-3xl lg:text-4xl font-medium text-white/50">R$</span>
-        <span id="saldo-total" class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none">0,00</span>
-        <span id="saldo-oculto" class="text-4xl lg:text-5xl font-black" style="display:none; color:#555; letter-spacing:-3px;">••••••</span>
+        <span id="saldo-total" class="text-4xl lg:text-5xl font-black text-white tracking-tight leading-none value-visible">0,00</span>
+        <span class="text-4xl lg:text-5xl font-black text-white/30 value-hidden" style="display:none;">••••••</span>
       </div>
       
       <style>
-        /* Ocultar e exibir componentes de saldo especificamente */
-        body.hide-values #saldo-total { display: none !important; }
-        body.hide-values #saldo-oculto { display: inline-block !important; }
-
-        body.hide-values .sensitive-value {
-          color: transparent !important;
-          user-select: none !important;
+        /* Lógica Universal de Ocultação de Valores */
+        body.hide-values .value-visible {
+          display: none !important;
         }
-        body.hide-values .sensitive-value::after {
-          content: '••••••';
-          position: absolute;
-          left: 0;
-          top: 0;
-          bottom: 0;
-          display: flex;
-          align-items: center;
-          color: #555;
-          letter-spacing: -2px;
-          font-weight: 600;
-          pointer-events: none;
-        }
-        .sensitive-value {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          transition: opacity 0.2s ease, color 0.1s ease;
+        body.hide-values .value-hidden {
+          display: inline-flex !important;
         }
 
         /* ── Estilos das abas do Modal de Transação ── */
@@ -320,7 +300,7 @@
         });
       </script>
       <div class="flex items-center gap-3 mt-3">
-        <p class="text-xs text-white/40">Média: <span class="text-white/65 font-medium tracking-wide">R$</span> <span class="text-white/65 font-semibold sensitive-value" id="home-burn-daily">0,00</span>/dia</p>
+        <p class="text-xs text-white/40 flex items-baseline gap-1">Média: <span class="text-white/65 font-medium tracking-wide">R$</span> <span class="text-white/65 font-semibold value-visible" id="home-burn-daily">0,00</span><span class="text-white/30 font-semibold value-hidden" style="display:none;">••••••</span>/dia</p>
         <span id="home-net-chip" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border border-emerald-400/20 bg-emerald-400/8 text-emerald-300">
           <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> --
         </span>
@@ -364,7 +344,8 @@
               <p class="text-[9px] uppercase tracking-wider text-white/35 leading-none mb-1">Entrada</p>
               <div class="flex items-baseline gap-1">
                 <span class="text-[10px] text-emerald-300/70 font-medium tracking-wide">R$</span>
-                <p class="text-sm font-bold text-emerald-300 leading-none sensitive-value" id="dashboard-income">0,00</p>
+                <span class="text-sm font-bold text-emerald-300 leading-none value-visible" id="dashboard-income">0,00</span>
+                <span class="text-sm font-bold text-emerald-300/40 leading-none value-hidden" style="display:none;">••••••</span>
               </div>
             </div>
           </div>
@@ -377,7 +358,8 @@
               <p class="text-[9px] uppercase tracking-wider text-white/35 leading-none mb-1">Saída</p>
               <div class="flex items-baseline gap-1">
                 <span class="text-[10px] text-rose-300/70 font-medium tracking-wide">R$</span>
-                <p class="text-sm font-bold text-rose-300 leading-none sensitive-value" id="dashboard-expense">0,00</p>
+                <span class="text-sm font-bold text-rose-300 leading-none value-visible" id="dashboard-expense">0,00</span>
+                <span class="text-sm font-bold text-rose-300/40 leading-none value-hidden" style="display:none;">••••••</span>
               </div>
             </div>
           </div>

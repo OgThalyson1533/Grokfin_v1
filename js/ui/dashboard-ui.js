@@ -1454,10 +1454,14 @@ export function renderPerformanceComparison(periodData) {
           </div>
           ${chipHtml}
         </div>
-        <div class="flex items-center gap-1.5 pt-1">
-          <p class="text-xl font-black ${valueColor} leading-tight"><span class="text-sm opacity-70">R$</span> <span class="sensitive-value">${card.format(current).replace(/R\$\s?|-?R\$\s?/g, '')}</span></p>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <p class="text-xl font-black ${valueColor} leading-tight">
+            <span class="text-sm opacity-70">R$</span> 
+            <span class="value-visible">${card.format(current).replace(/R\$\s?|-?R\$\s?/g, '')}</span>
+            <span class="value-hidden opacity-40" style="display:none;">••••••</span>
+          </p>
         </div>
-        <p class="text-[10px] ${hasPrev ? 'text-white/32' : 'text-white/18'} pt-0.5">${hasPrev ? `Anterior: <span class="opacity-70">R$</span> <span class="sensitive-value">` + card.format(previous).replace(/R\$\s?|-?R\$\s?/g, '') + `</span>` : 'Sem dados anteriores'}</p>
+        <p class="text-[10px] ${hasPrev ? 'text-white/32' : 'text-white/18'} pt-0.5">${hasPrev ? `Anterior: <span class="opacity-70">R$</span> <span class="value-visible">` + card.format(previous).replace(/R\$\s?|-?R\$\s?/g, '') + `</span><span class="value-hidden opacity-40" style="display:none;">••••••</span>` : 'Sem dados anteriores'}</p>
       </div>`;
   }).join('');
 }
