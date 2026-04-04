@@ -42,10 +42,11 @@ export function renderDashboard(analytics) {
   const el = id => document.getElementById(id);
   
   if (el('saldo-total')) animateValue(el('saldo-total'), 0, state.balance, 1500, formatNumber);
-  if (el('dashboard-income')) animateValue(el('dashboard-income'), 0, analytics.incomes, 1500, formatMoney);
-  if (el('dashboard-expense')) animateValue(el('dashboard-expense'), 0, analytics.expenses, 1500, formatMoney);
+  if (el('dashboard-income')) animateValue(el('dashboard-income'), 0, analytics.incomes, 1500, formatNumber);
+  if (el('dashboard-expense')) animateValue(el('dashboard-expense'), 0, analytics.expenses, 1500, formatNumber);
   if (el('dashboard-runway')) el('dashboard-runway').textContent = `${formatNumber(analytics.runwayMonths, 1)} meses`;
-  if (el('dashboard-burn')) animateValue(el('dashboard-burn'), 0, analytics.burnDaily, 1500, formatMoney);
+  if (el('dashboard-burn')) animateValue(el('dashboard-burn'), 0, analytics.burnDaily, 1500, formatNumber);
+  if (el('home-burn-daily')) animateValue(el('home-burn-daily'), 0, analytics.burnDaily || 0, 1500, formatNumber);
 
   const monthlyNetChip = document.getElementById('monthly-net-chip');
   if (monthlyNetChip) {
@@ -1453,8 +1454,10 @@ export function renderPerformanceComparison(periodData) {
           </div>
           ${chipHtml}
         </div>
-        <p class="text-xl font-black ${valueColor} leading-tight sensitive-value">${card.format(current)}</p>
-        <p class="text-[10px] ${hasPrev ? 'text-white/32' : 'text-white/18'} sensitive-value">${hasPrev ? `Anterior: ${card.format(previous)}` : 'Sem dados anteriores'}</p>
+        <div class="flex items-center gap-1.5 pt-1">
+          <p class="text-xl font-black ${valueColor} leading-tight"><span class="text-sm opacity-70">R$</span> <span class="sensitive-value">${card.format(current).replace(/R\$\s?|-?R\$\s?/g, '')}</span></p>
+        </div>
+        <p class="text-[10px] ${hasPrev ? 'text-white/32' : 'text-white/18'} pt-0.5">${hasPrev ? `Anterior: <span class="opacity-70">R$</span> <span class="sensitive-value">` + card.format(previous).replace(/R\$\s?|-?R\$\s?/g, '') + `</span>` : 'Sem dados anteriores'}</p>
       </div>`;
   }).join('');
 }

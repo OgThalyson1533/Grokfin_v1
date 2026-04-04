@@ -320,7 +320,7 @@
         });
       </script>
       <div class="flex items-center gap-3 mt-3">
-        <p class="text-xs text-white/40">Média: <span class="text-white/65 font-semibold sensitive-value" id="home-burn-daily">R$ 0,00</span>/dia</p>
+        <p class="text-xs text-white/40">Média: <span class="text-white/65 font-medium tracking-wide">R$</span> <span class="text-white/65 font-semibold sensitive-value" id="home-burn-daily">0,00</span>/dia</p>
         <span id="home-net-chip" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border border-emerald-400/20 bg-emerald-400/8 text-emerald-300">
           <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> --
         </span>
@@ -362,7 +362,10 @@
             </div>
             <div>
               <p class="text-[9px] uppercase tracking-wider text-white/35 leading-none mb-1">Entrada</p>
-              <p class="text-sm font-bold text-emerald-300 leading-none sensitive-value" id="dashboard-income">R$ 0,00</p>
+              <div class="flex items-baseline gap-1">
+                <span class="text-[10px] text-emerald-300/70 font-medium tracking-wide">R$</span>
+                <p class="text-sm font-bold text-emerald-300 leading-none sensitive-value" id="dashboard-income">0,00</p>
+              </div>
             </div>
           </div>
           <!-- Saída -->
@@ -372,7 +375,10 @@
             </div>
             <div>
               <p class="text-[9px] uppercase tracking-wider text-white/35 leading-none mb-1">Saída</p>
-              <p class="text-sm font-bold text-rose-300 leading-none sensitive-value" id="dashboard-expense">R$ 0,00</p>
+              <div class="flex items-baseline gap-1">
+                <span class="text-[10px] text-rose-300/70 font-medium tracking-wide">R$</span>
+                <p class="text-sm font-bold text-rose-300 leading-none sensitive-value" id="dashboard-expense">0,00</p>
+              </div>
             </div>
           </div>
        </div>
