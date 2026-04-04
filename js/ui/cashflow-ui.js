@@ -167,16 +167,33 @@ export function renderFixedModalRows() {
   const fixed = state.fixedExpenses || [];
   rows.innerHTML = fixed.map((f, i) => `
     <div class="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/4 px-3 py-2.5">
-      <div class="flex-1 grid grid-cols-3 gap-2">
-        <input type="text" value="${escapeHtml(f.name)}" placeholder="Nome" data-fx-name="${i}" class="col-span-1 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:border-cyan-400/50"/>
-        <input type="text" value="${f.value.toFixed(2).replace('.', ',')}" placeholder="Valor" data-fx-value="${i}" class="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:border-cyan-400/50 text-right"/>
-        <input type="number" min="1" max="28" value="${f.day}" placeholder="Dia" data-fx-day="${i}" class="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white outline-none focus:border-cyan-400/50 text-center"/>
+      <input type="text" value="${escapeHtml(f.name)}" placeholder="Ex: Aluguel, Netflix…" data-fx-name="${i}"
+             class="flex-1 min-w-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none focus:border-cyan-400/50 placeholder:text-white/25"/>
+      <input type="text" value="${f.value.toFixed(2).replace('.', ',')}" placeholder="0,00" data-fx-value="${i}" inputmode="decimal"
+             class="w-24 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white outline-none focus:border-cyan-400/50 text-right"/>
+      <div class="relative w-16">
+        <input type="number" min="1" max="28" value="${f.day || 1}" data-fx-day="${i}"
+               class="w-full rounded-xl border border-white/10 bg-white/5 px-2 py-2 text-xs text-white outline-none focus:border-cyan-400/50 text-center"
+               title="Dia do mês em que será lançado (1 a 28)"/>
       </div>
-      <label class="flex items-center gap-1 text-xs text-white/50 cursor-pointer">
-        <input type="checkbox" ${f.isIncome ? 'checked' : ''} data-fx-income="${i}" class="accent-emerald-400"> Renda
-      </label>
-      <button onclick="removeFixedRow(${i})" class="w-7 h-7 flex items-center justify-center rounded-lg text-rose-400/60 hover:text-rose-300 hover:bg-rose-400/10 transition-colors"><i class="fa-solid fa-xmark text-xs"></i></button>
+      <select data-fx-income="${i}"
+              class="w-24 rounded-xl border border-white/10 bg-[#0f1829] px-2 py-2 text-xs font-semibold outline-none focus:border-cyan-400/50 cursor-pointer
+                     ${f.isIncome ? 'text-emerald-400' : 'text-rose-400'}">
+        <option value="0" ${!f.isIncome ? 'selected' : ''} class="text-rose-400 bg-[#0f1829]">💸 Despesa</option>
+        <option value="1" ${f.isIncome  ? 'selected' : ''} class="text-emerald-400 bg-[#0f1829]">💰 Receita</option>
+      </select>
+      <button onclick="removeFixedRow(${i})" class="w-7 h-7 flex items-center justify-center rounded-lg text-rose-400/60 hover:text-rose-300 hover:bg-rose-400/10 transition-colors flex-shrink-0">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
     </div>`).join('');
+
+  // Atualiza cor do select ao mudar
+  rows.querySelectorAll('select[data-fx-income]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      sel.className = sel.className.replace(/text-(rose|emerald)-400/g, '');
+      sel.classList.add(sel.value === '1' ? 'text-emerald-400' : 'text-rose-400');
+    });
+  });
 }
 
 export function removeFixedRow(i) {
@@ -195,8 +212,8 @@ export function saveFixedModal() {
     const dayEl = rows.querySelector(`[data-fx-day="${i}"]`);
     const incomeEl = rows.querySelector(`[data-fx-income="${i}"]`);
     const value = parseCurrencyInput(valueEl?.value || '');
-    const day = parseInt(dayEl?.value) || 1;
-    const isIncome = !!incomeEl?.checked;
+    const day = Math.min(Math.max(parseInt(dayEl?.value) || 1, 1), 28);
+    const isIncome = incomeEl?.value === '1';
     
     if (name && value) {
       const existing = state.fixedExpenses?.[i];
@@ -213,10 +230,10 @@ export function saveFixedModal() {
 
 export function addFixedRow() {
   if (!state.fixedExpenses) state.fixedExpenses = [];
-  state.fixedExpenses.push({ id: uid('fx'), name: '', cat: 'Rotina', value: 0, day: 1, active: true });
+  state.fixedExpenses.push({ id: uid('fx'), name: '', cat: 'Rotina', value: 0, day: 1, active: true, isIncome: false });
   renderFixedModalRows();
   const rows = document.getElementById('fixed-modal-rows');
-  rows.lastElementChild?.querySelector('input')?.focus();
+  rows.lastElementChild?.querySelector('input[data-fx-name]')?.focus();
 }
 
 export function openBudgetModal() {

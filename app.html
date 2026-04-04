@@ -505,10 +505,16 @@
       <div class="grid grid-cols-1 gap-5">
         <!-- Próximos -->
         <div class="rounded-3xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] backdrop-blur-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] p-5">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center justify-between mb-1">
             <p class="home-section-title">Próximos 7 Dias</p>
-            <span class="min-w-[22px] h-[22px] rounded-full bg-violet-500/25 border border-violet-400/25 text-[10px] font-bold text-violet-300 flex items-center justify-center px-1" id="home-upcoming-count">0</span>
+            <div class="flex items-center gap-2">
+              <span class="min-w-[22px] h-[22px] rounded-full bg-violet-500/25 border border-violet-400/25 text-[10px] font-bold text-violet-300 flex items-center justify-center px-1" id="home-upcoming-count">0</span>
+              <button onclick="window.openFixedModal?.()" class="text-[10px] font-semibold text-cyan-400/70 hover:text-cyan-300 transition-colors flex items-center gap-1">
+                <i class="fa-solid fa-sliders text-[9px]"></i> Gerenciar
+              </button>
+            </div>
           </div>
+          <p class="text-[10px] text-white/30 mb-3">Lançados automaticamente no dia de vencimento</p>
           <div class="overflow-x-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
             <div class="flex gap-2.5 pb-2 w-max" id="home-upcoming-cards">
               <div class="w-36 rounded-2xl border border-white/8 bg-white/4 p-3">
@@ -516,13 +522,18 @@
               </div>
             </div>
           </div>
-          <button onclick="document.getElementById('tx-add-btn')?.click()"
-                  title="Nova transação"
-                  class="mt-3 flex items-center justify-center gap-2 rounded-2xl w-full py-2.5 text-sm font-bold text-black transition-all hover:scale-105 active:scale-95 shadow-lg"
-                  style="background:linear-gradient(135deg,#6366f1,#a855f7)">
-            <i class="fa-solid fa-plus text-white text-xs"></i>
-            <span class="text-white text-xs">Novo lançamento</span>
-          </button>
+          <div class="mt-3 flex gap-2">
+            <button onclick="document.getElementById('tx-add-btn')?.click()"
+                    class="flex-1 flex items-center justify-center gap-2 rounded-2xl py-2.5 text-xs font-bold text-white/70 border border-white/10 bg-white/4 hover:bg-white/8 transition-colors">
+              <i class="fa-solid fa-plus text-[10px]"></i> Lançamento manual
+            </button>
+            <button onclick="window.openFixedModal?.()"
+                    class="flex-1 flex items-center justify-center gap-2 rounded-2xl py-2.5 text-xs font-bold text-black transition-all hover:scale-[1.02] active:scale-95"
+                    style="background:linear-gradient(135deg,#6366f1,#a855f7)">
+              <i class="fa-solid fa-rotate text-white text-[10px]"></i>
+              <span class="text-white">+ Recorrente</span>
+            </button>
+          </div>
         </div>
 
         <!-- Metas -->
@@ -1749,7 +1760,26 @@
           </div>
           <div class="toggle-wrapper" id="toggle-recorrente-wrap"><div class="toggle-switch"></div><input type="checkbox" id="tx-modal-recurring" class="hidden"></div>
         </div>
-        <div class="form-group"><label>Parcelas (Opcional)</label><input type="text" class="form-control" placeholder="1 = à vista" id="input-parcelas"></div>
+        <!-- Notificação explicativa — aparece ao ativar o toggle recorrente -->
+        <div id="recurring-info-box" class="hidden rounded-2xl p-3.5 text-xs" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.22)">
+          <div class="flex gap-2.5 items-start">
+            <i class="fa-solid fa-circle-info text-violet-400 mt-0.5 shrink-0"></i>
+            <div>
+              <p class="font-bold text-violet-200 mb-1">O que vai acontecer?</p>
+              <p class="text-white/60 leading-relaxed">Esta despesa será cadastrada como <strong class="text-violet-300">compromisso mensal</strong>. Todo mês, no dia <strong id="recurring-day-label" class="text-white">—</strong>, ela será lançada automaticamente no extrato.</p>
+              <p class="text-white/35 mt-2">Para pausar ou editar: <span class="text-cyan-400/80 font-medium">Fluxo de Caixa → Compromissos Recorrentes</span></p>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Parcelas (Opcional)</label>
+          <input type="text" class="form-control" placeholder="1 = à vista, 3 = 3x, 12 = 12x…" id="input-parcelas" inputmode="numeric"/>
+          <!-- Preview de parcelas -->
+          <div id="installments-preview" class="hidden mt-2 rounded-xl px-3 py-2 text-xs" style="background:rgba(0,245,255,.05);border:1px solid rgba(0,245,255,.14)">
+            <i class="fa-solid fa-layer-group text-cyan-400 mr-1.5"></i>
+            <span id="installments-preview-text" class="text-white/65"></span>
+          </div>
+        </div>
         <div class="form-group"><label>Observações</label><textarea class="form-control" rows="3" placeholder="Informações adicionais sobre esta transação..." id="input-observacoes"></textarea></div>
         
         <div class="form-group">
@@ -2170,6 +2200,13 @@
             </select>
           </div>
         </div>
+        <!-- Preview de parcelas do cartão -->
+        <div id="card-tx-preview" class="hidden rounded-2xl px-4 py-3 text-xs" style="background:rgba(0,245,255,.05);border:1px solid rgba(0,245,255,.14)">
+          <div class="flex gap-2 items-center">
+            <i class="fa-solid fa-layer-group text-cyan-400 shrink-0"></i>
+            <span id="card-tx-preview-text" class="text-white/65"></span>
+          </div>
+        </div>
         <p id="card-tx-error" class="hidden text-xs text-rose-400 font-semibold"></p>
       </div>
       <div class="px-6 pb-6 flex gap-3">
@@ -2243,10 +2280,17 @@
          style="background:#0f1829">
       <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
         <div>
-          <h3 class="text-lg font-bold text-white">Custos & Receitas Fixas</h3>
-          <p class="text-xs text-white/40 mt-1">Salário, aluguel, assinaturas — tudo que é recorrente</p>
+          <h3 class="text-lg font-bold text-white">Compromissos Recorrentes</h3>
+          <p class="text-xs text-white/40 mt-1">Cada item é lançado <span class="text-cyan-400/80 font-semibold">automaticamente no extrato</span> todo mês no dia definido</p>
         </div>
         <button id="fixed-modal-close" class="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-6 pt-4 pb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/25">
+        <span class="flex-1">Nome</span>
+        <span class="w-24 text-right">Valor (R$)</span>
+        <span class="w-16 text-center">Dia/mês</span>
+        <span class="w-12 text-center">Tipo</span>
+        <span class="w-7"></span>
       </div>
       <div class="px-6 py-4 max-h-[55vh] overflow-y-auto space-y-2" id="fixed-modal-rows"></div>
       <div class="px-6 py-3 border-t border-white/8">

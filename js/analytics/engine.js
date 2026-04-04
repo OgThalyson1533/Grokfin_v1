@@ -480,13 +480,16 @@ export function processRecurrences(state) {
   if (!state.fixedExpenses?.length) return false;
 
   const now = new Date();
-  const currentMonthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
-  if (state.lastCronRun === currentMonthKey) return false;
-
+  const today = now.getDate();
   let changesMade = false;
 
   state.fixedExpenses.forEach(exp => {
-    // Verifica por data DD/MM/YYYY + flag recurringTemplate
+    if (!exp.active || !exp.value) return;
+
+    // Só lança quando o dia de execução do compromisso chegou ou passou
+    if (today < (exp.day || 1)) return;
+
+    // Verifica se já foi lançado neste mês com a flag recurringTemplate
     const alreadyLaunched = state.transactions.some(t => {
       const d = parseDateBR(t.date);
       if (!d) return false;
@@ -496,7 +499,7 @@ export function processRecurrences(state) {
              !!t.recurringTemplate;
     });
 
-    if (!alreadyLaunched && exp.value > 0) {
+    if (!alreadyLaunched) {
       const txDay   = String(exp.day || 1).padStart(2, '0');
       const txMonth = String(now.getMonth() + 1).padStart(2, '0');
       const txDate  = `${txDay}/${txMonth}/${now.getFullYear()}`;
@@ -516,9 +519,8 @@ export function processRecurrences(state) {
     }
   });
 
-  state.lastCronRun = currentMonthKey;
   // Invalida memo após cron
-  _memoKey = null;
+  if (changesMade) _memoKey = null;
   return changesMade;
 }
 

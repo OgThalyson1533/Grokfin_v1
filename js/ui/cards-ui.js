@@ -321,24 +321,34 @@ export function saveCardTx() {
   if (!amount) { errEl.textContent = 'Valor inválido.'; errEl.classList.remove('hidden'); return; }
   
   const installValue = Number((amount / installments).toFixed(2));
-  const _cardTxDate = new Intl.DateTimeFormat('pt-BR').format(new Date());
+  const baseDate = new Date();
+  const origDay = baseDate.getDate();
 
   for (let i = 0; i < installments; i++) {
+    // Distribui as parcelas pelos meses corretos com safe month add
+    const d = new Date(baseDate);
+    if (i > 0) {
+      d.setDate(1);
+      d.setMonth(d.getMonth() + i);
+      d.setDate(Math.min(origDay, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+    }
+    const _cardTxDate = new Intl.DateTimeFormat('pt-BR').format(d);
+
     if (!card.invoices) card.invoices = [];
     const _txId = uid('tx');
     const _iDesc = installments > 1 ? `${desc} (${i + 1}/${installments})` : desc;
 
     card.invoices.unshift({
       id: uid('ctx'),
-      txRefId: _txId, // [FIX] referência para remoção sincronizada com o extrato
+      txRefId: _txId,
       desc: _iDesc,
       cat,
       value: installValue,
+      date: _cardTxDate,
       installments,
       installmentCurrent: i + 1
     });
 
-    // [FIX] Cria transação real no extrato geral → aparece no histórico e sincroniza com Supabase
     state.transactions.unshift({
       id: _txId,
       date: _cardTxDate,
@@ -411,6 +421,32 @@ export function bindCardEvents() {
   document.getElementById('card-tx-modal-close')?.addEventListener('click', () => document.getElementById('card-tx-modal-overlay').classList.add('hidden'));
   document.getElementById('card-tx-cancel')?.addEventListener('click', () => document.getElementById('card-tx-modal-overlay').classList.add('hidden'));
   document.getElementById('card-tx-save')?.addEventListener('click', saveCardTx);
+
+  // Preview de parcelas no modal do cartão
+  function _updateCardTxPreview() {
+    const n = parseInt(document.getElementById('card-tx-installments')?.value) || 1;
+    const raw = parseCurrencyInput(document.getElementById('card-tx-value')?.value || '');
+    const preview = document.getElementById('card-tx-preview');
+    const previewText = document.getElementById('card-tx-preview-text');
+    if (!preview || !previewText) return;
+    if (n < 2 || !raw) { preview.classList.add('hidden'); return; }
+    const installValue = (raw / n).toFixed(2).replace('.', ',');
+    const base = new Date();
+    const origDay = base.getDate();
+    const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const labels = [];
+    for (let i = 0; i < Math.min(n, 4); i++) {
+      const d = new Date(base.getFullYear(), base.getMonth(), 1);
+      d.setMonth(d.getMonth() + i);
+      const maxDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      labels.push(`${String(Math.min(origDay, maxDay)).padStart(2,'0')}/${months[d.getMonth()]}`);
+    }
+    const rest = n > 4 ? ` + ${n - 4} mais` : '';
+    previewText.textContent = `${n}x de R$\u00A0${installValue} — ${labels.join(', ')}${rest}`;
+    preview.classList.remove('hidden');
+  }
+  document.getElementById('card-tx-installments')?.addEventListener('change', _updateCardTxPreview);
+  document.getElementById('card-tx-value')?.addEventListener('input', _updateCardTxPreview);
   document.getElementById('card-tx-modal-overlay')?.addEventListener('click', e => {
     if (e.target === document.getElementById('card-tx-modal-overlay')) document.getElementById('card-tx-modal-overlay').classList.add('hidden');
   });

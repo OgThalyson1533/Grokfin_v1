@@ -1195,7 +1195,13 @@ export function saveTxModal() {
     for (let i = 0; i < installments; i++) {
       let d = parseDateBR(dateStr);
       if (!d) d = new Date();
-      d.setMonth(d.getMonth() + i);
+      // Safe month add — evita overflow (ex: 31/jan + 1 mês = 03/mar em vez de 28/fev)
+      if (i > 0) {
+        const origDay = d.getDate();
+        d.setDate(1);
+        d.setMonth(d.getMonth() + i);
+        d.setDate(Math.min(origDay, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+      }
       const mDate = new Intl.DateTimeFormat('pt-BR').format(d);
       const txId = uid('tx');
       newIds.push(txId);
@@ -1238,7 +1244,19 @@ export function saveTxModal() {
       }
     }
     saveState();
-    showToast(installments > 1 ? `Criada em ${installments} parcelas.` : (isRecurring ? 'Transação e recorrência criadas.' : 'Transação criada com sucesso.'), 'success');
+
+    // Se recorrente, registra em fixedExpenses para auto-lançamento mensal
+    if (isRecurring && !isIncome && installments === 1) {
+      if (!state.fixedExpenses) state.fixedExpenses = [];
+      const alreadyFixed = state.fixedExpenses.some(f => f.name.toLowerCase() === desc.toLowerCase());
+      if (!alreadyFixed) {
+        const txDay = parseDateBR(dateStr)?.getDate() || 1;
+        state.fixedExpenses.push({ id: uid('fx'), name: desc, cat, value: rawValue, day: txDay, active: true, isIncome: false });
+        saveState();
+      }
+    }
+
+    showToast(installments > 1 ? `Criada em ${installments} parcelas.` : (isRecurring ? 'Transação criada e registrada como recorrente mensal.' : 'Transação criada com sucesso.'), 'success');
 
     // [FIX TX] Upload do anexo vinculado à primeira parcela
     if (attachFile && newIds.length > 0) {
@@ -1415,7 +1433,60 @@ export function bindTxEvents() {
 
   // Toggles de status/recorrência
   el('toggle-pagamento')?.addEventListener('click', function() { this.classList.toggle('active'); const chk = el('tx-modal-realized'); if (chk) chk.checked = this.classList.contains('active'); });
-  el('toggle-recorrente-wrap')?.addEventListener('click', function() { this.classList.toggle('active'); const chk = el('tx-modal-recurring'); if (chk) chk.checked = this.classList.contains('active'); });
+  el('toggle-recorrente-wrap')?.addEventListener('click', function() {
+    this.classList.toggle('active');
+    const chk = el('tx-modal-recurring');
+    if (chk) chk.checked = this.classList.contains('active');
+    const box = el('recurring-info-box');
+    if (!box) return;
+    if (this.classList.contains('active')) {
+      const dateVal = el('input-data')?.value || '';
+      const day = dateVal.split('/')[0]?.replace(/\D/g, '') || '—';
+      const dayLabel = el('recurring-day-label');
+      if (dayLabel) dayLabel.textContent = day !== '—' ? `${day} de cada mês` : '—';
+      box.classList.remove('hidden');
+    } else {
+      box.classList.add('hidden');
+    }
+  });
+
+  // Preview de parcelas — atualiza ao digitar parcelas ou valor
+  function _updateInstallmentsPreview() {
+    const n = parseInt(el('input-parcelas')?.value) || 1;
+    const raw = parseCurrencyInput(el('input-valor')?.value || '');
+    const preview = el('installments-preview');
+    const previewText = el('installments-preview-text');
+    if (!preview || !previewText) return;
+    if (n < 2 || !raw) { preview.classList.add('hidden'); return; }
+    const installValue = (raw / n).toFixed(2).replace('.', ',');
+    const dateVal = el('input-data')?.value || '';
+    const baseDay = parseInt(dateVal.split('/')[0]) || new Date().getDate();
+    const baseMonth = parseInt(dateVal.split('/')[1]) || new Date().getMonth() + 1;
+    const baseYear = parseInt(dateVal.split('/')[2]) || new Date().getFullYear();
+    const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const labels = [];
+    for (let i = 0; i < Math.min(n, 4); i++) {
+      const d = new Date(baseYear, baseMonth - 1, 1);
+      d.setMonth(d.getMonth() + i);
+      const maxDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      labels.push(`${String(Math.min(baseDay, maxDay)).padStart(2,'0')}/${months[d.getMonth()]}`);
+    }
+    const rest = n > 4 ? ` + ${n - 4} mais` : '';
+    previewText.textContent = `${n}x de R$\u00A0${installValue} — ${labels.join(', ')}${rest}`;
+    preview.classList.remove('hidden');
+  }
+  el('input-parcelas')?.addEventListener('input', _updateInstallmentsPreview);
+  el('input-valor')?.addEventListener('input', _updateInstallmentsPreview);
+  el('input-data')?.addEventListener('change', () => {
+    _updateInstallmentsPreview();
+    // Atualiza o dia na notificação de recorrente, se estiver ativo
+    if (el('toggle-recorrente-wrap')?.classList.contains('active')) {
+      const dateVal = el('input-data')?.value || '';
+      const day = dateVal.split('/')[0]?.replace(/\D/g, '') || '—';
+      const dayLabel = el('recurring-day-label');
+      if (dayLabel) dayLabel.textContent = day !== '—' ? `${day} de cada mês` : '—';
+    }
+  });
 
   // OCR
   el('btn-scanner')?.addEventListener('click', () => el('tx-ocr-input')?.click());
