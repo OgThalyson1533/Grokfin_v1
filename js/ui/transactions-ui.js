@@ -712,21 +712,11 @@ export function renderTransactionFilters() {
 
   const btnBank = document.getElementById('tx-filter-bank');
   const btnCard = document.getElementById('tx-filter-card');
-  const activeClasses = ['bg-[#2E5C41]', 'border-transparent', 'text-white'];
-  const inactiveClasses = ['border-white/10', 'bg-transparent', 'text-white/50'];
   if (btnBank) {
-      if (state.ui.txOrigin === 'bank') {
-          btnBank.classList.add(...activeClasses); btnBank.classList.remove(...inactiveClasses);
-      } else {
-          btnBank.classList.remove(...activeClasses); btnBank.classList.add(...inactiveClasses);
-      }
+    btnBank.classList.toggle('tx-origin-active', state.ui.txOrigin === 'bank');
   }
   if (btnCard) {
-      if (state.ui.txOrigin === 'card') {
-          btnCard.classList.add(...activeClasses); btnCard.classList.remove(...inactiveClasses);
-      } else {
-          btnCard.classList.remove(...activeClasses); btnCard.classList.add(...inactiveClasses);
-      }
+    btnCard.classList.toggle('tx-origin-active', state.ui.txOrigin === 'card');
   }
 
   const categories = [...new Set([...getAllCategories(), ...state.transactions.map(item => item.cat)])].sort((a, b) => a.localeCompare(b, 'pt-BR'));

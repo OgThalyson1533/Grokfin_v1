@@ -704,6 +704,32 @@ span.flatpickr-weekday {
 [data-theme="light"] .date-input-themed { color-scheme: light; }
 
 /* ══════════════════════════════════════════════════════════════════
+   TABLE WRAPPER — tema-aware
+   ══════════════════════════════════════════════════════════════════ */
+.tx-table-wrap {
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   FILTROS BANCO / CARTÃO — tema-aware
+   ══════════════════════════════════════════════════════════════════ */
+.tx-origin-filter-btn {
+  border-color: var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+}
+.tx-origin-filter-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+}
+.tx-origin-filter-btn.tx-origin-active {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success);
+}
+
+/* ══════════════════════════════════════════════════════════════════
    MEDIA QUERIES MOBILE
    ══════════════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {

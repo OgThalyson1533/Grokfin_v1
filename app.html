@@ -138,7 +138,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
                 <span id="current-view-chip" class="pill text-xs"><i class="fa-solid fa-house text-cyan-300"></i> Home</span>
-                <span class="hidden sm:inline-flex pill text-xs"><i class="fa-solid fa-shield-halved text-cyan-300/70"></i> <span class="text-white/50">salvo localmente</span></span>
+                <span id="sync-status-chip" class="hidden sm:inline-flex pill text-xs"><i class="fa-solid fa-cloud text-cyan-300/70"></i> <span class="text-white/50">sincronizado</span></span>
               </div>
               <div class="mt-0.5 flex items-center gap-2">
                 <p class="text-sm font-semibold text-white/80">Olá, <span id="home-display-name" class="text-white font-bold">Usuário</span></p>
@@ -707,7 +707,7 @@
 <!-- Title & Desktop Buttons -->
 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
   <div>
-    <h3 class="font-serif text-[32px] font-bold tracking-tight text-[#E8ECEC]">Movimentações</h3>
+    <h3 class="font-serif text-[32px] font-bold tracking-tight" style="color:var(--text-main)">Movimentações</h3>
     <p class="mt-1 text-sm text-white/50">Gerencie suas entradas, saídas e transferências</p>
   </div>
   
@@ -723,10 +723,10 @@
 
 <!-- Toggles Banco / Cartão -->
 <div class="flex items-center gap-2 mt-2">
-  <button id="tx-filter-bank" onclick="if(window.toggleTxFilterOrigin) window.toggleTxFilterOrigin('bank')" class="flex items-center gap-2 rounded border px-4 py-2.5 text-sm font-semibold transition-colors" style="background:var(--success-bg);border-color:var(--success-border);color:var(--success)">
+  <button id="tx-filter-bank" onclick="if(window.toggleTxFilterOrigin) window.toggleTxFilterOrigin('bank')" class="tx-origin-filter-btn tx-origin-active flex items-center gap-2 rounded border px-4 py-2.5 text-sm font-semibold transition-colors">
     <i class="fa-solid fa-building-columns"></i> Banco
   </button>
-  <button id="tx-filter-card" onclick="if(window.toggleTxFilterOrigin) window.toggleTxFilterOrigin('card')" class="flex items-center gap-2 rounded border border-white/10 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/50 hover:bg-white/5 transition-colors">
+  <button id="tx-filter-card" onclick="if(window.toggleTxFilterOrigin) window.toggleTxFilterOrigin('card')" class="tx-origin-filter-btn flex items-center gap-2 rounded border px-4 py-2.5 text-sm font-semibold transition-colors">
     <i class="fa-regular fa-credit-card"></i> Cartão
   </button>
 </div>
@@ -782,7 +782,7 @@
   </div>
 </div>
 
-<div class="rounded-xl relative flex flex-col pt-0 border border-white/10 bg-[#0d121c] mt-2">
+<div class="rounded-xl relative flex flex-col pt-0 mt-2 tx-table-wrap">
   <div class="overflow-x-auto w-full mt-0">
     <table class="w-full text-left whitespace-nowrap" id="tx-main-table">
       <thead class="border-b border-white/5 bg-transparent text-xs font-semibold text-white/40">
