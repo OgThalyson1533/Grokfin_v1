@@ -450,9 +450,13 @@ export function bindGoalEvents() {
       return;
     }
     var briefBtn = e.target.closest('[data-goal-brief]');
-    if (briefBtn && window.switchTab && window.sendChatPrompt) {
+    if (briefBtn && window.toggleAiSidePanel && window.sendChatPrompt) {
+      e.preventDefault();
       var g = state.goals.find(function(x) { return x.id === briefBtn.dataset.goalBrief; });
-      if (g) { window.switchTab(3); window.sendChatPrompt('Resuma o plano para a meta "' + g.nome + '". O que devo fazer este mês?'); }
+      if (g) { 
+        window.toggleAiSidePanel(true); 
+        window.sendChatPrompt('Resuma o plano para a meta "' + g.nome + '". O que devo fazer este mês?'); 
+      }
     }
   });
   container?.addEventListener('keydown', function(e) {
