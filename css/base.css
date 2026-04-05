@@ -530,7 +530,7 @@ body::after { display: none; }
 }
 [data-theme="dark"] #goal-add-btn,
 [data-theme="ocean-glass"] #goal-add-btn {
-  background: linear-gradient(135deg, #63ffab, #36f1c8) !important;
+  background: #ffffff !important;
   color: #0e0e0e !important;
 }
 

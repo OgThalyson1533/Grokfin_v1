@@ -151,7 +151,7 @@ export function renderGoals(analytics) {
         '</div>' +
         '<h4 class="text-xl font-black text-white mt-4">Nenhuma meta criada ainda</h4>' +
         '<p class="text-sm text-white/45 mt-2 max-w-xs text-center leading-relaxed">Defina para onde quer levar seu dinheiro. Cada meta vira um plano com data, aporte mensal e progresso visual.</p>' +
-        '<button onclick="document.getElementById(\'goal-add-btn\').click()" class="mt-6 flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-black transition-transform hover:scale-105 active:scale-95" style="background:linear-gradient(135deg,#00f5ff,#00ff85)">' +
+        '<button onclick="document.getElementById(\'goal-add-btn\').click()" class="mt-6 flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-black transition-transform hover:scale-105 active:scale-95 bg-white">' +
           '<i class="fa-solid fa-plus"></i> Criar primeira meta' +
         '</button>' +
       '</div>';
@@ -202,7 +202,7 @@ export function renderGoals(analytics) {
             '<h2>' + escapeHtml(goal.nome) + '</h2>' +
             '<div class="goal-stats">' +
               '<div><p>Guardado</p><strong>' + formatMoney(goal.atual) + '</strong></div>' +
-              '<div><p>Mensal</p><strong style="' + (monthlyNeed > 0 ? 'color: '+themeColor : '') + '">' + (isDone ? '--' : formatMoney(monthlyNeed)) + '</strong></div>' +
+              '<div><p>Mensal</p><strong>' + (isDone ? '--' : formatMoney(monthlyNeed)) + '</strong></div>' +
             '</div>' +
           '</div>' +
 
