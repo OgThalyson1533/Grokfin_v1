@@ -53,6 +53,7 @@
   <link rel="stylesheet" href="./css/nav.css">
   <link rel="stylesheet" href="./css/components.css">
   <link rel="stylesheet" href="./css/transactions.css">
+  <link rel="stylesheet" href="./css/goals-v3.css">
 </head>
 <body class="selection:bg-emerald-300 selection:text-black">
   <div class="pointer-events-none fixed inset-0 overflow-hidden" id="app-glow-container">
@@ -832,24 +833,20 @@
         </div>
 
         <div id="tab-4" class="tab-panel space-y-10">
-<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-<div>
-<p class="text-sm font-semibold uppercase tracking-[.24em] text-cyan-200/55">Metas inteligentes</p>
-<h3 class="mt-2 font-serif text-4xl font-black tracking-tight text-white">Transforme vontade em plano</h3>
-<p class="mt-3 max-w-2xl text-white/55">
-                Agora cada meta tem uma área própria, estimativa de prazo, aporte mensal sugerido e um tema visual mais fiel ao objetivo — inclusive para games, consoles e eletrônicos.
-              </p>
-</div>
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between mb-6">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-200/55 mb-1">Metas inteligentes</p>
+              <h3 class="font-serif text-4xl font-black tracking-tight text-white mb-1">Transforme vontade em plano</h3>
+            </div>
+            
+            <button id="goal-add-btn" class="glass-panel text-white px-6 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition hover:scale-105 active:scale-95 border-white/10 shrink-0">
+              <i class="fa-solid fa-plus text-sm"></i> Nova Meta
+            </button>
+          </div>
 
-<div class="flex flex-col justify-end">
-  <button id="goal-add-btn" class="btn-nova-transacao">
-    <i class="fa-solid fa-plus"></i> Nova Meta
-  </button>
-</div>
-</div>
-<div class="grid grid-cols-1 gap-4 md:grid-cols-3" id="goals-overview"></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" id="goals-overview"></div>
 
-<div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3" id="goals-container"></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="goals-container"></div>
         </div>
 
         <!-- ═══════════════════════════ TAB 5: PERFIL ═══════════════════════════ -->

@@ -126,62 +126,25 @@ export function renderGoals(analytics) {
   const totalTarget    = state.goals.reduce(function(a, g) { return a + Number(g.total || 0); }, 0);
   const avgProgress    = analytics.goalsProgress || 0;
   const monthlyNeedAll = state.goals.reduce(function(a, g) { return a + getMonthlyNeed(g); }, 0);
-  const activeGoals    = state.goals.filter(function(g) { return getGoalProgress(g) < 100; }).length;
-  const completedGoals = state.goals.length - activeGoals;
-
-  var miniBarHtml = state.goals.slice(0,6).map(function(g) {
-    var p = getGoalProgress(g);
-    var c = p >= 80 ? '#10b981' : p >= 40 ? '#06b6d4' : '#a855f7';
-    var op = (0.4 + (p/100)*0.6).toFixed(2);
-    return '<div class="h-1.5 rounded-full flex-1 min-w-[18px]" style="background:' + c + ';opacity:' + op + '"></div>';
-  }).join('');
-
-  var totalBarHtml = '';
-  if (totalTarget > 0) {
-    var tPct = Math.min(100, (totalSaved/totalTarget)*100).toFixed(1);
-    totalBarHtml = '<div class="mt-3 progress-track h-1.5"><div class="progress-fill" style="width:' + tPct + '%"></div></div>' +
-      '<p class="mt-1.5 text-[10px] text-white/35">' + formatPercent((totalSaved/totalTarget)*100,0) + ' do total alvo ' + formatMoney(totalTarget) + '</p>';
-  }
-
-  var activeLbl = activeGoals + ' meta' + (activeGoals !== 1 ? 's' : '') + ' ativa' + (activeGoals !== 1 ? 's' : '');
-  if (completedGoals > 0) activeLbl += ' \u2022 ' + completedGoals + ' conclu\u00edda' + (completedGoals !== 1 ? 's' : '');
 
   overviewContainer.innerHTML =
-    '<div class="goal-overview-card">' +
-      '<div class="flex items-center gap-3 mb-3">' +
-        '<div class="w-9 h-9 rounded-xl bg-emerald-400/12 border border-emerald-400/20 flex items-center justify-center shrink-0">' +
-          '<i class="fa-solid fa-piggy-bank text-emerald-300 text-sm"></i>' +
-        '</div>' +
-        '<p class="text-xs font-bold uppercase tracking-[.18em] text-white/40">Total guardado</p>' +
-      '</div>' +
-      '<p class="text-3xl font-black text-white">' + formatMoney(totalSaved) + '</p>' +
-      totalBarHtml +
+    '<div class="stat-card">' +
+      '<div class="stat-header-label"><i class="fa-solid fa-star opacity-40"></i> Total Guardado</div>' +
+      '<div class="stat-value">' + formatMoney(totalSaved) + '</div>' +
     '</div>' +
-    '<div class="goal-overview-card">' +
-      '<div class="flex items-center gap-3 mb-3">' +
-        '<div class="w-9 h-9 rounded-xl bg-cyan-400/12 border border-cyan-400/20 flex items-center justify-center shrink-0">' +
-          '<i class="fa-solid fa-calendar-check text-cyan-300 text-sm"></i>' +
-        '</div>' +
-        '<p class="text-xs font-bold uppercase tracking-[.18em] text-white/40">Aporte mensal</p>' +
-      '</div>' +
-      '<p class="text-3xl font-black text-cyan-200">' + formatMoney(monthlyNeedAll) + '</p>' +
-      '<p class="mt-2 text-[11px] text-white/40">' + activeLbl + '</p>' +
+    '<div class="stat-card">' +
+      '<div class="stat-header-label"><i class="fa-solid fa-calendar-plus opacity-40"></i> Aporte Mensal</div>' +
+      '<div class="stat-value">' + formatMoney(monthlyNeedAll) + '</div>' +
     '</div>' +
-    '<div class="goal-overview-card">' +
-      '<div class="flex items-center gap-3 mb-3">' +
-        '<div class="w-9 h-9 rounded-xl bg-violet-400/12 border border-violet-400/20 flex items-center justify-center shrink-0">' +
-          '<i class="fa-solid fa-chart-line text-violet-300 text-sm"></i>' +
-        '</div>' +
-        '<p class="text-xs font-bold uppercase tracking-[.18em] text-white/40">Progresso m\u00e9dio</p>' +
-      '</div>' +
-      '<p class="text-3xl font-black text-violet-200">' + formatPercent(avgProgress, 0) + '</p>' +
-      '<div class="mt-3 flex gap-1 flex-wrap">' + miniBarHtml + '</div>' +
+    '<div class="stat-card">' +
+      '<div class="stat-header-label"><i class="fa-solid fa-arrow-trend-up opacity-40"></i> Progresso Médio</div>' +
+      '<div class="stat-value">' + formatPercent(avgProgress, 0) + '</div>' +
     '</div>';
 
   /* Estado vazio */
   if (!state.goals.length) {
     goalsContainer.innerHTML =
-      '<div class="goal-empty-state col-span-full">' +
+      '<div class="goal-empty-state col-span-full mt-8">' +
         '<div class="goal-empty-icon">' +
           '<i class="fa-solid fa-bullseye text-4xl" style="background:linear-gradient(135deg,#00f5ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></i>' +
         '</div>' +
@@ -194,7 +157,7 @@ export function renderGoals(analytics) {
     return;
   }
 
-  /* Cards */
+  /* Cards v3 */
   goalsContainer.innerHTML = state.goals.map(function(rawGoal) {
     var goal = Object.assign({}, rawGoal, {
       nome:  rawGoal.nome  || rawGoal.name   || 'Meta',
@@ -205,114 +168,52 @@ export function renderGoals(analytics) {
     var progress    = getGoalProgress(goal);
     var monthlyNeed = getMonthlyNeed(goal);
     var remaining   = Math.max(0, goal.total - goal.atual);
-    var days        = daysUntil(goal.deadline);
     var theme       = detectGoalTheme(goal.nome, goal.theme || 'auto');
     var catalog     = GOAL_THEME_CATALOG[theme] || GOAL_THEME_CATALOG.generic;
     var themeColor  = catalog.color;
     var goalImage   = goal.customImage || goal.img || catalog.img;
     var suggested   = monthlyNeed > 0 ? monthlyNeed : (remaining > 0 ? Math.min(remaining, 500) : 0);
+    var isDone      = progress >= 100;
 
-    /* Chip velocidade */
-    var velocityHtml = '';
-    if (progress < 100 && monthlyNeed > 0) {
-      if (days <= 0) {
-        velocityHtml = '<span class="goal-chip" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.25);color:#fca5a5"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Prazo vencido</span>';
-      } else if (state.balance >= monthlyNeed) {
-        velocityHtml = '<span class="goal-chip" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.2);color:#6ee7b7"><i class="fa-solid fa-bolt mr-1"></i>No ritmo</span>';
-      } else {
-        velocityHtml = '<span class="goal-chip" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.2);color:#fde68a"><i class="fa-solid fa-gauge mr-1"></i>Aten\u00e7\u00e3o</span>';
-      }
-    }
+    var inputPh = isDone ? 'Concluído' : formatMoney(suggested);
+    var opacityProp = isDone ? 'opacity:0.5;' : '';
 
-    /* Chip dias */
-    var daysHtml = '';
-    if (progress < 100) {
-      if (days <= 0)
-        daysHtml = '<span class="goal-chip" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.2);color:#fca5a5">Vencida</span>';
-      else if (days <= 30)
-        daysHtml = '<span class="goal-chip" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.2);color:#fde68a">' + days + 'd restantes</span>';
-      else
-        daysHtml = '<span class="goal-chip">' + Math.ceil(days/30) + 'm restantes</span>';
-    }
+    return '<article class="goal-card-v3 group" data-goal-id="' + goal.id + '">' +
+      '<div class="goal-bg" style="background-image:url(\'' + goalImage + '\')"></div>' +
+      '<div class="goal-overlay"></div>' +
+      '<div class="goal-content">' +
 
-    /* Smart tip */
-    var smartIcon, smartTip;
-    if (progress >= 100) {
-      smartIcon = '🏆'; smartTip = 'Meta atingida! Considere investir o valor ou criar um novo objetivo.';
-    } else if (days <= 0) {
-      smartIcon = '⚠️'; smartTip = 'Prazo vencido. Atualize a data ou faça um aporte para retomar o plano.';
-    } else if (state.balance >= monthlyNeed && monthlyNeed > 0) {
-      smartIcon = '🔥'; smartTip = 'Você tem saldo para o aporte ideal de ' + formatMoney(monthlyNeed) + '/mês. Mantenha o ritmo!';
-    } else if (monthlyNeed > 0) {
-      smartIcon = '💡'; smartTip = 'Aporte ideal: ' + formatMoney(monthlyNeed) + '/mês. Qualquer valor guardado agora já acelera o prazo.';
-    } else {
-      smartIcon = '✨'; smartTip = 'Guarde o que puder — cada aporte conta para bater o prazo.';
-    }
-
-    /* Botão aporte */
-    var aporteBtnHtml;
-    if (progress >= 100) {
-      aporteBtnHtml = '<div class="goal-done-badge"><i class="fa-solid fa-trophy"></i> Meta Conclu\u00edda</div>';
-    } else {
-      var ph = suggested > 0 ? suggested.toFixed(2).replace('.', ',') : '0,00';
-      aporteBtnHtml =
-        '<div class="goal-aporte-wrap">' +
-          '<div class="goal-aporte-input-row">' +
-            '<span class="goal-aporte-prefix">R$</span>' +
-            '<input id="goal-invest-' + goal.id + '" type="text" inputmode="decimal" class="goal-aporte-input" placeholder="' + ph + '" />' +
+        /* Topo do Card */
+        '<div class="goal-top">' +
+          '<div class="progress-circle-wrap">' +
+            buildRingSVG(progress, themeColor, 54) +
+            '<span class="progress-circle-pct">' + progress + '%</span>' +
           '</div>' +
-          '<button data-goal-contribute="' + goal.id + '" class="goal-aporte-btn">' +
-            '<i class="fa-solid fa-circle-plus mr-1.5"></i>Aportar' +
-          '</button>' +
-        '</div>';
-    }
-
-    return '<article class="goal-card group" data-goal-id="' + goal.id + '">' +
-      '<div class="goal-card-bg" style="background-image:url(\'' + goalImage + '\')"></div>' +
-      '<div class="goal-card-overlay"></div>' +
-      '<div class="goal-card-body">' +
-
-        /* Topo */
-        '<div class="goal-card-top">' +
-          '<span class="goal-chip" style="background:' + themeColor + '1a;border-color:' + themeColor + '30;color:' + themeColor + '">' +
-            '<i class="fa-solid ' + catalog.icon + ' mr-1"></i>' + escapeHtml(catalog.label) +
-          '</span>' +
-          '<div class="flex items-center gap-1.5 flex-wrap justify-end">' + velocityHtml + daysHtml + '</div>' +
+          '<div class="goal-target">' +
+            '<span>Alvo</span>' +
+            '<strong>' + formatMoney(goal.total) + '</strong>' +
+          '</div>' +
         '</div>' +
 
-        /* Centro: ring + info */
-        '<div class="goal-card-center">' +
-          '<div class="goal-ring-wrap">' +
-            buildRingSVG(progress, themeColor, 108) +
-            '<div class="goal-ring-inner">' +
-              '<span class="goal-ring-pct" style="color:' + themeColor + '">' + progress + '%</span>' +
-              '<span class="goal-ring-label">conclu\u00eddo</span>' +
+        /* Meio/Baixo */
+        '<div class="goal-bottom">' +
+          '<div class="goal-info">' +
+            '<h2>' + escapeHtml(goal.nome) + '</h2>' +
+            '<div class="goal-stats">' +
+              '<div><p>Guardado</p><strong>' + formatMoney(goal.atual) + '</strong></div>' +
+              '<div><p>Mensal</p><strong style="' + (monthlyNeed > 0 ? 'color: '+themeColor : '') + '">' + (isDone ? '--' : formatMoney(monthlyNeed)) + '</strong></div>' +
             '</div>' +
           '</div>' +
-          '<div class="goal-card-info">' +
-            '<h4 class="goal-card-name">' + escapeHtml(goal.nome) + '</h4>' +
-            '<p class="goal-card-target">Alvo <strong>' + formatMoney(goal.total) + '</strong></p>' +
-            '<div class="goal-card-numbers">' +
-              '<div><p class="goal-card-num-label">Guardado</p><p class="goal-card-num-value" style="color:' + themeColor + '">' + formatMoney(goal.atual) + '</p></div>' +
-              '<div><p class="goal-card-num-label">Faltam</p><p class="goal-card-num-value text-white/80">' + formatMoney(remaining) + '</p></div>' +
-              '<div><p class="goal-card-num-label">Aporte/mês</p><p class="goal-card-num-value text-cyan-300">' + formatMoney(monthlyNeed) + '</p></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
 
-        /* Smart tip */
-        '<div class="goal-smart-tip">' +
-          '<span class="goal-tip-icon">' + smartIcon + '</span>' +
-          '<p class="goal-tip-text">' + smartTip + '</p>' +
-        '</div>' +
-
-        /* Ações */
-        '<div class="goal-card-actions">' +
-          aporteBtnHtml +
-          '<div class="goal-action-btns">' +
-            '<button data-goal-brief="' + goal.id + '" class="goal-icon-btn" title="Analisar com IA"><i class="fa-solid fa-robot"></i></button>' +
-            '<button onclick="openEditGoal(\'' + goal.id + '\')" class="goal-icon-btn" title="Editar meta"><i class="fa-solid fa-pen"></i></button>' +
-            '<button onclick="confirmDeleteGoal(\'' + goal.id + '\')" class="goal-icon-btn goal-icon-btn-danger" title="Excluir meta"><i class="fa-solid fa-trash-can"></i></button>' +
+          /* Action Bar */
+          '<div class="action-bar">' +
+            '<input type="text" id="goal-invest-' + goal.id + '" class="input-aporte" placeholder="' + inputPh + '" ' + (isDone ? 'disabled' : '') + ' style="' + opacityProp + '">' +
+            (isDone ? '' : '<button data-goal-contribute="' + goal.id + '" class="btn-aportar">+</button>') +
+            '<button data-goal-brief="' + goal.id + '" class="btn-icon" title="Analisar com IA">' +
+              '<svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7v1a1 1 0 0 1-1 1h-1v1a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-1H4a1 1 0 0 1-1-1v-1a7 7 0 0 1 7-7h1V5.73A2 2 0 1 1 12 2zm-3 10a1 1 0 0 0-1 1v2a1 1 0 0 0 2 0v-2a1 1 0 0 0-1-1zm6 0a1 1 0 0 0-1 1v2a1 1 0 0 0 2 0v-2a1 1 0 0 0-1-1z"/></svg>' +
+            '</button>' +
+            '<button onclick="openEditGoal(\'' + goal.id + '\')" class="btn-icon" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+            '<button onclick="confirmDeleteGoal(\'' + goal.id + '\')" class="btn-icon delete" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
           '</div>' +
         '</div>' +
 
