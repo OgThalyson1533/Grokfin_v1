@@ -436,15 +436,15 @@ export function renderHomeGoals() {
 
     return `
       <div onclick="switchTab(4)" title="${escapeHtml(nome)} — ${pct}%"
-           style="position:relative;min-width:130px;height:140px;border-radius:16px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,0.05);flex-shrink:0;background-color:#1a1a1a;transition:transform 0.3s,border-color 0.3s;"
+           style="position:relative;width:110px;min-width:110px;max-width:110px;height:130px;border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,0.05);flex-shrink:0;background-color:#1a1a1a;transition:transform 0.3s,border-color 0.3s;"
            onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(255,255,255,0.15)'"
            onmouseout="this.style.transform='translateY(0)';this.style.borderColor='rgba(255,255,255,0.05)'">
-        <div style="position:absolute;inset:0;${bgStyle}z-index:1;transition:transform 0.6s;"></div>
+        <div style="position:absolute;inset:0;${bgStyle}z-index:1;"></div>
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.4) 50%,rgba(0,0,0,0.1) 100%);z-index:2;"></div>
-        <div style="position:relative;z-index:3;padding:12px;height:100%;display:flex;flex-direction:column;justify-content:space-between;">
-          <div style="align-self:flex-end;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);padding:4px 8px;border-radius:12px;font-size:11px;font-weight:500;letter-spacing:0.02em;color:${accentColor};">${pct}%</div>
+        <div style="position:relative;z-index:3;padding:10px;height:100%;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;">
+          <div style="align-self:flex-end;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);padding:3px 7px;border-radius:10px;font-size:10px;font-weight:500;letter-spacing:0.02em;color:${accentColor};">${pct}%</div>
           <div>
-            <h4 style="font-size:13px;font-weight:500;color:#f5f5f7;margin:0 0 8px;letter-spacing:0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(nome.slice(0, 12))}</h4>
+            <h4 style="font-size:12px;font-weight:500;color:#f5f5f7;margin:0 0 7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(nome.slice(0, 11))}</h4>
             <div style="width:100%;height:2px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden;">
               <div style="height:100%;width:${pct}%;background:${accentColor};border-radius:2px;"></div>
             </div>
