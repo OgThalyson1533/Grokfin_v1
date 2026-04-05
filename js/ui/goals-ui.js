@@ -98,13 +98,14 @@ function daysUntil(dateIso) {
 }
 
 function buildRingSVG(pct, color, size) {
-  size = size || 108;
-  const R   = (size / 2) - 10;
+  size = size || 54;
+  const strokeWidth = size <= 60 ? 3.5 : 7;
+  const R   = (size / 2) - (strokeWidth / 2);
   const C   = 2 * Math.PI * R;
   const off = C * (1 - Math.min(pct, 100) / 100);
-  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" style="transform:rotate(-90deg)" aria-hidden="true">' +
-    '<circle cx="' + (size/2) + '" cy="' + (size/2) + '" r="' + R + '" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/>' +
-    '<circle cx="' + (size/2) + '" cy="' + (size/2) + '" r="' + R + '" fill="none" stroke="' + color + '" stroke-width="7"' +
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" style="transform:rotate(-90deg); position:absolute; top:0; left:0;" aria-hidden="true">' +
+    '<circle cx="' + (size/2) + '" cy="' + (size/2) + '" r="' + R + '" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="' + strokeWidth + '"/>' +
+    '<circle cx="' + (size/2) + '" cy="' + (size/2) + '" r="' + R + '" fill="none" stroke="' + color + '" stroke-width="' + strokeWidth + '"' +
     ' stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '"' +
     ' stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>' +
     '</svg>';
