@@ -405,7 +405,7 @@ export function renderHomeHeader() {
   if (headerAvatar && profile.avatarImage) headerAvatar.src = profile.avatarImage;
 }
 
-/** Renderiza rings de metas no home */
+/** Renderiza mini-cards de metas no home */
 export function renderHomeGoals() {
   const container = document.getElementById('home-goals-rings');
   if (!container) return;
@@ -413,47 +413,43 @@ export function renderHomeGoals() {
   const goals = state.goals || [];
   if (!goals.length) {
     container.innerHTML = `
-      <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="switchTab(4)">
-        <div class="w-16 h-16 rounded-full border-2 border-dashed border-white/15 flex items-center justify-center">
-          <i class="fa-solid fa-plus text-white/25 text-lg"></i>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;" onclick="switchTab(4)">
+        <div style="width:68px;height:68px;border-radius:50%;border:2px dashed rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+          <i class="fa-solid fa-plus" style="color:rgba(255,255,255,0.25);font-size:18px;"></i>
         </div>
-        <p class="text-[10px] text-white/35 text-center w-16">Nova meta</p>
+        <p style="font-size:10px;color:rgba(255,255,255,0.35);text-align:center;width:68px;">Nova meta</p>
       </div>`;
     return;
   }
 
-  const R = 28, C = 2 * Math.PI * R; // circumference
-
   container.innerHTML = goals.slice(0, 8).map((g) => {
-    const nome = g.nome || g.name || 'Meta';
+    const nome  = g.nome || g.name || 'Meta';
     const atual = Number(g.atual ?? g.current ?? 0);
     const total = Number(g.total ?? g.target ?? 0);
     const pct   = total > 0 ? Math.min(100, Math.round((atual / total) * 100)) : 0;
-    const offset = C * (1 - pct / 100);
-    const color  = pct >= 80 ? '#00ff85' : pct >= 40 ? '#00f5ff' : '#a855f7';
-    const shortName = nome.slice(0, 10);
-
-    // Try to show goal image as ring background thumbnail
+    const isGreen = pct >= 80;
+    const accentColor = isGreen ? '#34d399' : '#c084fc';
     const imgUrl = g.customImage || g.img || '';
-    const innerContent = imgUrl
-      ? `<div class="absolute inset-[5px] rounded-full bg-cover bg-center opacity-60" style="background-image:url('${imgUrl}')"></div>`
-      : `<i class="fa-solid fa-bullseye text-white/30 text-sm"></i>`;
+    const bgStyle = imgUrl
+      ? `background-image:url('${imgUrl}');background-size:cover;background-position:center;`
+      : `background-color:#222;`;
 
     return `
-      <div class="flex flex-col items-center gap-1.5 cursor-pointer shrink-0" onclick="switchTab(4)" title="${escapeHtml(nome)} — ${pct}%">
-        <div class="relative w-[68px] h-[68px]">
-          <svg width="68" height="68" viewBox="0 0 68 68" style="position:absolute;inset:0;transform:rotate(-90deg)">
-            <circle cx="34" cy="34" r="${R}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3.5"/>
-            <circle cx="34" cy="34" r="${R}" fill="none" stroke="${color}" stroke-width="3.5"
-              stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
-              stroke-linecap="round"/>
-          </svg>
-          <div class="absolute inset-0 flex items-center justify-center">
-            ${innerContent}
+      <div onclick="switchTab(4)" title="${escapeHtml(nome)} — ${pct}%"
+           style="position:relative;min-width:130px;height:140px;border-radius:16px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,0.05);flex-shrink:0;background-color:#1a1a1a;transition:transform 0.3s,border-color 0.3s;"
+           onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(255,255,255,0.15)'"
+           onmouseout="this.style.transform='translateY(0)';this.style.borderColor='rgba(255,255,255,0.05)'">
+        <div style="position:absolute;inset:0;${bgStyle}z-index:1;transition:transform 0.6s;"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.4) 50%,rgba(0,0,0,0.1) 100%);z-index:2;"></div>
+        <div style="position:relative;z-index:3;padding:12px;height:100%;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="align-self:flex-end;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);padding:4px 8px;border-radius:12px;font-size:11px;font-weight:500;letter-spacing:0.02em;color:${accentColor};">${pct}%</div>
+          <div>
+            <h4 style="font-size:13px;font-weight:500;color:#f5f5f7;margin:0 0 8px;letter-spacing:0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(nome.slice(0, 12))}</h4>
+            <div style="width:100%;height:2px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${accentColor};border-radius:2px;"></div>
+            </div>
           </div>
-          <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none" style="background:${color}22;color:${color};border:1px solid ${color}44">${pct}%</div>
         </div>
-        <p class="text-[9px] font-semibold text-white/45 text-center truncate w-[68px] mt-1">${escapeHtml(shortName)}</p>
       </div>`;
   }).join('');
 }
