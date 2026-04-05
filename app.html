@@ -277,11 +277,48 @@
           // Lê do localStorage, se não existir assume como falso (oculto)
           let visivel = localStorage.getItem('saldoVisivel') === 'true';
 
-          const updateUI = () => {
+          const playRouletteEffect = () => {
+            const elements = document.querySelectorAll('.value-visible');
+            elements.forEach(el => {
+              const textContent = el.innerText || el.textContent;
+              // Ignorar se não tiver números
+              if (!textContent || !/\d/.test(textContent)) return;
+              
+              // Gerenciamento de spam-click e estado da animação
+              const isAnimating = !!el.dataset.animId;
+              const finalValue = isAnimating ? el.dataset.targetValue : textContent;
+              
+              if (!isAnimating) {
+                el.dataset.targetValue = finalValue;
+              } else {
+                clearInterval(parseInt(el.dataset.animId, 10));
+              }
+
+              let iterations = 0;
+              const maxIterations = 15; // Duração: 15 * 35ms ~ 525ms
+              const animInterval = setInterval(() => {
+                if (iterations >= maxIterations) {
+                  clearInterval(animInterval);
+                  el.innerText = finalValue;
+                  delete el.dataset.targetValue;
+                  delete el.dataset.animId;
+                } else {
+                  // Substitui apenas os numerais para manter centavos (, e .)
+                  el.innerText = finalValue.replace(/\d/g, () => Math.floor(Math.random() * 10));
+                }
+                iterations++;
+              }, 35);
+              
+              el.dataset.animId = animInterval;
+            });
+          };
+
+          const updateUI = (shouldAnimate = false) => {
             if (visivel) {
               aberto.classList.remove('hidden');
               fechado.classList.add('hidden');
               document.body.classList.remove('hide-values');
+              if (shouldAnimate) playRouletteEffect();
             } else {
               aberto.classList.add('hidden');
               fechado.classList.remove('hidden');
@@ -289,13 +326,13 @@
             }
           };
 
-          // Inicializar UI de acordo com o state
-          updateUI();
+          // Inicializar UI de acordo com o state (sem animação no boot)
+          updateUI(false);
 
           btn.addEventListener('click', () => {
             visivel = !visivel;
             localStorage.setItem('saldoVisivel', visivel);
-            updateUI();
+            updateUI(true);
           });
         });
       </script>
